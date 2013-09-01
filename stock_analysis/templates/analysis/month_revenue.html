@@ -1,0 +1,46 @@
+{% extends "analysis/index.html" %}
+
+{% block content %}
+  {% if month_revenues %}
+    <br>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <td><h3>月營收明細</h3></td>
+          <td>
+            <div class="btn-toolbar">
+            <div class="btn-group">
+              <a class="btn btn-primary" href="/revenue/month/">月合併營收</a>
+            </div>
+            <div class="btn-group">
+              <a class="btn btn-primary" href="/revenue/season/">季合併盈餘</a>
+            </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>年/月</td>
+          <td>營收(仟元)</td>
+          <td>月增率</td>
+          <td>去年同期(仟元)</td>
+          <td>年增率</td>
+          <td>累計營收(仟元)</td>
+          <td>年增率</td>
+        </tr>
+      </thead>
+      <tbody>
+      {% for month_revenue in month_revenues %}
+        <tr>
+          <td>{{ month_revenue.year }}/{{month_revenue.month}}</td>
+          <td>{{ month_revenue.revenue }}</td>
+          <td>{{ month_revenue.month_growth_rate }}</td>
+          <td>{{ month_revenue.last_year_revenue }}</td>
+          <td>{{ month_revenue.year_growth_rate }}</td>
+          <td>{{ month_revenue.acc_revenue }}</td>
+          <td>{{ month_revenue.acc_year_growth_rate }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "analysis/index.html" %}
+
+{% block content %}
+  <br>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <td><h3>{{ revenue_title }}</h3></td>
+        <td>
+          <div class="btn-toolbar">
+            <div class="btn-group">
+              <a class="btn btn-primary" href="/revenue/month/">月合併營收</a>
+            </div>
+            <div class="btn-group">
+              <a class="btn btn-primary" href="/revenue/season/">季合併盈餘</a>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        {% for head in revenue_head %}
+        <td>{{ head }}</td>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for revenue_items in revenue_body %}
+      <tr>
+        {% for item in revenue_items %}
+        <td>{{ item }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

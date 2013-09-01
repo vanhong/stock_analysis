@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta charset="utf-8">
+	<title>Stock Analysis</title>
+	  <link href="/static/css/bootstrap/bootstrap.css" rel="stylesheet">
+  	<link href="/static/css/bootstrap/bootstrap-responsive.css" rel="stylesheet">
+  	<link href="/static/css/site.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <div class="navbar navbar-inverse navbar-fixed-top">
+  	    <div class="navbar-inner">
+  		  <div class="container">
+  		    <ul class="nav">
+  			  <li>
+  			    <a href="#index.html">Home</a>
+  			  </li>
+  			  <li>
+  			    <a href="#stock_analysis">個股分析</a>
+  			  </li>
+  			  <li>
+  			    <a href="#financial_stock">財報選股</a>
+  		      </li>
+  		    </ul>
+  		  </div>
+  	    </div>
+  	  </div>
+  	  <div class="navbar">
+  	    <div class="span12">
+  		    <form class="navbar-form" action="/analysis/" method="get">
+  		  	  <div class="span4"></div>
+            {% if stock_id %}
+  		      <input class="span2" type="text" name="stock_id" value={{ stock_id }}>
+            {% else %}
+            <input class="span2" type="text" name="stock_id" value="8114">
+            {% endif %}
+  		      <button type="submit" class="btn">Submit</button>
+  		    </form>
+        </div>
+      </div>
+      <div class="row">
+  	    <div class="span2">
+    		    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; margin-bottom: 5px; *width: 180px;">
+    		  	  <li class="dropdown-submenu">
+                <a tabindex="-1" href="#"><i class="icon-chevron-right"></i> 基本分析</a>
+                <ul class="dropdown-menu">
+                  <li><a tabindex="-1" href="#">基本資料</a></li>
+                  <li><a tabindex="-1" href="#">股本形成</a></li>
+                  <li><a tabindex="-1" href="#">股利政策</a></li>
+                  <li><a tabindex="-1" href="#">經營績效</a></li>
+                  <li><a tabindex="-1" href="#">獲利能力</a></li>
+                  <li><a tabindex="-1" href="#">土地資產</a></li>
+                  <li><a tabindex="-1" href="#">轉投資</a></li>
+                  <li><a tabindex="-1" href="/revenue/month/">營收盈餘</a></li>
+                  <li><a tabindex="-1" href="#">重大行事歷</a></li>
+                  <li><a tabindex="-1" href="#">產銷組合</a></li>
+                </ul>
+              </li>
+    		  	  <li><a href="#"><i class="icon-chevron-right"></i> 財務分析</a></li>
+    		  	  <li><a href="#"><i class="icon-chevron-right"></i> 籌碼分析</a></li>
+    		    </ul>
+  	    </div>
+        <div class="span9">
+          {% block content %}
+          {% endblock %}
+        </div>
+      </div>
+	</div>
+    <script type="text/javascript" src="/static/js/jquery-2.0.3.js"></script>
+	<script type="text/javascript" src="/static/js/bootstrap/bootstrap.js"></script>
+  </body>
+</html>
