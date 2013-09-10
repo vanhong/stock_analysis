@@ -1,9 +1,7 @@
 from django.conf.urls import patterns, include, url
 from django.conf.urls import *
-"""from stock_analysis.views import test, site, home, analysis, set_stock_id, revenue
-from stocks.views import update_stock_id, update_month_revenue, update_season_revenue
-from financial.views import update_season_financial_ratio"""
-import stock_analysis
+from django.conf import settings
+from stock_analysis.views import ajax_user_search, set_stockid, testStockid
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
@@ -11,15 +9,18 @@ import stock_analysis
 urlpatterns = patterns('',
     (r'^home/index/$', 'stock_analysis.views.home'),
     (r'^analysis/$', 'stock_analysis.views.analysis'),
+    url( r'^set_stockid/$', set_stockid, name = 'set_stockid'),
     (r'^revenue/month/$', 'stock_analysis.views.month_revenue'),
     (r'^revenue/season/$', 'stock_analysis.views.season_revenue'),
     (r'^update_stockid/$', 'stocks.views.update_stock_id'),
     (r'^update_month_revenue/$', 'stocks.views.update_month_revenue'),
     (r'^update_season_profit/$', 'stocks.views.update_season_profit'),
-    (r'^update_season_financial_ratio/$', 'stocks.views.update_season_financial_ratio'),
-    (r'^test/$', 'stock_analysis.views.test'),
+    url(r'^test/$', 'stock_analysis.views.test'),
+    url(r'^testStockid/$', 'stock_analysis.views.testStockid'),
     (r'^site/$', 'stock_analysis.views.site'),
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': stock_analysis.settings.STATIC_ROOT}),
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
+    url( r'^hello/^$', 'stock_analysis.views.index', name = 'demo_index' ),
+    url( r'^user/$', ajax_user_search, name = 'demo_user_search' ),
     # Examples:
     # url(r'^$', 'stock_analysis.views.home', name='home'),
     # url(r'^stock_analysis/', include('stock_analysis.foo.urls')),

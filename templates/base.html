@@ -1,0 +1,14 @@
+<html>
+	<head>
+		<title>Django/jQuery AJAX Demo</title>
+		<link href="{{ STATIC_URL }}style.css" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.js"></script>
+		{% block extra_js %}{% endblock %}
+	</head>
+	
+	<body>
+		<div id="centered">
+		{% block main %}{% endblock %}
+		</div>
+	</body>
+</html>

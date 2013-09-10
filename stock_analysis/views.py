@@ -3,45 +3,48 @@
 from django.http import HttpResponse, Http404
 from django.template.loader import get_template
 from django.shortcuts import render_to_response
+from django.template.context import RequestContext
 from django.template import Context
-from stock_analysis.settings import STATIC_ROOT
+from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, SeasonRevenue
 
 def test(request):
-	return render_to_response('test.html', {"STATIC_ROOT": "/static"})
+	return render_to_response('test.html', context_instance = RequestContext(request))
+
+def testStockid(request):
+	return render_to_response('analysis/testStockid.html', context_instance = RequestContext(request))
 
 def site(request):
-	return render_to_response('site.html', {"STATIC_ROOT": "/static"})
+	return render_to_response('site.html', context_instance = RequestContext(request))
 
 def home(request):
-	return render_to_response('home/index.html', {"STATIC_ROOT": "/static"})
+	return render_to_response('home/index.html', context_instance = RequestContext(request))
 
 def analysis(request):
 	if 'stock_id' in request.GET:
 		stock_id = request.GET['stock_id']
 		if StockId.objects.filter(symbol=stock_id):
 			request.session['stock_id'] = request.GET['stock_id']
-			return render_to_response('analysis/index.html', 
-				{"STATIC_ROOT": "/static", "stock_id": request.session["stock_id"]})
+			return render_to_response(
+				'analysis/index.html', {"stock_id": request.session["stock_id"]},
+				context_instance = RequestContext(request))
 		else:
 			request.session['stock_id'] = ''
 			errmsg = 'error'
-			return render_to_response('analysis/index.html', 
-				{"STATIC_ROOT": "/static", "stock_id": errmsg})
-	return render_to_response('analysis/index.html', {"STATIC_ROOT": "/static"})
+			return render_to_response(
+				'analysis/index.html', {"stock_id": errmsg},
+				context_instance = RequestContext(request))
+	return render_to_response('analysis/index.html', 
+							  context_instance = RequestContext(request))
 
-def set_stock_id(request):
-	if 'stock_id' in request.GET:
-		stock_id = request.GET['stock_id']
-		if StockId.objects.filter(symbol=stock_id).count() > 0:
-			request.session["stock_id"] = request.GET['stock_id']
-			return render_to_response('analysis/index.html', 
-				{"STATIC_ROOT": "/static", "stock_id": StockId.objects.filter(symbol=stock_id).count()})
+def set_stockid(request):
+	if 'q' in request.GET:
+		stockid = request.GET['q']
+		if StockId.objects.filter(symbol=stockid):
+			return HttpResponse(stockid + ' exists')
 		else:
-			request.session["stock_id"] = ''
-			return render_to_response('analysis/index.html',
-				{"STATIC_ROOT": "/static", "stock_id": "can't find this stock"})
+			return HttpResponse('error')
 
 def month_revenue(request):
 	symbol = request.session['stock_id']
@@ -69,13 +72,12 @@ def month_revenue(request):
 				item.append(revenue.acc_year_growth_rate)
 				revenue_body.append(item)
 			return render_to_response(
-				'analysis/revenue.html', {
-				"STATIC_ROOT": "/static", "stock_id": symbol, "revenue_title": revenue_title,
-				"revenue_head": revenue_head, "revenue_body": revenue_body})
+				'analysis/revenue.html', {"stock_id": symbol, "revenue_title": revenue_title,
+				"revenue_head": revenue_head, "revenue_body": revenue_body},
+				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/index.html',{
-		"STATIC_ROOT": "/static", "stock_id": request.session["stock_id"]})
-
+		'analysis/index.html',{"stock_id": request.session["stock_id"]},
+		context_instance = RequestContext(request))
 
 def season_revenue(request):
 	symbol = request.session['stock_id']
@@ -104,10 +106,20 @@ def season_revenue(request):
 				revenue_body.append(item)
 			return render_to_response(
 				'analysis/revenue.html', {
-				"STATIC_ROOT": "/static", "stock_id": symbol, "revenue_title": revenue_title,
-				"revenue_head": revenue_head, "revenue_body": revenue_body})
+				"stock_id": symbol, "revenue_title": revenue_title,
+				"revenue_head": revenue_head, "revenue_body": revenue_body},
+				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/index.html',
-		{"STATIC_ROOT": "/static", "stock_id": request.session["stock_id"]})
+		'analysis/index.html', {"stock_id": request.session["stock_id"]},
+		context_instance = RequestContext(request))
 
+def filter(request):
+	symbol = request.session['stock_id']
 
+def ajax_user_search(request):
+	q = request.GET.get('q')
+	if q is not None:
+		return HttpResponse('ajax_usr_search ' + q)
+
+def index(request):
+	return HttpResponse('index')
