@@ -36,8 +36,6 @@ class SeasonFinancialRatio(models.Model):
     debt_equity_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     long_term_funds_to_fixed_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
-
-
 class SeasonBalanceSheet(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)

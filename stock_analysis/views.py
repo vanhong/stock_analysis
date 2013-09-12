@@ -48,6 +48,7 @@ def set_stockid(request):
 
 def month_revenue(request):
 	symbol = request.session['stock_id']
+	stockname = StockId.objects.get(symbol=symbol)
 	revenue_title = r'月營收明細'
 	revenue_head = []
 	revenue_head.append(r'年/月')
@@ -71,8 +72,10 @@ def month_revenue(request):
 				item.append(revenue.acc_revenue)
 				item.append(revenue.acc_year_growth_rate)
 				revenue_body.append(item)
+
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/revenue.html', {"stock_id": symbol, "revenue_title": revenue_title,
+				'analysis/revenue.html', {"stock_id": name, "revenue_title": revenue_title,
 				"revenue_head": revenue_head, "revenue_body": revenue_body},
 				context_instance = RequestContext(request))
 	return render_to_response(
