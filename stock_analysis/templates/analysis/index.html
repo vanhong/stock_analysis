@@ -1,74 +1,59 @@
-<html>
-	<head>
-		<title>Stock_Analysis</title>
-		<link href="{{ STATIC_URL }}style.css" rel="stylesheet" type="text/css" />
-		<link href="{{ STATIC_URL }}css/bootstrap/bootstrap.css" rel="stylesheet">
-  		<link href="{{ STATIC_URL }}css/bootstrap/bootstrap-responsive.min.css" rel="stylesheet">
-		<script type="text/javascript" src="{{ STATIC_URL }}js/jquery-2.0.3.js"></script>
-		<script type="text/javascript">
-		$( document ).ready( function() {
-			$( '#searchSubmit' ).click( function() {
-				q = $( '#q' ).val();
-				$( '#results' ).html( '&nbsp;' ).load( '{% url "set_stockid" %}?q=' + q );
-			});
-		});		
+{% extends "base.html" %}
 
-		$( document ).ajaxStart( function() {
-			$( '#spinner' ).show();
-		}).ajaxStop( function() {
-			$( '#spinner' ).hide();
-		});
-		</script>
-	</head>
-	<body>
-		<div class="container">
-			<div class="navbar navbar-inverse navbar-fixed-top">
-  	    	<div class="navbar-inner">
-  		  	<div class="container">
-  		    	<ul class="nav">
-  			  		<li><a href="#index.html">Home</a></li>
-  			  		<li><a href="#stock_analysis">個股分析</a></li>
-  			  		<li><a href="#financial_stock">財報選股</a></li>
-  		    	</ul>
-  		  	</div>
-  	    	</div>
-  	  		</div>
-				<br>
-				<br>
-				<div class="container">
-  		    <input id="q" type="search" class="search-query">
-  		    <button id="searchSubmit" class="btn">Search</button>
-  		    <div class="margin">
-					<div id="results"></div>
-				  </div>
-				</div>
-			<div class="row">
-  	    <div class="span2">
-    		    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; margin-bottom: 5px; *width: 180px;">
-    		  	  <li class="dropdown-submenu">
-                <a tabindex="-1" href="#"><i class="icon-chevron-right"></i> 基本分析</a>
-                <ul class="dropdown-menu">
-                  <li><a tabindex="-1" href="#">基本資料</a></li>
-                  <li><a tabindex="-1" href="#">股本形成</a></li>
-                  <li><a tabindex="-1" href="#">股利政策</a></li>
-                  <li><a tabindex="-1" href="#">經營績效</a></li>
-                  <li><a tabindex="-1" href="#">獲利能力</a></li>
-                  <li><a tabindex="-1" href="#">土地資產</a></li>
-                  <li><a tabindex="-1" href="#">轉投資</a></li>
-                  <li><a tabindex="-1" href="/revenue/month/">營收盈餘</a></li>
-                  <li><a tabindex="-1" href="#">重大行事歷</a></li>
-                  <li><a tabindex="-1" href="#">產銷組合</a></li>
-                </ul>
-              </li>
-    		  	  <li><a href="#"><i class="icon-chevron-right"></i> 財務分析</a></li>
-    		  	  <li><a href="#"><i class="icon-chevron-right"></i> 籌碼分析</a></li>
-    		    </ul>
-  	    </div>
-        <div class="span9">
-          {% block content %}
-          {% endblock %}
+{% block extra_js %}
+<script type="text/javascript">
+$( document ).ready( function() {
+  $( '#searchSubmit' ).click( function() {
+    q = $( '#q' ).val();
+    $( '#results' ).html( '&nbsp;' ).load( '{% url "set_stockid" %}?q=' + q );
+  });
+});   
+
+$( document ).ajaxStart( function() {
+  $( '#spinner' ).show();
+}).ajaxStop( function() {
+    $( '#spinner' ).hide();
+});
+</script>
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="row">
+      <div class="span4 offset4">
+        <input id="q" type="search" class="search-query">
+        <button id="searchSubmit" class="btn">Search</button>
+        <div class="margin">
+        <div id="results"></div>
         </div>
       </div>
-		</div>
-	</body>
-</html>
+    </div>
+    <div class="row">
+      <div class="span2">
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
+          <li class="dropdown-submenu">
+            <a href="#">  基本分析</a>
+            <ul class="dropdown-menu">
+              <li><a href="#">基本資料</a></li>
+              <li><a href="#">股本形成</a></li>
+              <li><a href="#">股利政策</a></li>
+              <li><a href="#">經營績效</a></li>
+              <li><a href="#">獲利能力</a></li>
+              <li><a href="#">土地資產</a></li>
+              <li><a href="#">轉投資</a></li>
+              <li><a href="/revenue/month/">營收盈餘</a></li>
+              <li><a href="#">重大行事歷</a></li>
+              <li><a href="#">產銷組合</a></li>
+            </ul>
+          </li>
+          <li><a href="#">  財務分析</a></li>
+          <li><a href="#">  籌碼分析</a></li>
+        </ul>
+      </div>
+      <div class="span9">
+          {% block analysis_content %}
+          {% endblock %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

@@ -7,7 +7,7 @@ from django.template.context import RequestContext
 from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
-from stocks.models import StockId, MonthRevenue, SeasonRevenue
+from stocks.models import StockId, Revenue
 
 def test(request):
 	return render_to_response('test.html', context_instance = RequestContext(request))
@@ -22,19 +22,6 @@ def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))
 
 def analysis(request):
-	if 'stock_id' in request.GET:
-		stock_id = request.GET['stock_id']
-		if StockId.objects.filter(symbol=stock_id):
-			request.session['stock_id'] = request.GET['stock_id']
-			return render_to_response(
-				'analysis/index.html', {"stock_id": request.session["stock_id"]},
-				context_instance = RequestContext(request))
-		else:
-			request.session['stock_id'] = ''
-			errmsg = 'error'
-			return render_to_response(
-				'analysis/index.html', {"stock_id": errmsg},
-				context_instance = RequestContext(request))
 	return render_to_response('analysis/index.html', 
 							  context_instance = RequestContext(request))
 
@@ -42,6 +29,7 @@ def set_stockid(request):
 	if 'q' in request.GET:
 		stockid = request.GET['q']
 		if StockId.objects.filter(symbol=stockid):
+			request.session['stock_id'] = stockid
 			return HttpResponse(stockid + ' exists')
 		else:
 			return HttpResponse('error')
@@ -84,7 +72,8 @@ def month_revenue(request):
 
 def season_revenue(request):
 	symbol = request.session['stock_id']
-	revenue_title = r'月盈餘明細'
+	stockname = StockId.objects.get(symbol=symbol)
+	revenue_title = r'季盈餘明細'
 	revenue_head = []
 	revenue_head.append(r'年/季')
 	revenue_head.append(r'稅後盈餘(仟元)')
@@ -107,9 +96,10 @@ def season_revenue(request):
 				item.append(revenue.acc_profit)
 				item.append(revenue.acc_year_growth_rate)
 				revenue_body.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
 				'analysis/revenue.html', {
-				"stock_id": symbol, "revenue_title": revenue_title,
+				"stock_id": name, "revenue_title": revenue_title,
 				"revenue_head": revenue_head, "revenue_body": revenue_body},
 				context_instance = RequestContext(request))
 	return render_to_response(

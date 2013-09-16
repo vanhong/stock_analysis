@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import urllib
+import datetime
 from django.http import HttpResponse
 from HTMLParser import HTMLParser
 import time
 from decimal import Decimal
-from stocks.models import StockId, MonthRevenue, SeasonRevenue
+from stocks.models import StockId, RevenueName, Revenue
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -72,53 +73,81 @@ class ParseStockId(HTMLParser):
                 self.totaldata.append(self.stockdata)
                 self.stockdata = []
 
-def update_month_revenue(request):
-    stock_ids = StockId.objects.all()
-    monthly_revenues = MonthRevenue.objects.all()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zch_" + stock_symbol + ".djhtm"
-        webcode = urllib.urlopen(url)
-        revenue = ParseStockRevenue()
-        if webcode.code == 200:
-            revenue.feed(webcode.read())
-            webcode.close()
-        else:
-            return HttpResponse("update revenue failed")
-        
-        if not revenue.totaldata:
-            time.sleep(0.5)
-            webcode = urllib.urlopen(url)
-            revenue = ParseStockRevenue()
+def update_revenue(request):
+    stockids = StockId.objects.all()
+    today = datetime.date.today()
+    if today.day >= 10:
+        last_revenue_day = today.replace(month=today.month-1)
+    else:
+        last_revenue_day = today.replace(month=today.month-2)
+    for stockid in stockids:
+        revenue_in_db = Revenue.objects.filter(symbol=stockid.symbol, year=last_revenue_day.year, month=last_revenue_day.month)
+        print str(stockid) + ' ' + str(last_revenue_day.year) + ' ' + str(last_revenue_day.month)
 
-        if revenue.totaldata:
-            for i in xrange(len(revenue.totaldata)):
-                totaldata = revenue.totaldata[i]
-                year = int(totaldata[0].split("/")[0]) + 1911
-                month = int(totaldata[0].split("/")[1])
-                monthRevenue = MonthRevenue()
-                monthRevenue.surrogate_key = stock_symbol + "_" + str(year) + str(month).zfill(2)
-                monthRevenue.year = year
-                monthRevenue.month = month
-                monthRevenue.symbol = stock_symbol
-                if totaldata[1] != "nil":
-                    monthRevenue.revenue = Decimal(totaldata[1].replace(",", ""))
-                if totaldata[2] != "nil":
-                    monthRevenue.month_growth_rate = Decimal(totaldata[2].replace("%", "").replace(",", ""))
-                if totaldata[3] != "nil":
-                    monthRevenue.last_year_revenue = Decimal(totaldata[3].replace(",", ""))
-                if totaldata[4] != "nil":
-                    monthRevenue.year_growth_rate = Decimal(totaldata[4].replace("%", "").replace(",", ""))
-                if totaldata[5] != "nil":
-                    monthRevenue.acc_revenue = Decimal(totaldata[5].replace(",", ""))
-                if totaldata[6] != "nil":
-                    monthRevenue.acc_year_growth_rate = Decimal(totaldata[6].replace("%", "").replace(",", ""))
-                monthRevenue.save()
-                """print(str(year) + " " + str(month) + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
-                  totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8") + " " +
-                  totaldata[4].decode("cp950").encode("utf-8") + " " + totaldata[5].decode("cp950").encode("utf-8") + " " +
-                  totaldata[6].decode("cp950").encode("utf-8"))"""
-            print("update " + stock_symbol)
+        if revenue_in_db:
+            print 'stockid ' + stockid.symbol + ' exists'
+
+        if not revenue_in_db:
+            symbol = stockid.symbol
+            url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zch_" + symbol + ".djhtm"
+            webcode = urllib.urlopen(url)
+            revenues = ParseStockRevenue()
+            if webcode.code == 200:
+                revenues.feed(webcode.read())
+                webcode.close()
+            else:
+                return HttpResponse("update revenue failed")
+
+            if not revenues.totaldata:
+                time.sleep(0.5)
+                webcode = urllib.urlopen(url)
+                revenues = ParseStockRevenue()  
+
+            if revenues.totaldata:
+                revenue_name = RevenueName()
+                for i in xrange(len(revenues.totaldata)):
+                    totaldata = revenues.totaldata[i]
+                    print(totaldata)
+                    year = int(totaldata[0].split("/")[0]) + 1911
+                    month = int(totaldata[0].split("/")[1])
+                    key = symbol + '_' + str(year) + str(month).zfill(2) + '_M_'
+                    revenue = Revenue()
+                    revenue.symbol = symbol
+                    revenue.year = year
+                    revenue.season = 0
+                    revenue.month = month
+                    revenue.time_type = 'M'
+                    if totaldata[1] != 'nil':
+                        revenue.name = revenue_name.revenue
+                        revenue.surrogate_key = key + revenue.name
+                        revenue.value = str(Decimal(totaldata[1].replace(",", "")) * 1000)
+                        revenue.save()
+                    if totaldata[2] != 'nil':
+                        revenue.name = revenue_name.growth_rate
+                        revenue.surrogate_key = key + revenue.name
+                        revenue.value = str(Decimal(totaldata[2].replace("%", "").replace(",", "")) / 100)
+                        revenue.save()
+                    if totaldata[3] != 'nil':
+                        revenue.name = revenue_name.last_year_revenue
+                        revenue.surrogate_key = key + revenue.name
+                        revenue.value = str(Decimal(totaldata[3].replace(",", "")) * 1000)
+                        revenue.save()
+                    if totaldata[4] != 'nil':
+                        revenue.name = revenue_name.year_growth_rate
+                        revenue.surrogate_key = key + revenue.name
+                        revenue.value = str(Decimal(totaldata[4].replace("%", "").replace(",", "")) / 100)
+                        revenue.save()
+                    if totaldata[5] != 'nil':
+                        revenue.name = revenue_name.acc_revenue
+                        revenue.surrogate_key = key + revenue.name
+                        revenue.value = str(Decimal(totaldata[5].replace(",", "")) * 1000)
+                        revenue.save()
+                    if totaldata[6] != 'nil':
+                        revenue.name = revenue_name.acc_year_growth_rate
+                        revenue.surrogate_key = key + revenue.name
+                        revenue.value = str(Decimal(totaldata[6].replace("%", "").replace(",", "")) / 100)
+                        revenue.save()
+            print("update " + symbol)
     return HttpResponse("update revenue")
 
 class ParseStockRevenue(HTMLParser):
@@ -164,56 +193,6 @@ class ParseStockRevenue(HTMLParser):
                     self.revenuedata.append(text.strip())
                 self.totaldata.append(self.revenuedata)
                 self.revenuedata = []
-
-def update_season_profit(request):
-    stock_ids = StockId.objects.all()
-    season_revenue = SeasonRevenue.objects.all()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zcha_" + stock_symbol + ".djhtm"
-        webcode = urllib.urlopen(url)
-        revenue = ParseStockSeasonRevenue()
-        if webcode.code == 200:
-            revenue.feed(webcode.read())
-            webcode.close()
-        else:
-            return HttpResponse("update season revenue failed")
-
-        if not revenue.total_data:
-            time.sleep(0.5)
-            webcode = urllib.urlopen(url)
-            revenue.feed(webcode.read())
-            webcode.close()
-        
-        if revenue.total_data:
-            for i in xrange(len(revenue.total_data)):
-                totaldata = revenue.total_data[i]
-                year = int(totaldata[0].split("Q")[0].split(".")[0]) + 1911
-                season = int(totaldata[0].split("Q")[0].split(".")[1])
-                season_revenue = SeasonRevenue()
-                season_revenue.surrogate_key = stock_symbol + "_" + str(year) + str(season).zfill(2)
-                season_revenue.year = year
-                season_revenue.season = season
-                season_revenue.symbol = stock_symbol
-                if totaldata[1] != "nil" and totaldata[1] != "N/A":
-                    season_revenue.profit = Decimal(totaldata[1].replace(",", ""))
-                if totaldata[2] != "nil" and totaldata[2] != "N/A":
-                    season_revenue.season_growth_rate = Decimal(totaldata[2].replace("%", "").replace(",", ""))
-                if totaldata[3] != "nil" and totaldata[3] != "N/A":
-                    season_revenue.last_year_profit = Decimal(totaldata[3].replace(",", ""))
-                if totaldata[4] != "nil" and totaldata[4] != "N/A":
-                    season_revenue.year_growth_rate = Decimal(totaldata[4].replace("%", "").replace(",", ""))
-                if totaldata[5] != "nil" and totaldata[5] != "N/A":
-                    season_revenue.acc_profit = Decimal(totaldata[5].replace(",", ""))
-                if totaldata[6] != "nil" and totaldata[6] != "N/A":
-                    season_revenue.acc_year_growth_rate = Decimal(totaldata[6].replace("%", "").replace(",", ""))
-                season_revenue.save()
-                """print(totaldata[0].decode("cp950").encode("utf-8") + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
-                      totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8") + " " +
-                      totaldata[4].decode("cp950").encode("utf-8") + " " + totaldata[5].decode("cp950").encode("utf-8") + " " +
-                      totaldata[6].decode("cp950").encode("utf-8"))"""
-            print("update " + stock_symbol + "season revenue")
-    return HttpResponse("update season revenue")
 
 class ParseStockSeasonRevenue(HTMLParser):
     def reset(self):
