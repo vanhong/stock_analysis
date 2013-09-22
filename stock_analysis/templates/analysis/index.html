@@ -18,17 +18,14 @@ $( document ).ajaxStart( function() {
 {% endblock %}
 
 {% block content %}
-  <div class="container">
-    <div class="row">
+  <div class="container" id="results">
+    <div class="row-fluid">
       <div class="span4 offset4">
         <input id="q" type="search" class="search-query">
         <button id="searchSubmit" class="btn">Search</button>
-        <div class="margin">
-        <div id="results"></div>
-        </div>
       </div>
     </div>
-    <div class="row">
+    <div class="row-fluid">
       <div class="span2">
         <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
           <li class="dropdown-submenu">

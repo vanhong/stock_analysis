@@ -7,7 +7,7 @@ from django.template.context import RequestContext
 from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
-from stocks.models import StockId, Revenue
+from stocks.models import StockId, MonthRevenue
 
 def test(request):
 	return render_to_response('test.html', context_instance = RequestContext(request))
@@ -30,9 +30,9 @@ def set_stockid(request):
 		stockid = request.GET['q']
 		if StockId.objects.filter(symbol=stockid):
 			request.session['stock_id'] = stockid
-			return HttpResponse(stockid + ' exists')
+			return month_revenue(request)
 		else:
-			return HttpResponse('error')
+			return HttpResponse('stockid error')
 
 def month_revenue(request):
 	symbol = request.session['stock_id']
@@ -116,3 +116,14 @@ def ajax_user_search(request):
 
 def index(request):
 	return HttpResponse('index')
+
+def test2(request):
+	return render_to_response('test3.html', context_instance = RequestContext(request))
+
+def highchart(request):
+	lu = { 'categories' : [ 'Fall 2008', 'Spring 2009','Fall 2009', 'Spring 2010', 'Fall 2010', 'Spring 2011'],\
+			'undergrad' : [18, 22, 30, 34, 40, 47],\
+			'grad' : [1, 2, 4, 4, 5, 7],\
+			'employee' : [2, 3, 0, 1, 1, 2] }
+	lu['total_enrolled'] = [sum(a) for a in zip(lu['undergrad'], lu['grad'],lu['employee'])]
+	return render_to_string('enrollment_chart.html', lu )
