@@ -118,7 +118,25 @@ def index(request):
 	return HttpResponse('index')
 
 def test2(request):
-	return render_to_response('test2.html', context_instance = RequestContext(request))
+	return render_to_response('test4.html', context_instance = RequestContext(request))
+
+def getJSON2(request):
+	symbol = '8114'
+	if StockId.objects.filter(symbol=symbol):
+		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('surrogate_key')
+		revenue_data = []
+		for revenue in month_revenues:
+			revenue_data.append(int(revenue.revenue))
+
+	data = {'revenue' : revenue_data}
+
+	json.dumps(data)
+
+
+	response_data = {'Tokyo' :  [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6],
+					'NewYork' : [-0.2, 0.8, 5.7, 11.3, 17.0, 22.0, 24.8, 24.1, 20.1, 14.1, 8.6, 2.5]}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
 
 def getJSON(request):
 	print('in getJSON')
