@@ -5,31 +5,89 @@
         #flot-placeholder{width:350px;height:300px;}       
     </style>
     <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="http://www.pureexample.com/js/flot/excanvas.min.js"></script><![endif]-->
-    <script type="text/javascript" src="http://www.pureexample.com/js/lib/jquery-1.8.3.min.js"></script>
-    <script type="text/javascript" src="http://www.pureexample.com/js/flot/jquery.flot.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-2.0.3.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/json2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/highcharts/highcharts.js"></script>
     <script type="text/javascript">
-        var data = [[1, 130], [2, 40], [3, 80], [4, 160], [5, 159], [6, 370], [7, 330], [8, 350], [9, 370], [10, 400], [11, 330], [12, 350]];
- 
-        var dataset = [{label: "line1",data: data}];
- 
-        var options = {
-            series: {
-                lines: { show: true },
-                points: {
-                    radius: 3,
-                    show: true
-                }
-            }
-        };
- 
-        $(document).ready(function () {
-            $.plot($("#flot-placeholder"), dataset, options);
+        $(document).ready(function(){
+            $.get('/getJSON', function(jData){
+                //alert(jData[0].Key);
+                //alert('finish get data=' + jData[0].Key);
+                alert(JSON.stringify(jData.chart));
+                alert(jData.chart)
+                //alert(jData.yAxis.style.color)
+                //alert(jData.chart[0].zoomType);
+                $('#container').highcharts({
+                    chart: {
+                        zoomType: 'xy'
+                    },
+                    title: jData.title,
+                    subtitle: jData.subtitle,
+                    xAxis: jData.xAxis,
+                    yAxis: [{ // Primary yAxis
+                        labels: {
+                            format: '{value}C',
+                            style: {
+                                color: '#89A54E'
+                            }
+                        },
+                        title: {
+                            text: 'Temperature',
+                            style: {
+                                color: '#89A54E'
+                            }
+                        }
+                    }, { // Secondary yAxis
+                        title: {
+                            text: 'Rainfall',
+                            style: {
+                                color: '#4572A7'
+                            }
+                        },
+                        labels: {
+                            format: '{value} mm',
+                            style: {
+                                color: '#4572A7'
+                            }
+                        },
+                        opposite: true
+                    }],
+                    tooltip: {
+                        shared: true
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'left',
+                        x: 120,
+                        verticalAlign: 'top',
+                        y: 100,
+                        floating: true,
+                        backgroundColor: '#FFFFFF'
+                    },
+                    series: [{
+                        name: 'Rainfall',
+                        color: '#4572A7',
+                        type: 'column',
+                        yAxis: 1,
+                        data: [49.9, 71.5, 106.4, 129.2, 144.0, 176.0, 135.6, 148.5, 216.4, 194.1, 95.6, 54.4],
+                        tooltip: {
+                            valueSuffix: ' mm'
+                        }
+                    }, {
+                        name: 'Temperature',
+                        color: '#89A54E',
+                        type: 'spline',
+                        data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6],
+                        tooltip: {
+                            valueSuffix: '°C'
+                        }
+                    }]
+                });
+            });
         });
     </script>
 </head>
 <body>
-    <div id="flot-placeholder"></div>
+    <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
 </body>
 </html>
-
-Read more at http://www.jqueryflottutorial.com/tw/making-first-jquery-flot-line-chart.html#TDXlhcekAJ6VoKEv.99 

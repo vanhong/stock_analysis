@@ -19,6 +19,7 @@ urlpatterns = patterns('',
     (r'^site/$', 'stock_analysis.views.site'),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
     (r'^test2/$', 'stock_analysis.views.test2'),
+    (r'^getJSON/$', 'stock_analysis.views.getJSON'),
     # Examples:
     # url(r'^$', 'stock_analysis.views.home', name='home'),
     # url(r'^stock_analysis/', include('stock_analysis.foo.urls')),

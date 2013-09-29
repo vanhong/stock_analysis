@@ -35,3 +35,4 @@ class SeasonRevenue(models.Model):
     year_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     acc_profit = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     acc_year_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
