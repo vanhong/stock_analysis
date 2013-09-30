@@ -36,12 +36,14 @@
                             }
                         },
                         title: {
+                            text: '',
                             style: {
                                 color: '#89A54E'
                             }
                         }
                     }, { // Secondary yAxis
                         title: {
+                            text: '',
                             style: {
                                 color: '#4572A7'
                             }
