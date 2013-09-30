@@ -2,6 +2,12 @@
 
 {% block analysis_content %}
   <h4>{{ stock_id }}{{ revenue_title }}</h4>
+  <script type="text/javascript">
+  var drawTool = new Draw.Tool();
+  drawTool.Init();
+  </script>
+  <div id="Result">
+  </div>
   <table class="table table-bordered">
     <thead>
       <tr>
