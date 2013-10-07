@@ -4,9 +4,10 @@
 import urllib, datetime
 from django.http import HttpResponse
 from HTMLParser import HTMLParser
+from bs4 import BeautifulSoup
 import time
 from decimal import Decimal
-from stocks.models import StockId, MonthRevenue, SeasonRevenue
+from stocks.models import StockId, MonthRevenue, SeasonRevenue, Dividend
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -97,7 +98,8 @@ def update_month_revenue(request):
             if not revenue.totaldata:
                 time.sleep(0.5)
                 webcode = urllib.urlopen(url)
-                revenue = ParseStockRevenue()   
+                revenue.feed(webcode.read())
+                webcode.close()
 
             if revenue.totaldata:
                 for i in xrange(len(revenue.totaldata)):
@@ -128,6 +130,96 @@ def update_month_revenue(request):
                       totaldata[6].decode("cp950").encode("utf-8"))"""
                 print("update " + stock_symbol)
     return HttpResponse("update revenue")
+
+def update_dividend_new(request):
+    stock_symbol = '2454'
+    url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stock_symbol + ".djhtm"
+    web = urllib.urlopen(url)
+    soup = BeautifulSoup(web)
+    dividend_datas = soup.find_all("td", { "class": "t2" })
+    for dividend_data in dividend_datas:
+        try:
+            year = int(dividend_data.contents[0])
+            cash_dividends = dividend_data.next_sibling
+            print year
+            print cash_dividends
+        except:
+            print "error"
+
+    return HttpResponse("update dividend")
+
+def update_dividend(request):
+    stock_ids = StockId.objects.all()
+    for stock_id in stock_ids:
+        stock_symbol = stock_id.symbol
+        url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stock_symbol + ".djhtm"
+        web = urllib.urlopen(url)
+        dividend_page = ParseDividend()
+        if web.code == 200:
+            dividend_page.feed(web.read())
+            web.close()
+        else:
+            return HttpResponse("update dividend error")
+        if not dividend_page.totaldata:
+            time.sleep(0.5)
+            web = urllib.urlopen(url)
+            dividend_page.feed(web.read())
+            web.close()
+        if dividend_page.totaldata:
+            for i in xrange(len(dividend_page.totaldata)):
+                totaldata = dividend_page.totaldata[i]
+                dividend = Dividend()
+                year = int(totaldata[0]) + 1911
+                dividend.year = year
+                dividend.surrogate_key = stock_symbol + "_" + str(year)
+                dividend.symbol = stock_symbol
+                dividend.cash_dividends = Decimal(totaldata[1])
+                dividend.stock_dividends_from_retained_earnings = Decimal(totaldata[2])
+                dividend.stock_dividends_from_capital_reserve = Decimal(totaldata[3])
+                dividend.stock_dividends = Decimal(totaldata[4])
+                dividend.total_dividends = Decimal(totaldata[5])
+                dividend.employee_stock_rate = Decimal(totaldata[6])
+                dividend.save()
+            print("update dividend " + stock_symbol)
+    return HttpResponse("update dividend")
+
+class ParseDividend(HTMLParser):
+    def reset(self):
+        HTMLParser.reset(self)
+        self.dividendinfo = False
+        self.cell = 0
+        self.dividenddata = []
+        self.totaldata = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'td':
+            if attrs[0][1] == 't2':
+                self.dividendinfo = True
+                self.cell %= 7
+                self.cell += 1
+            elif attrs[0][1] == 't3n1':
+                self.dividendinfo = True
+                self.cell %= 7
+                self.cell += 1
+    def handle_endtag(self, tag):
+        if tag == 'tr':
+            self.dividendinfo = False
+            self.cell = 0
+        if tag == 'td':
+            self.dividendinfo = False
+    def handle_data(self, text):
+        if self.dividendinfo:
+            if text:
+                try:
+                    data = Decimal(text)
+                    self.dividenddata.append(data)
+                except:
+                    self.cell = 0
+                    self.dividenddata = []
+                    self.dividendinfo = False
+                if self.cell == 7:
+                    self.totaldata.append(self.dividenddata)
+                    self.dividenddata = []
 
 class ParseStockRevenue(HTMLParser):
     def reset(self):
@@ -261,3 +353,4 @@ class ParseStockSeasonRevenue(HTMLParser):
                 self.total_data.append(self.revenue_data)
                 self.revenue_data = []
                 
+

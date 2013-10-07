@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+from decimal import *
 from django.http import HttpResponse, Http404
 from django.template.loader import get_template
 from django.shortcuts import render_to_response
@@ -7,7 +8,7 @@ from django.template.context import RequestContext
 from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
-from stocks.models import StockId, MonthRevenue
+from stocks.models import StockId, MonthRevenue, Dividend
 
 def test(request):
 	return render_to_response('test.html', context_instance = RequestContext(request))
@@ -30,9 +31,47 @@ def set_stockid(request):
 		stockid = request.GET['q']
 		if StockId.objects.filter(symbol=stockid):
 			request.session['stock_id'] = stockid
-			return month_revenue(request)
+			stockname = StockId.objects.get(symbol=stockid)
+			name = stockname.name.encode('utf-8') + '(' + str(stockid) + ')'
+			return HttpResponse('')
+			return render_to_response('analysis/index.html', {"stock_id": name}, 
+									  context_instance = RequestContext(request))
 		else:
 			return HttpResponse('stockid error')
+
+def dividend(request):
+	symbol = request.session['stock_id']
+	stockname = StockId.objects.get(symbol=symbol)
+	dividend_head = []
+	dividend_head.append(r'年度')
+	dividend_head.append(r'現金股利')
+	dividend_head.append(r'盈餘配股')
+	dividend_head.append(r'公積配股')
+	dividend_head.append(r'股票股利')
+	dividend_head.append(r'合計')
+	dividend_head.append(r'員工配股率%')
+	dividend_body = []
+	if StockId.objects.filter(symbol=symbol):
+		dividends = Dividend.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		if dividends:
+			for dividend in dividends:
+				item = []
+				item.append(dividend.year)
+				item.append(round(dividend.cash_dividends, 2))
+				item.append(round(dividend.stock_dividends_from_retained_earnings, 2))
+				item.append(round(dividend.stock_dividends_from_capital_reserve, 2))
+				item.append(round(dividend.stock_dividends, 2))
+				item.append(round(dividend.total_dividends, 2))
+				item.append(round(dividend.employee_stock_rate, 2))
+				dividend_body.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/dividend.html', {"stock_id": name, "dividend_head": dividend_head,
+				"dividend_body": dividend_body},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/dividend.html',{"stock_id": request.session["stock_id"]},
+		context_instance = RequestContext(request))
 
 def month_revenue(request):
 	symbol = request.session['stock_id']
@@ -118,14 +157,19 @@ def index(request):
 	return HttpResponse('index')
 
 def getRevenueChart(request):
-	symbol = '8114'
+	symbol = request.session['stock_id']
+	if not symbol:
+		symbol = '8114'
 	if StockId.objects.filter(symbol=symbol):
 		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('surrogate_key')
 		revenue_data = []
 		growth_rate_data = []
+		xAxis_categories = []
 		for revenue in month_revenues:
 			if revenue.revenue is not None and revenue.year_growth_rate is not None:
 				revenue_data.append(int(revenue.revenue))
-				growth_rate_data.append(int(revenue.year_growth_rate))
-	data = {'revenue' : revenue_data, 'growth_rate' : growth_rate_data}
+				growth_rate_data.append(float(revenue.year_growth_rate))
+				xAxis_categories.append(str(revenue.year) + '/' + str(revenue.month).zfill(2))
+	data = {'revenue' : revenue_data, 'growth_rate' : growth_rate_data, 'categories' : xAxis_categories}
+	
 	return HttpResponse(json.dumps(data), content_type="application/json")

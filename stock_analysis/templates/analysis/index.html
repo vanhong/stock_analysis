@@ -1,13 +1,20 @@
 {% extends "base.html" %}
 
 {% block extra_js %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/Draw.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}js/highstocks/js/highstock.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/highstocks/js/highstock.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/analysis.js"></script>
 <script type="text/javascript">
 $( document ).ready( function() {
   $( '#searchSubmit' ).click( function() {
     q = $( '#q' ).val();
-    $( '#results' ).html( '&nbsp;' ).load( '{% url "set_stockid" %}?q=' + q );
+    //stockid
+    //action , revenue_month
+    //load.(/action/stockid)
+    $( '#q' ).html( '&nbsp;' ).load( '{% url "set_stockid" %}?q=' + q , 
+      function(){ 
+        window.location.replace('/analysis/');
+    });
+    
   });
 });   
 
@@ -31,16 +38,13 @@ $( document ).ajaxStart( function() {
       <div class="span2">
         <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
           <li class="dropdown-submenu">
-            <a href="#">  基本分析</a>
+            <a class="" href="#">  基本分析</a>
             <ul class="dropdown-menu">
-              <li><a href="/basic/">基本資料</a></li>
-              <li><a href="#">股本形成</a></li>
-              <li><a href="#">股利政策</a></li>
+              <li><a id="revenue" href="/revenue/month/">營收資訊</a></li>
+              <li><a href="/dividend/">股利政策</a></li>
               <li><a href="#">經營績效</a></li>
               <li><a href="#">獲利能力</a></li>
-              <li><a href="#">土地資產</a></li>
               <li><a href="#">轉投資</a></li>
-              <li><a id="revenue" href="/revenue/month/">營收盈餘</a></li>
               <li><a href="#">重大行事歷</a></li>
               <li><a href="#">產銷組合</a></li>
             </ul>
@@ -49,10 +53,9 @@ $( document ).ajaxStart( function() {
           <li><a href="#">  籌碼分析</a></li>
         </ul>
       </div>
-      <div class="span9">
-          {% block analysis_content %}
-          {% endblock %}
-      </div>
+      <div class="span8">
+        {% block analysis_content %}
+        {% endblock %}
     </div>
   </div>
 {% endblock %}
