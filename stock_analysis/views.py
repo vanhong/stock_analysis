@@ -9,12 +9,7 @@ from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend
-
-def test(request):
-	return render_to_response('test.html', context_instance = RequestContext(request))
-
-def testStockid(request):
-	return render_to_response('analysis/testStockid.html', context_instance = RequestContext(request))
+from financial.models import SeasonFinancialRatio
 
 def site(request):
 	return render_to_response('site.html', context_instance = RequestContext(request))
@@ -33,14 +28,20 @@ def set_stockid(request):
 			request.session['stock_id'] = stockid
 			stockname = StockId.objects.get(symbol=stockid)
 			name = stockname.name.encode('utf-8') + '(' + str(stockid) + ')'
-			return HttpResponse('')
 			return render_to_response('analysis/index.html', {"stock_id": name}, 
 									  context_instance = RequestContext(request))
 		else:
 			return HttpResponse('stockid error')
 
+def getSymbol(request):
+	try:
+		symbol = request.session['stock_id']
+	except:
+		symbol = '2330'
+	return symbol
+
 def dividend(request):
-	symbol = request.session['stock_id']
+	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	dividend_head = []
 	dividend_head.append(r'年度')
@@ -73,8 +74,37 @@ def dividend(request):
 		'analysis/dividend.html',{"stock_id": request.session["stock_id"]},
 		context_instance = RequestContext(request))
 
+def profitability(request):
+	symbol = getSymbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	profit_title = r'季獲利能力'
+	profit_head = []
+	profit_head.append(r'季度')
+	profit_head.append(r'毛利率')
+	profit_head.append(r'營益率')
+	profit_head.append(r'稅前盈利率')
+	profit_head.append(r'稅後盈利率')
+	profit_body = []
+	if StockId.objects.filter(symbol=symbol):
+		season_profits = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		if season_profits:
+			for profit in season_profits:
+				item = []
+				item.append(str(profit.year)+'Q'+str(profit.season))
+				item.append(profit.gross_profit_margin)
+				item.append(profit.operating_profit_margin)
+				item.append(profit.net_before_tax_profit_margin)
+				item.append(profit.net_after_tax_profit_margin)
+				profit_body.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/profitability.html', {"stock_id": name, "profit_title": profit_title,
+				"profit_head": profit_head, "profit_body": profit_body},
+				context_instance = RequestContext(request))
+	return HttpResponse('profitability')
+
 def month_revenue(request):
-	symbol = request.session['stock_id']
+	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	revenue_title = r'月營收明細'
 	revenue_head = []
@@ -106,11 +136,11 @@ def month_revenue(request):
 				"revenue_head": revenue_head, "revenue_body": revenue_body},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/index.html',{"stock_id": request.session["stock_id"]},
+		'analysis/index.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
 def season_revenue(request):
-	symbol = request.session['stock_id']
+	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	revenue_title = r'季盈餘明細'
 	revenue_head = []
@@ -157,7 +187,7 @@ def index(request):
 	return HttpResponse('index')
 
 def getRevenueChart(request):
-	symbol = request.session['stock_id']
+	symbol = getSymbol(request)
 	if not symbol:
 		symbol = '8114'
 	if StockId.objects.filter(symbol=symbol):
@@ -172,4 +202,19 @@ def getRevenueChart(request):
 				xAxis_categories.append(str(revenue.year) + '/' + str(revenue.month).zfill(2))
 	data = {'revenue' : revenue_data, 'growth_rate' : growth_rate_data, 'categories' : xAxis_categories}
 	
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
+def getDividendChart(request):
+	data = {}
+	symbol = getSymbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		dividends = Dividend.objects.filter(symbol=symbol).order_by('-surrogate_key')[0:10]
+		xAxis_categories = []
+		cash_dividends = []
+		stock_dividends = []
+		for dividend in dividends:
+			xAxis_categories.append(str(dividend.year))
+			cash_dividends.append(round(float(dividend.cash_dividends), 2))
+			stock_dividends.append(round(float(dividend.stock_dividends), 2))
+	data = {'categories': xAxis_categories[::-1], 'cash_dividends': cash_dividends[::-1], 'stock_dividends': stock_dividends[::-1]}
 	return HttpResponse(json.dumps(data), content_type="application/json")

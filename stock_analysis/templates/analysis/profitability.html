@@ -1,0 +1,29 @@
+{% extends "analysis/index.html" %}
+
+{% block analysis_content %}
+  <h4>{{ stock_id }}{{ profit_title }}</h4>
+  <script type="text/javascript">
+  var drawTool = new DrawProfitbility.Tool();
+  drawTool.Init();
+  </script>
+  <div id="Result">
+  </div>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        {% for head in profit_head %}
+        <td>{{ head }}</td>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for profit_items in profit_body %}
+      <tr>
+        {% for item in profit_items %}
+        <td>{{ item }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

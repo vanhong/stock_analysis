@@ -5,14 +5,18 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/analysis.js"></script>
 <script type="text/javascript">
 $( document ).ready( function() {
+
+  $( '#analysis').attr('class', 'active');
+
   $( '#searchSubmit' ).click( function() {
+
     q = $( '#q' ).val();
     //stockid
     //action , revenue_month
     //load.(/action/stockid)
     $( '#q' ).html( '&nbsp;' ).load( '{% url "set_stockid" %}?q=' + q , 
       function(){ 
-        window.location.replace('/analysis/');
+        window.location.replace(window.location.pathname);
     });
     
   });
@@ -42,8 +46,7 @@ $( document ).ajaxStart( function() {
             <ul class="dropdown-menu">
               <li><a id="revenue" href="/revenue/month/">營收資訊</a></li>
               <li><a href="/dividend/">股利政策</a></li>
-              <li><a href="#">經營績效</a></li>
-              <li><a href="#">獲利能力</a></li>
+              <li><a href="/profitability/">獲利能力</a></li>
               <li><a href="#">轉投資</a></li>
               <li><a href="#">重大行事歷</a></li>
               <li><a href="#">產銷組合</a></li>
