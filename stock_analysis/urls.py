@@ -21,6 +21,7 @@ urlpatterns = patterns('',
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
     (r'^getRevenueChart/$', 'stock_analysis.views.getRevenueChart'),
     (r'^getDividendChart/$', 'stock_analysis.views.getDividendChart'),
+    (r'^getProfitabilityChart/$', 'stock_analysis.views.getProfitabilityChart'),
     (r'^update_season_financial_ratio/$', 'financial.views.update_season_financial_ratio'),
     # Examples:
     # url(r'^$', 'stock_analysis.views.home', name='home'),

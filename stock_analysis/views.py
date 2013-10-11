@@ -71,7 +71,7 @@ def dividend(request):
 				"dividend_body": dividend_body},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/dividend.html',{"stock_id": request.session["stock_id"]},
+		'analysis/dividend.html',{"stock_id": getSymbol(request)},
 		context_instance = RequestContext(request))
 
 def profitability(request):
@@ -101,7 +101,9 @@ def profitability(request):
 				'analysis/profitability.html', {"stock_id": name, "profit_title": profit_title,
 				"profit_head": profit_head, "profit_body": profit_body},
 				context_instance = RequestContext(request))
-	return HttpResponse('profitability')
+	return render_to_response(
+		'analysis/profitability.html',{"stock_id": getSymbol(request)},
+		context_instance = RequestContext(request))
 
 def month_revenue(request):
 	symbol = getSymbol(request)
@@ -217,4 +219,25 @@ def getDividendChart(request):
 			cash_dividends.append(round(float(dividend.cash_dividends), 2))
 			stock_dividends.append(round(float(dividend.stock_dividends), 2))
 	data = {'categories': xAxis_categories[::-1], 'cash_dividends': cash_dividends[::-1], 'stock_dividends': stock_dividends[::-1]}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
+def getProfitabilityChart(request):
+	data = {}
+	symbol = getSymbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		profitabilitys = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('surrogate_key')
+		xAxis_categories = []
+		gross_profit_margins = []
+		operating_profit_margins = []
+		net_before_tax_profit_margins = []
+		net_after_tax_profit_margins = []
+		for profitability in profitabilitys:
+			xAxis_categories.append(str(profitability.year) + "Q" + str(profitability.season))
+			gross_profit_margins.append(float(profitability.gross_profit_margin))
+			operating_profit_margins.append(float(profitability.operating_profit_margin))
+			net_before_tax_profit_margins.append(float(profitability.net_before_tax_profit_margin))
+			net_after_tax_profit_margins.append(float(profitability.net_after_tax_profit_margin))
+	data = {'categories': xAxis_categories, 'gross_profit_margins': gross_profit_margins, 
+			'operating_profit_margins': operating_profit_margins, 'net_before_tax_profit_margins': net_before_tax_profit_margins,
+			'net_after_tax_profit_margins': net_after_tax_profit_margins}
 	return HttpResponse(json.dumps(data), content_type="application/json")
