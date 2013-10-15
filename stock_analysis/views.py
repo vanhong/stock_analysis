@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import json
 from decimal import *
 from django.http import HttpResponse, Http404
@@ -9,6 +9,7 @@ from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
 
 def site(request):
@@ -218,3 +219,136 @@ def getDividendChart(request):
 			stock_dividends.append(round(float(dividend.stock_dividends), 2))
 	data = {'categories': xAxis_categories[::-1], 'cash_dividends': cash_dividends[::-1], 'stock_dividends': stock_dividends[::-1]}
 	return HttpResponse(json.dumps(data), content_type="application/json")
+
+def filter_index(request):
+	return render_to_response(
+		'filter/filter_index.html', {},
+		context_instance = RequestContext(request))
+
+@csrf_exempt
+def filter_start(request):
+	print 'Start to Filter'
+	conditions = {}
+	for key, value in request.POST.iteritems():
+		condition = key.split('-')[0];
+		para = key.split('-')[1];
+		if conditions.has_key(condition) is False:
+			conditions[condition] = {para: value}
+		else:
+			conditions[condition][para] = value
+		print 'condition=' + condition + ', para=' + para + ', value=' + value
+		print len(conditions[condition])
+
+	results = {}
+	stock_ids = StockId.objects.all()
+	for stockid in stock_ids:
+		passed = True
+		dataArr = []
+		for key, value in conditions.iteritems(): #逐一條件做篩選
+			if key == 'MonthRevenueContinuousAnnualGrowth': #月營收連續幾個月年增率>多少
+				data = ''
+				monthCnt = value['MonthCnt']
+				MonthRevenueAnnualGrowth = value['MonthRevenueAnnualGrowth']
+				revenues = MonthRevenue.objects.filter(symbol=stockid.symbol).order_by('-year', '-month')
+				if monthCnt == '' or MonthRevenueAnnualGrowth == '':
+					#print 'empty input to filter MonthRevenueContinuousAnnualGrowth'
+					continue
+
+				if len(revenues) >= int(monthCnt):
+					for i in range(0, int(monthCnt)):
+						if revenues[i].year_growth_rate < Decimal(MonthRevenueAnnualGrowth):
+							passed = False
+						data += str(revenues[i].year) + '-' + str(revenues[i].month) + '=' + str(revenues[i].year_growth_rate) + '%; '
+					if passed:
+						dataArr.append('[' + data + ']')
+				else:
+					passed = False
+			elif key == 'SeasonOPM':
+				SeasonCnt = value['SeasonCnt']
+				SeasonOPM = value['SeasonOPM']
+				OverUnder = value['OverUnder']
+				ratios = SeasonFinancialRatio.objects.filter(symbol=stockid.symbol).order_by('-year','-season')
+				dataList = [d.operating_profit_margin for d in ratios]
+				data = checkData(dataList, SeasonCnt, OverUnder, SeasonOPM)
+				#print 'get checkData return=' + data
+				if data != '':
+					dataArr.append('SeasonOPM=' + data)
+				else:
+					passed = False
+			elif key == 'SeasonGPM':
+				SeasonCnt = value['SeasonCnt']
+				SeasonGPM = value['SeasonGPM']
+				OverUnder = value['OverUnder']
+				ratios = SeasonFinancialRatio.objects.filter(symbol=stockid.symbol).order_by('-year','-season')
+				dataList = [d.gross_profit_margin for d in ratios]
+				data = checkData(dataList, SeasonCnt, OverUnder, SeasonGPM)
+				print 'get GPM checkData return=' + data
+				if data != '':
+					dataArr.append('SeasonGPM=' + data)
+				else:
+					passed = False
+
+		if passed:
+			results[stockid.symbol] = ';'.join(dataArr)
+			#print stockid.symbol
+			print 'key=' + stockid.symbol + ', value=' + results[stockid.symbol]
+			#print revenues[0].year
+	return render_to_response(
+				'filter/filter_result.html', {
+				"results": results},
+				context_instance = RequestContext(request))
+
+	'''
+	tradingDays = CorpTrade.objects.values_list('trade_date', flat=True).distinct()
+	if tradingDays:
+		for item in tradingDays:
+			print item
+	else:
+		return HttpResponse('Query tradingDays empty')
+
+	overBuyDays = 0
+	if 'overBuyDays' in request.POST:
+		overBuyDays = request.POST['overBuyDays']
+	
+	end_date = date.today()
+	d = date.today() - timedelta(days=10)
+	delta = timedelta(days=1)
+	matches = {}
+	while d <= end_date:
+		print d.strftime("%Y-%m-%d")
+		d += delta
+		corpTrades = CorpTrade.objects.filter(trade_date = d.strftime("%Y%m%d")).filter(foreign_buy__gt=F('foreign_sell'))
+		if corpTrades:
+			for item in corpTrades:
+				if matches.has_key(item.symbol) is False:
+					matches[item.symbol] = 1
+				else:
+					matches[item.symbol] += 1
+				#print item.symbol
+		for key, value in matches.items():
+			if value > 1:
+				print(key + ' = ' + str(value))'''
+
+def checkData(dataList, cnt, overunder, condition):
+	passed = True
+	data = ''
+	if len(dataList) >= int(cnt):
+		for i in range(0, int(cnt)):
+			if overunder == 'over':
+				if dataList[i] < Decimal(condition):
+					passed = False
+			else:
+				if dataList[i] > Decimal(condition):
+					passed = False
+			data += str(dataList[i]) + '%; '
+		if passed:
+			return '[' + data + ']'
+		else:
+			return ''
+	else:
+		return ''
+
+
+def daterange(start_date, end_date):
+	for n in range(int ((end_date - start_date).days)):
+		yield start_date + timedelta(n)

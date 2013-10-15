@@ -1,0 +1,11 @@
+
+  <div id="Result">
+  		The filtered results!
+  </div>
+  <table class="table table-bordered" style=" margin:2em; ">
+  	{% for key, value in results.items %}
+      <tr>
+        <td>{{ key }}</td><td>{{ value }}</td>
+      </tr>
+    {% endfor %}
+  </table>

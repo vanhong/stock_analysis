@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/StockFilter.js"></script>
+<script type="text/javascript">
+	var filter = new StockFilter.Filter();
+	filter.Init();
+	
+</script>
+
+<style type="text/css">
+.condition{
+	margin:2em;
+}
+
+.conditionTable td{
+	border: solid 1px #33333;
+}
+
+.conditionTable input.dateCnt{
+	border: solid 1px #33333;
+	width: 3em;
+}
+
+</style>
+
+<div class="condition">
+<!--
+<input type="text" id="MonthRevenueAnnualGrowth" data-provide="typeahead" placeholder="月營收年增大於"/>
+<input type="text" id="SeasonRevenueAnnualGrowth" data-provide="typeahead" placeholder="季營收年增大於"/>
+<br/>
+<input type="text" id="ForeignOverBuy" data-provide="typeahead" placeholder="外資買超連續幾個交易日"/>
+<input type="text" id="data" SecurityOverBuy-provide="typeahead" placeholder="投信買超連續幾個交易日"/>
+-->
+<button type="button" id="StartFilter" class="btn btn-primary">Go</button>
+</div>
+<div class="condition">
+<fieldset>
+<legend>月營收</legend>
+	<table class="conditionTable">
+		<tr>
+			<td>
+				<!--
+				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
+				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
+				-->
+				<input type="checkbox" id="Con-MonthRevenueContinuousAnnualGrowth" class="css-checkbox" checked="checked"/>
+				<label for="Con-MonthRevenueContinuousAnnualGrowth" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="text" id="MonthRevenueContinuousAnnualGrowth-MonthCnt" class="dateCnt"/>月
+			<td>
+			<td>
+				年增率大於 <input type="text" id="MonthRevenueContinuousAnnualGrowth-MonthRevenueAnnualGrowth"  placeholder=""/> (%)
+			<td>
+		</tr>
+	</table>	
+</fieldset>
+
+<fieldset>
+<legend>財務比率</legend>
+	<table class="conditionTable">
+		<tr>
+			<td>
+				<!--
+				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
+				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
+				-->
+				<input type="checkbox" id="Con-SeasonOPM" class="css-checkbox" checked="checked"/>
+				<label for="Con-SeasonOPM" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="text" id="SeasonOPM-SeasonCnt"   class="dateCnt"/>季
+			<td>
+			<td>
+				營益率 <select id="SeasonOPM-OverUnder" style="width:4em"><option value="over">></option><option value="under"><</option> </select> <input type="text" id="SeasonOPM-SeasonOPM" /> (%)
+			<td>
+		</tr>
+		<tr>
+			<td>
+				<!--
+				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
+				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
+				-->
+				<input type="checkbox" id="Con-SeasonGPM" class="css-checkbox" checked="checked"/>
+				<label for="Con-SeasonGPM" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="text" id="SeasonGPM-SeasonCnt"  class="dateCnt"/>季
+			<td>
+			<td>
+				毛益率 <select id="SeasonGPM-OverUnder" style="width:4em"><option value="over">></option><option value="under"><</option> </select> <input type="text" id="SeasonGPM-SeasonGPM"  placeholder=""/> (%)
+			<td>
+		</tr>
+	</table>	
+</fieldset>
+</div>
+
+<div id="FilterResult" class="condition"></div>
+{% endblock %}
