@@ -52,7 +52,7 @@ class SeasonBalanceSheet(models.Model):
     season = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
     cash = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-    short_term_investement = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    short_term_investment = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     accounts_and_notes_receivable = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     other_receivable = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     short_term_debt = models.DecimalField(max_digits=20, decimal_places=0, null=True)

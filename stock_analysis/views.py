@@ -11,9 +11,6 @@ from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend
 from financial.models import SeasonFinancialRatio
 
-def site(request):
-	return render_to_response('site.html', context_instance = RequestContext(request))
-
 def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))
 

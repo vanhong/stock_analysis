@@ -35,7 +35,9 @@
                                         return this.value;
                                     }
                                 }
-                            }
+                            },
+                            max: 12,
+                            minRange: 12,
                     }],
                     yAxis: [{ // Primary yAxis
                         labels: {
@@ -89,15 +91,15 @@
                     }, {
                         name: '成長率',
                         color: '#89A54E',
-                        type: 'spline',
+                        type: 'line',
                         data: jData.growth_rate,
                         tooltip: {
                             valueSuffix: '%'
                         }
-                    }]//,
-                    //scrollbar: {
-                    //    enabled: true
-                    //}
+                    }],
+                    scrollbar: {
+                        enabled: true
+                    }
                 });    
             });
         }
@@ -230,49 +232,49 @@
                 //alert(JSON.stringify(jData));
                 //$('#Result').html(jData);
                 $('#Result').highcharts({
-            title: {
-                text: '獲利能力',
-                x: -20 //center
-            },
-            xAxis: {
-                categories: jData.categories
-            },
-            yAxis: {
-                title: {
-                    text: ''
-                },
-                labels: {
-                            format: '{value}%'
+                    title: {
+                        text: '獲利能力',
+                        x: -20 //center
+                    },
+                    xAxis: {
+                        categories: jData.categories
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
                         },
-                plotLines: [{
-                    value: 0,
-                    width: 1,
-                    color: '#808080'
-                }]
-            },
-            tooltip: {
-                valueSuffix: ''
-            },
-            legend: {
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                borderWidth: 0
-            },
-            series: [{
-                name: '毛利率',
-                data: jData.gross_profit_margins
-            }, {
-                name: '營益率',
-                data: jData.operating_profit_margins
-            }, {
-                name: '稅前淨利率',
-                data: jData.net_before_tax_profit_margins
-            }, {
-                name: '稅後淨利率',
-                data: jData.net_after_tax_profit_margins
-            }]
-        });
+                        labels: {
+                                    format: '{value}%'
+                                },
+                        plotLines: [{
+                            value: 0,
+                            width: 1,
+                            color: '#808080'
+                        }]
+                    },
+                    tooltip: {
+                        valueSuffix: ''
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'middle',
+                        borderWidth: 0
+                    },
+                    series: [{
+                        name: '毛利率',
+                        data: jData.gross_profit_margins
+                    }, {
+                        name: '營益率',
+                        data: jData.operating_profit_margins
+                    }, {
+                        name: '稅前淨利率',
+                        data: jData.net_before_tax_profit_margins
+                    }, {
+                        name: '稅後淨利率',
+                        data: jData.net_after_tax_profit_margins
+                    }]
+                });
             });
         }
 
@@ -288,3 +290,10 @@
     }
     DrawProfitbility.Tool = Tool;
 } (window.DrawProfitbility = window.DrawProfitbility || {}));
+
+(function(DrawPerformancePerShare) {
+    function Tool () {
+        // body...
+    }
+    DrawPerformancePerShare.Tool = Tool;
+} (window.DrawPerformancePerShare = window.DrawPerformancePerShare || {}));

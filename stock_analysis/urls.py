@@ -6,23 +6,34 @@ from stock_analysis.views import ajax_user_search, set_stockid
 # from django.contrib import admin
 # admin.autodiscover()
 
-urlpatterns = patterns('',
-    (r'^home/index/$', 'stock_analysis.views.home'),
-    (r'^analysis/$', 'stock_analysis.views.month_revenue'),
+urlpatterns = patterns('stock_analysis.views',
+    (r'^home/index/$', 'home'),
+    (r'^analysis/$', 'month_revenue'),
+    (r'^revenue/month/$', 'month_revenue'),
+    (r'^revenue/season/$', 'season_revenue'),
+    (r'^dividend/$', 'dividend'),
+    (r'^profitability/$', 'profitability'),
+    (r'^getRevenueChart/$', 'getRevenueChart'),
+    (r'^getDividendChart/$', 'getDividendChart'),
+    (r'^getProfitabilityChart/$', 'getProfitabilityChart'),
+)
+
+urlpatterns += patterns('stocks.views',
+    (r'^update_stockid/$', 'update_stock_id'),
+    (r'^update_dividend/$', 'update_dividend'),
+    (r'^update_month_revenue/$', 'update_month_revenue'),
+)
+
+urlpatterns += patterns('financial.views',
+    (r'^update_season_financial_ratio/$', 'update_season_financial_ratio'),
+    (r'^update_season_balance_sheet/$', 'update_season_balance_sheet'),
+)
+
+urlpatterns += patterns('',
     url( r'^set_stockid/$', set_stockid, name = 'set_stockid'),
-    (r'^revenue/month/$', 'stock_analysis.views.month_revenue'),
-    (r'^revenue/season/$', 'stock_analysis.views.season_revenue'),
-    (r'^dividend/$', 'stock_analysis.views.dividend'),
-    (r'^profitability/$', 'stock_analysis.views.profitability'),
-    (r'^update_stockid/$', 'stocks.views.update_stock_id'),
-    (r'^update_dividend/$', 'stocks.views.update_dividend'),
-    (r'^update_month_revenue/$', 'stocks.views.update_month_revenue'),
-    (r'^site/$', 'stock_analysis.views.site'),
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
-    (r'^getRevenueChart/$', 'stock_analysis.views.getRevenueChart'),
-    (r'^getDividendChart/$', 'stock_analysis.views.getDividendChart'),
-    (r'^getProfitabilityChart/$', 'stock_analysis.views.getProfitabilityChart'),
-    (r'^update_season_financial_ratio/$', 'financial.views.update_season_financial_ratio'),
+   
+    
     # Examples:
     # url(r'^$', 'stock_analysis.views.home', name='home'),
     # url(r'^stock_analysis/', include('stock_analysis.foo.urls')),
