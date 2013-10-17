@@ -27,17 +27,17 @@
                     title: jData.title,
                     subtitle: jData.subtitle,
                     xAxis: [{
-                            categories: jData.categories, 
-                            labels: {
-                                //step: 6,
-                                formatter: function() {
-                                    if (this.value.endsWith('01')){
-                                        return this.value;
-                                    }
+                        categories: jData.categories, 
+                        labels: {
+                            //step: 6,
+                            formatter: function() {
+                                if (this.value.endsWith('01') || this.value.endsWith('06')){
+                                    return this.value;
                                 }
-                            },
-                            max: 12,
-                            //minRange: 12,
+                            }
+                        },
+                        max: 12,
+                        minRange: 12
                     }],
                     yAxis: [{ // Primary yAxis
                         labels: {
@@ -51,7 +51,9 @@
                             style: {
                                 color: '#89A54E'
                             }
-                        }
+                        },
+                        max : 200,
+                        min : -50
                     }, { // Secondary yAxis
                         title: {
                             text: '',
@@ -65,6 +67,7 @@
                                 color: '#4572A7'
                             }
                         },
+                        min : 0,
                         opposite: true
                     }],
                     tooltip: {
