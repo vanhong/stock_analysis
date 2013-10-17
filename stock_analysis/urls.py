@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, include, url
+﻿from django.conf.urls import patterns, include, url
 from django.conf.urls import *
 from django.conf import settings
 from stock_analysis.views import ajax_user_search, set_stockid
@@ -43,4 +43,9 @@ urlpatterns += patterns('',
 
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
+)
+
+urlpatterns += patterns('stock_analysis.views',
+    url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
+    url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
 )

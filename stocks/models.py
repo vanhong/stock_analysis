@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 
 class StockId(models.Model):
     symbol = models.CharField(max_length=10, primary_key=True)
@@ -7,7 +7,7 @@ class StockId(models.Model):
     company_type = models.CharField(max_length=20)
      
     def __unicode__(self):
-        return u'%s %s' % (self.symbol, sylf.name)
+        return u'%s %s' % (self.symbol, self.name)
 
 class MonthRevenue(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
