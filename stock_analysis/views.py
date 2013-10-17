@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 ﻿# -*- coding: utf-8 -*-
-=======
-# -*- coding: utf-8 -*-
->>>>>>> a01702b32d4d24d8177f96b699c8e73ef30255bf
+
 import json
 from decimal import *
 from django.http import HttpResponse, Http404
@@ -13,17 +10,9 @@ from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend
-<<<<<<< HEAD
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
 
-def site(request):
-	return render_to_response('site.html', context_instance = RequestContext(request))
-
-=======
-from financial.models import SeasonFinancialRatio
-
->>>>>>> a01702b32d4d24d8177f96b699c8e73ef30255bf
 def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))
 
@@ -81,11 +70,7 @@ def dividend(request):
 				"dividend_body": dividend_body},
 				context_instance = RequestContext(request))
 	return render_to_response(
-<<<<<<< HEAD
-		'analysis/dividend.html',{"stock_id": request.session["stock_id"]},
-=======
 		'analysis/dividend.html',{"stock_id": getSymbol(request)},
->>>>>>> a01702b32d4d24d8177f96b699c8e73ef30255bf
 		context_instance = RequestContext(request))
 
 def profitability(request):
@@ -115,13 +100,9 @@ def profitability(request):
 				'analysis/profitability.html', {"stock_id": name, "profit_title": profit_title,
 				"profit_head": profit_head, "profit_body": profit_body},
 				context_instance = RequestContext(request))
-<<<<<<< HEAD
-	return HttpResponse('profitability')
-=======
 	return render_to_response(
 		'analysis/profitability.html',{"stock_id": getSymbol(request)},
 		context_instance = RequestContext(request))
->>>>>>> a01702b32d4d24d8177f96b699c8e73ef30255bf
 
 def month_revenue(request):
 	symbol = getSymbol(request)
@@ -239,7 +220,6 @@ def getDividendChart(request):
 	data = {'categories': xAxis_categories[::-1], 'cash_dividends': cash_dividends[::-1], 'stock_dividends': stock_dividends[::-1]}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-<<<<<<< HEAD
 def filter_index(request):
 	return render_to_response(
 		'filter/filter_index.html', {},
@@ -372,7 +352,7 @@ def checkData(dataList, cnt, overunder, condition):
 def daterange(start_date, end_date):
 	for n in range(int ((end_date - start_date).days)):
 		yield start_date + timedelta(n)
-=======
+
 def getProfitabilityChart(request):
 	data = {}
 	symbol = getSymbol(request)
@@ -393,4 +373,3 @@ def getProfitabilityChart(request):
 			'operating_profit_margins': operating_profit_margins, 'net_before_tax_profit_margins': net_before_tax_profit_margins,
 			'net_after_tax_profit_margins': net_after_tax_profit_margins}
 	return HttpResponse(json.dumps(data), content_type="application/json")
->>>>>>> a01702b32d4d24d8177f96b699c8e73ef30255bf

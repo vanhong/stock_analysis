@@ -31,19 +31,6 @@ urlpatterns += patterns('financial.views',
 
 urlpatterns += patterns('',
     url( r'^set_stockid/$', set_stockid, name = 'set_stockid'),
-<<<<<<< HEAD
-    (r'^revenue/month/$', 'stock_analysis.views.month_revenue'),
-    (r'^revenue/season/$', 'stock_analysis.views.season_revenue'),
-    (r'^dividend/$', 'stock_analysis.views.dividend'),
-    (r'^profitability/$', 'stock_analysis.views.profitability'),
-    (r'^update_stockid/$', 'stocks.views.update_stock_id'),
-    (r'^update_dividend/$', 'stocks.views.update_dividend'),
-    (r'^update_month_revenue/$', 'stocks.views.update_month_revenue'),
-    (r'^update_corp_trade/$', 'chip.views.update_corp_trade'),
-    (r'^update_price/$', 'price.views.update_price'),
-    (r'^site/$', 'stock_analysis.views.site'),
-=======
->>>>>>> a01702b32d4d24d8177f96b699c8e73ef30255bf
     (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.STATIC_ROOT}),
    
     

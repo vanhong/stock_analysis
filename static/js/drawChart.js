@@ -37,7 +37,7 @@
                                 }
                             },
                             max: 12,
-                            minRange: 12,
+                            //minRange: 12,
                     }],
                     yAxis: [{ // Primary yAxis
                         labels: {
