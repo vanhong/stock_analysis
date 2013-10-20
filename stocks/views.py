@@ -7,7 +7,7 @@ from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
 import time
 from decimal import Decimal
-from stocks.models import StockId, MonthRevenue, SeasonRevenue, Dividend
+from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -267,7 +267,7 @@ class ParseStockRevenue(HTMLParser):
 
 def update_season_profit(request):
     stock_ids = StockId.objects.all()
-    season_revenue = SeasonRevenue.objects.all()
+    season_revenue = SeasonProfit.objects.all()
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zcha_" + stock_symbol + ".djhtm"
@@ -290,7 +290,7 @@ def update_season_profit(request):
                 totaldata = revenue.total_data[i]
                 year = int(totaldata[0].split("Q")[0].split(".")[0]) + 1911
                 season = int(totaldata[0].split("Q")[0].split(".")[1])
-                season_revenue = SeasonRevenue()
+                season_revenue = SeasonProfit()
                 season_revenue.surrogate_key = stock_symbol + "_" + str(year) + str(season).zfill(2)
                 season_revenue.year = year
                 season_revenue.season = season

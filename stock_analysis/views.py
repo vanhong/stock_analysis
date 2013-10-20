@@ -9,7 +9,7 @@ from django.template.context import RequestContext
 from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
-from stocks.models import StockId, MonthRevenue, Dividend
+from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
 
@@ -154,7 +154,7 @@ def season_revenue(request):
 	revenue_head.append(r'年增率')
 	revenue_body = []
 	if StockId.objects.filter(symbol=symbol):
-		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		season_revenues = SeasonProfit.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if season_revenues:
 			for revenue in season_revenues:
 				item = []
@@ -187,10 +187,45 @@ def ajax_user_search(request):
 def index(request):
 	return HttpResponse('index')
 
+def getSeasonRevenueChart(request):
+	symbol = getSymbol(request)
+	maxProfit = 0
+	maxGrowthRate = -100
+	minGrowthRate = 10000
+	dataNum = 0
+	if StockId.objects.filter(symbol=symbol):
+		season_profits = SeasonProfit.objects.filter(symbol=symbol).order_by('surrogate_key')
+		profit_data = []
+		growth_rate_data = []
+		xAxis_categories = []
+		for profit in season_profits:
+			if profit.profit is not None and profit.year_growth_rate is not None:
+				int_season_profit = int(profit.profit)
+				if int_season_profit > maxProfit:
+					maxProfit = int_season_profit
+				profit_data.append(int_season_profit)
+				float_year_growth_rate = float(profit.year_growth_rate)
+				if float_year_growth_rate > maxGrowthRate:
+					maxGrowthRate = float_year_growth_rate
+				if float_year_growth_rate < minGrowthRate:
+					minGrowthRate = float_year_growth_rate
+				growth_rate_data.append(float_year_growth_rate)
+				xAxis_categories.append(str(profit.year) + 'Q' + str(profit.season))
+		if len(profit_data) > 24:
+			dataNum = 24
+		else:
+			dataNum = len(profit_data)
+	data = {'revenue' : profit_data, 'growth_rate': growth_rate_data, 'categories' : xAxis_categories,
+			'maxRevenue': maxProfit, 'maxGrowthRate' : maxGrowthRate, 'minGrowthRate': minGrowthRate,
+			'dataNum' : dataNum}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
 def getRevenueChart(request):
 	symbol = getSymbol(request)
-	if not symbol:
-		symbol = '8114'
+	maxRevenue = 0
+	maxGrowthRate = -100
+	minGrowthRate = 10000
+	dataNum = 0
 	if StockId.objects.filter(symbol=symbol):
 		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('surrogate_key')
 		revenue_data = []
@@ -198,10 +233,24 @@ def getRevenueChart(request):
 		xAxis_categories = []
 		for revenue in month_revenues:
 			if revenue.revenue is not None and revenue.year_growth_rate is not None:
-				revenue_data.append(int(revenue.revenue))
-				growth_rate_data.append(float(revenue.year_growth_rate))
+				intMonthRevenue = int(revenue.revenue)
+				if intMonthRevenue > maxRevenue:
+					maxRevenue = intMonthRevenue
+				revenue_data.append(intMonthRevenue)
+				floatYearGrowthRate = float(revenue.year_growth_rate)
+				if floatYearGrowthRate > maxGrowthRate:
+					maxGrowthRate = floatYearGrowthRate
+				if floatYearGrowthRate < minGrowthRate:
+					minGrowthRate = floatYearGrowthRate
+				growth_rate_data.append(floatYearGrowthRate)
 				xAxis_categories.append(str(revenue.year) + '/' + str(revenue.month).zfill(2))
-	data = {'revenue' : revenue_data, 'growth_rate' : growth_rate_data, 'categories' : xAxis_categories}
+		if len(revenue_data) > 24:
+			dataNum = 24
+		else:
+			dataNum = len(revenue_data)
+	data = {'revenue' : revenue_data, 'growth_rate' : growth_rate_data, 'categories' : xAxis_categories,
+			'maxRevenue' : maxRevenue, 'maxGrowthRate' : maxGrowthRate, 'minGrowthRate': minGrowthRate,
+			'dataNum' : dataNum}
 	
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
@@ -369,7 +418,12 @@ def getProfitabilityChart(request):
 			operating_profit_margins.append(float(profitability.operating_profit_margin))
 			net_before_tax_profit_margins.append(float(profitability.net_before_tax_profit_margin))
 			net_after_tax_profit_margins.append(float(profitability.net_after_tax_profit_margin))
+	names = [r'毛利率', r'營益率', r'稅前淨利率', r'稅後淨利率']
+	totalProfitability = [gross_profit_margins, operating_profit_margins, net_before_tax_profit_margins, 
+						  net_after_tax_profit_margins]
 	data = {'categories': xAxis_categories, 'gross_profit_margins': gross_profit_margins, 
-			'operating_profit_margins': operating_profit_margins, 'net_before_tax_profit_margins': net_before_tax_profit_margins,
-			'net_after_tax_profit_margins': net_after_tax_profit_margins}
+			'operating_profit_margins': operating_profit_margins, 
+			'net_before_tax_profit_margins': net_before_tax_profit_margins,
+			'net_after_tax_profit_margins': net_after_tax_profit_margins, 'names': names, 
+			'totalProfitability': totalProfitability}
 	return HttpResponse(json.dumps(data), content_type="application/json")
