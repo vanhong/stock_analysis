@@ -206,20 +206,6 @@
             $(window).load(function() {
                 //Default figure
                 GetData('/getDividendChart/');
-
-                //$('#Data').click(function(){
-                //    GetData('url2');
-                //    alert('revenue data');
-                //});
-                //$('#Data2').click(function(){
-                //    //FilterResult
-                //    GetData('url2');
-                //});
-
-                //$('#Data3').click(function(){
-                //    //FilterResult
-                //    GetData('url3');
-                //});
             });
         }
     }
