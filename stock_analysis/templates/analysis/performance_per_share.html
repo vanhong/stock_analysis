@@ -1,0 +1,29 @@
+{% extends "analysis/index.html" %}
+
+{% block analysis_content %}
+  <h4>{{ stock_id }}</h4>
+  <script type="text/javascript">
+  var drawTool = new DrawPerformancePerShare.Tool();
+  drawTool.Init();
+  </script>
+  <div id="Result">
+  </div>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        {% for head in performance_head %}
+        <td>{{ head }}</td>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for performance_items in performance_body %}
+      <tr>
+        {% for item in performance_items %}
+        <td>{{ item }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
