@@ -1,7 +1,7 @@
 {% extends "analysis/index.html" %}
 
 {% block analysis_content %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
   <script type="text/javascript">
     var obj = new Revenue.Tool();
     obj.Init();
@@ -17,15 +17,6 @@
     </div>
     </button>
   </div>
-  <script type="text/javascript">
-  if (window.location.pathname == '/revenue/month/') {
-    var drawTool = new Draw.Tool();
-    drawTool.DrawMonth();
-  } else if (window.location.pathname == '/revenue/season/') {
-    var drawTool = new Draw.Tool();
-    drawTool.DrawSeason();
-  }
-  </script>
   <div id="Result">
   </div>
   <div id="table_result">

@@ -1,12 +1,20 @@
 {% extends "analysis/index.html" %}
 
 {% block analysis_content %}
-  <h4>{{ stock_id }}</h4>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
   <script type="text/javascript">
-  var drawTool = new DrawDividend.Tool();
-  drawTool.Init();
+    var obj = new Dividend.Tool();
+    obj.Init();
   </script>
+  <div class="row-fluid">
+    <div class="span4">
+      <h4><span id="symbol" ></span><span id="revenue_type"></span></h4>
+    </div>
+    </button>
+  </div>
   <div id="Result">
+  </div>
+  <div id="table_result">
   </div>
   <table class="table table-bordered">
     <thead>
