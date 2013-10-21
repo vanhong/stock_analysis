@@ -17,11 +17,6 @@
 
         var GetData = function(url) {
             $.get(url, function(jData){
-                if (jData.dataNum >= 24) {
-                    scroll = true
-                } else {
-                    scroll = false
-                }
                 //alert(JSON.stringify(jData));
                 //$('#Result').html(jData);
                 $('#Result').highcharts({
@@ -32,16 +27,17 @@
                     title: jData.title,
                     subtitle: jData.subtitle,
                     xAxis: [{
-                        categories: jData.categories, 
-                        labels: {
-                            //step: 6,
-                            formatter: function() {
-                                if (this.value.endsWith('01') || this.value.endsWith('07    ')){
-                                    return this.value;
+                            categories: jData.categories, 
+                            labels: {
+                                //step: 6,
+                                formatter: function() {
+                                    if (this.value.endsWith('01')){
+                                        return this.value;
+                                    }
                                 }
-                            }
-                        },
-                        max: jData.dataNum - 1
+                            },
+                            max: 12,
+                            //minRange: 12,
                     }],
                     yAxis: [{ // Primary yAxis
                         labels: {
@@ -55,9 +51,7 @@
                             style: {
                                 color: '#89A54E'
                             }
-                        },
-                        max : jData.maxGrowthRate,
-                        min : jData.minGrowthRate
+                        }
                     }, { // Secondary yAxis
                         title: {
                             text: '',
@@ -71,8 +65,6 @@
                                 color: '#4572A7'
                             }
                         },
-                        max : jData.maxRevenue,
-                        min : 0,
                         opposite: true
                     }],
                     tooltip: {
@@ -106,7 +98,7 @@
                         }
                     }],
                     scrollbar: {
-                        enabled: scroll
+                        enabled: true
                     }
                 });    
             });
@@ -114,16 +106,16 @@
 
         this.DrawMonth = function() {
             //alert("Init");
-            $(window).load(function() {
+            // $(window).load(function() {
                 //Default figure
                 GetData('/getRevenueChart/');
-            });
+            // });
         }
         this.DrawSeason = function() {
-            $(window).load(function() {
+            // $(window).load(function() {
                 //Default figure
                 GetData('/getSeasonRevenueChart/');
-            });
+            // });
         }
     }
     Draw.Tool = Tool;
@@ -229,15 +221,6 @@
 
         var GetData = function(url) {
             $.get(url, function(jData){
-
-                var series = [];
-                for (i=0; i<jData.names.length; i++){
-                    series.push({
-                    name: jData.names[i],
-                    data: jData.totalProfitability[i]
-                    });
-                }
-                
                 //alert(JSON.stringify(jData));
                 //$('#Result').html(jData);
                 $('#Result').highcharts({
@@ -270,20 +253,19 @@
                         verticalAlign: 'middle',
                         borderWidth: 0
                     },
-                    series: series
-                    // series: [{
-                    //     name: '毛利率',
-                    //     data: jData.gross_profit_margins
-                    // }, {
-                    //     name: '營益率',
-                    //     data: jData.operating_profit_margins
-                    // }, {
-                    //     name: '稅前淨利率',
-                    //     data: jData.net_before_tax_profit_margins
-                    // }, {
-                    //     name: '稅後淨利率',
-                    //     data: jData.net_after_tax_profit_margins
-                    // }]
+                    series: [{
+                        name: '毛利率',
+                        data: jData.gross_profit_margins
+                    }, {
+                        name: '營益率',
+                        data: jData.operating_profit_margins
+                    }, {
+                        name: '稅前淨利率',
+                        data: jData.net_before_tax_profit_margins
+                    }, {
+                        name: '稅後淨利率',
+                        data: jData.net_after_tax_profit_margins
+                    }]
                 });
             });
         }
@@ -291,13 +273,10 @@
         this.Init = function() {
             //alert("Init");
             $(window).load(function() {
-
-                GetData('/getProfitabilityChart/');
-                
-                $('#profitability').click(function(){
-                     GetData('/getProfitabilityChart/');
-                });
                 //Default figure
+                GetData('/getProfitabilityChart/');
+
+                
             });
         }
     }

@@ -1,21 +1,30 @@
 {% extends "analysis/index.html" %}
 
 {% block analysis_content %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/Revenue.js"></script>
   <script type="text/javascript">
-  $( document ).ready( function() {
-      $( '#season_revenue' ).click( function() {
-          path = '/revenue/season/';
-          if (window.location.pathname != path) {
-              window.location.replace('/revenue/season/');
-          }
-      });
-      $( '#month_revenue' ).click( function() {
-          path = '/revenue/month';
-          if (window.location.pathname != path) {
-              window.location.replace('/revenue/month/');
-          }
-      });
-  });
+
+  // $( document ).ready( function() {
+  //     $( '#season_revenue' ).click( function() {
+  //         path = '/revenue/season/';
+  //         var drawTool = new Draw.Tool();
+  //           drawTool.DrawMonth();
+  //         if (window.location.pathname != path) {
+            
+  //             //window.location.replace('/revenue/season/');
+  //         }
+  //     });
+  //     $( '#month_revenue' ).click( function() {
+  //       var drawTool = new Draw.Tool();
+  //   drawTool.DrawSeason();
+  //         path = '/revenue/month';
+  //         if (window.location.pathname != path) {
+  //             //window.location.replace('/revenue/month/');
+  //         }
+  //     });
+  // });
+    var obj = new Revenue.Tool();
+    obj.Init();
   </script>
   <br>
   <div class="row-fluid">
