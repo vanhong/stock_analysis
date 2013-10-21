@@ -24,7 +24,7 @@ class MonthRevenue(models.Model):
     def __unicode__(self):
         return u"%d%d %s" % (self.year, self.month, self.symbol)
 
-class SeasonRevenue(models.Model):
+class SeasonProfit(models.Model):
     surrogate_key =  models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     season = models.IntegerField(db_index=True)
