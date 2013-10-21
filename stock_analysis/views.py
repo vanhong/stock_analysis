@@ -109,7 +109,7 @@ def revenue(request):
 		'analysis/revenue.html',
 		context_instance = RequestContext(request))
 
-def month_revenue_table(request):
+def month_revenue(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	revenue_title = r'月營收明細'
@@ -145,7 +145,7 @@ def month_revenue_table(request):
 		'analysis/index.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
-def season_revenue_table(request):
+def season_revenue(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	revenue_title = r'季盈餘明細'
