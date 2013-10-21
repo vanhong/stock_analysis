@@ -35,15 +35,24 @@
                     });
                 }
             });
-            
+            $('#Message').html('<b>Processing...</b>');
             $('#FilterResult').html('&nbsp;').load('/filter/start/', conditions, function(){
                 //alert('finish');
+                $('#Message').html('');
             });
         }
 
         this.Init = function() {
             //alert("Init");
             $(window).load(function() {
+                $('input[id^=Con-]').click(function(){
+                    if($(this).attr('checked') == 'checked'){
+                        $(this).attr('checked',false)
+                    }else{
+                        $(this).attr('checked',true)
+                    }
+                });
+
 				$('#StartFilter').click(function(){
                     //FilterResult
                     startFilter();

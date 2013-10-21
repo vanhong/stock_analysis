@@ -27,17 +27,17 @@
                     title: jData.title,
                     subtitle: jData.subtitle,
                     xAxis: [{
-                        categories: jData.categories, 
-                        labels: {
-                            //step: 6,
-                            formatter: function() {
-                                if (this.value.endsWith('01') || this.value.endsWith('06')){
-                                    return this.value;
+                            categories: jData.categories, 
+                            labels: {
+                                //step: 6,
+                                formatter: function() {
+                                    if (this.value.endsWith('01')){
+                                        return this.value;
+                                    }
                                 }
-                            }
-                        },
-                        max: 12,
-                        minRange: 12
+                            },
+                            max: 12,
+                            //minRange: 12,
                     }],
                     yAxis: [{ // Primary yAxis
                         labels: {
@@ -51,9 +51,7 @@
                             style: {
                                 color: '#89A54E'
                             }
-                        },
-                        max : 200,
-                        min : -50
+                        }
                     }, { // Secondary yAxis
                         title: {
                             text: '',
@@ -67,7 +65,6 @@
                                 color: '#4572A7'
                             }
                         },
-                        min : 0,
                         opposite: true
                     }],
                     tooltip: {
@@ -107,26 +104,18 @@
             });
         }
 
-        this.Init = function() {
+        this.DrawMonth = function() {
             //alert("Init");
-            $(window).load(function() {
+            // $(window).load(function() {
                 //Default figure
                 GetData('/getRevenueChart/');
-
-                //$('#Data').click(function(){
-                //    GetData('url2');
-                //    alert('revenue data');
-                //});
-    			//$('#Data2').click(function(){
-                //    //FilterResult
-                //    GetData('url2');
-                //});
-
-                //$('#Data3').click(function(){
-                //    //FilterResult
-                //    GetData('url3');
-                //});
-            });
+            // });
+        }
+        this.DrawSeason = function() {
+            // $(window).load(function() {
+                //Default figure
+                GetData('/getSeasonRevenueChart/');
+            // });
         }
     }
     Draw.Tool = Tool;

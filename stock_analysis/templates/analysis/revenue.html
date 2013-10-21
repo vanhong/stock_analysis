@@ -1,29 +1,33 @@
 {% extends "analysis/index.html" %}
 
 {% block analysis_content %}
-  <h4>{{ stock_id }}{{ revenue_title }}</h4>
+<script type="text/javascript" src="{{ STATIC_URL }}js/Revenue.js"></script>
   <script type="text/javascript">
-  var drawTool = new Draw.Tool();
-  drawTool.Init();
+    var obj = new Revenue.Tool();
+    obj.Init();
+  </script>
+  <br>
+  <div class="row-fluid">
+    <div class="span4">
+      <h4><span id="symbol" ></span><span id="revenue_type"></span></h4>
+    </div>
+    <div class="span4 offset4">
+      <button id="month_revenue" class="btn btn-primary">月營收</button>
+      <button id="season_revenue" class="btn btn-primary">季盈餘</button>
+    </div>
+    </button>
+  </div>
+  <script type="text/javascript">
+  if (window.location.pathname == '/revenue/month/') {
+    var drawTool = new Draw.Tool();
+    drawTool.DrawMonth();
+  } else if (window.location.pathname == '/revenue/season/') {
+    var drawTool = new Draw.Tool();
+    drawTool.DrawSeason();
+  }
   </script>
   <div id="Result">
   </div>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        {% for head in revenue_head %}
-        <td>{{ head }}</td>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for revenue_items in revenue_body %}
-      <tr>
-        {% for item in revenue_items %}
-        <td>{{ item }}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div id="table_result">
+  </div>
 {% endblock %}

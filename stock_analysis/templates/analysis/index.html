@@ -3,13 +3,14 @@
 {% block extra_js %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/highstocks/js/highstock.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/analysis.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/drawChart.js"></script>
 <script type="text/javascript">
 $( document ).ready( function() {
 
   $( '#analysis').attr('class', 'active');
 
   $( '#searchSubmit' ).click( function() {
-
+    // alert(window.location.pathname);
     q = $( '#q' ).val();
     //stockid
     //action , revenue_month
@@ -20,7 +21,7 @@ $( document ).ready( function() {
     });
     
   });
-});   
+});
 
 $( document ).ajaxStart( function() {
   $( '#spinner' ).show();
@@ -44,9 +45,9 @@ $( document ).ajaxStart( function() {
           <li class="dropdown-submenu">
             <a class="" href="#">  基本分析</a>
             <ul class="dropdown-menu">
-              <li><a id="revenue" href="/revenue/month/">營收資訊</a></li>
+              <li><a id="revenue" href="/analysis/">營收盈餘</a></li>
               <li><a href="/dividend/">股利政策</a></li>
-              <li><a href="/profitability/">獲利能力</a></li>
+              <li><a id="profitability" href="/profitability/">獲利能力</a></li>
               <li><a href="/performance_per_share/">經營績效</a></li>
               <li><a href="#">重大行事歷</a></li>
               <li><a href="#">產銷組合</a></li>

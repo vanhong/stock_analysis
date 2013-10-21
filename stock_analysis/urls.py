@@ -8,20 +8,22 @@ from stock_analysis.views import ajax_user_search, set_stockid
 
 urlpatterns = patterns('stock_analysis.views',
     (r'^home/index/$', 'home'),
-    (r'^analysis/$', 'month_revenue'),
-    (r'^revenue/month/$', 'month_revenue'),
-    (r'^revenue/season/$', 'season_revenue'),
+    (r'^analysis/$', 'revenue'),
     (r'^dividend/$', 'dividend'),
     (r'^profitability/$', 'profitability'),
     (r'^getRevenueChart/$', 'getRevenueChart'),
+    (r'^getSeasonRevenueChart/$', 'getSeasonRevenueChart'),
     (r'^getDividendChart/$', 'getDividendChart'),
     (r'^getProfitabilityChart/$', 'getProfitabilityChart'),
+    (r'^month_revenue_table/$', 'month_revenue_table'),
+    (r'^season_revenue_table/$', 'season_revenue_table'),
 )
 
 urlpatterns += patterns('stocks.views',
     (r'^update_stockid/$', 'update_stock_id'),
     (r'^update_dividend/$', 'update_dividend'),
     (r'^update_month_revenue/$', 'update_month_revenue'),
+    (r'^update_season_profit/$', 'update_season_profit'),
 )
 
 urlpatterns += patterns('financial.views',

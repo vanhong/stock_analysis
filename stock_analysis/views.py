@@ -9,7 +9,7 @@ from django.template.context import RequestContext
 from django.template import Context
 from stock_analysis.settings import STATIC_URL
 
-from stocks.models import StockId, MonthRevenue, Dividend
+from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
 
@@ -104,7 +104,12 @@ def profitability(request):
 		'analysis/profitability.html',{"stock_id": getSymbol(request)},
 		context_instance = RequestContext(request))
 
-def month_revenue(request):
+def revenue(request):
+	return render_to_response(
+		'analysis/revenue.html',
+		context_instance = RequestContext(request))
+
+def month_revenue_table(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	revenue_title = r'月營收明細'
@@ -133,14 +138,14 @@ def month_revenue(request):
 
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/revenue.html', {"stock_id": name, "revenue_title": revenue_title,
+				'analysis/revenue_table.html', {"stock_id": name, "revenue_title": revenue_title,
 				"revenue_head": revenue_head, "revenue_body": revenue_body},
 				context_instance = RequestContext(request))
 	return render_to_response(
 		'analysis/index.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
-def season_revenue(request):
+def season_revenue_table(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	revenue_title = r'季盈餘明細'
@@ -154,7 +159,7 @@ def season_revenue(request):
 	revenue_head.append(r'年增率')
 	revenue_body = []
 	if StockId.objects.filter(symbol=symbol):
-		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		season_revenues = SeasonProfit.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if season_revenues:
 			for revenue in season_revenues:
 				item = []
@@ -168,13 +173,11 @@ def season_revenue(request):
 				revenue_body.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/revenue.html', {
+				'analysis/revenue_table.html', {
 				"stock_id": name, "revenue_title": revenue_title,
 				"revenue_head": revenue_head, "revenue_body": revenue_body},
 				context_instance = RequestContext(request))
-	return render_to_response(
-		'analysis/index.html', {"stock_id": request.session["stock_id"]},
-		context_instance = RequestContext(request))
+	return HttpResponse('error')
 
 def filter(request):
 	symbol = request.session['stock_id']
@@ -187,10 +190,45 @@ def ajax_user_search(request):
 def index(request):
 	return HttpResponse('index')
 
+def getSeasonRevenueChart(request):
+	symbol = getSymbol(request)
+	maxProfit = 0
+	maxGrowthRate = -100
+	minGrowthRate = 10000
+	dataNum = 0
+	if StockId.objects.filter(symbol=symbol):
+		season_profits = SeasonProfit.objects.filter(symbol=symbol).order_by('surrogate_key')
+		profit_data = []
+		growth_rate_data = []
+		xAxis_categories = []
+		for profit in season_profits:
+			if profit.profit is not None and profit.year_growth_rate is not None:
+				int_season_profit = int(profit.profit)
+				if int_season_profit > maxProfit:
+					maxProfit = int_season_profit
+				profit_data.append(int_season_profit)
+				float_year_growth_rate = float(profit.year_growth_rate)
+				if float_year_growth_rate > maxGrowthRate:
+					maxGrowthRate = float_year_growth_rate
+				if float_year_growth_rate < minGrowthRate:
+					minGrowthRate = float_year_growth_rate
+				growth_rate_data.append(float_year_growth_rate)
+				xAxis_categories.append(str(profit.year) + 'Q' + str(profit.season))
+		if len(profit_data) > 24:
+			dataNum = 24
+		else:
+			dataNum = len(profit_data)
+	data = {'revenue' : profit_data, 'growth_rate': growth_rate_data, 'categories' : xAxis_categories,
+			'maxRevenue': maxProfit, 'maxGrowthRate' : maxGrowthRate, 'minGrowthRate': minGrowthRate,
+			'dataNum' : dataNum}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
 def getRevenueChart(request):
 	symbol = getSymbol(request)
-	if not symbol:
-		symbol = '8114'
+	maxRevenue = 0
+	maxGrowthRate = -100
+	minGrowthRate = 10000
+	dataNum = 0
 	if StockId.objects.filter(symbol=symbol):
 		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('surrogate_key')
 		revenue_data = []
@@ -198,10 +236,24 @@ def getRevenueChart(request):
 		xAxis_categories = []
 		for revenue in month_revenues:
 			if revenue.revenue is not None and revenue.year_growth_rate is not None:
-				revenue_data.append(int(revenue.revenue))
-				growth_rate_data.append(float(revenue.year_growth_rate))
+				intMonthRevenue = int(revenue.revenue)
+				if intMonthRevenue > maxRevenue:
+					maxRevenue = intMonthRevenue
+				revenue_data.append(intMonthRevenue)
+				floatYearGrowthRate = float(revenue.year_growth_rate)
+				if floatYearGrowthRate > maxGrowthRate:
+					maxGrowthRate = floatYearGrowthRate
+				if floatYearGrowthRate < minGrowthRate:
+					minGrowthRate = floatYearGrowthRate
+				growth_rate_data.append(floatYearGrowthRate)
 				xAxis_categories.append(str(revenue.year) + '/' + str(revenue.month).zfill(2))
-	data = {'revenue' : revenue_data, 'growth_rate' : growth_rate_data, 'categories' : xAxis_categories}
+		if len(revenue_data) > 24:
+			dataNum = 24
+		else:
+			dataNum = len(revenue_data)
+	data = {'revenue' : revenue_data, 'growth_rate' : growth_rate_data, 'categories' : xAxis_categories,
+			'maxRevenue' : maxRevenue, 'maxGrowthRate' : maxGrowthRate, 'minGrowthRate': minGrowthRate,
+			'dataNum' : dataNum}
 	
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
@@ -240,12 +292,100 @@ def filter_start(request):
 		print len(conditions[condition])
 
 	results = {}
+
+	passed = True
+	dataArr = []
+	for key, value in conditions.iteritems(): #逐一條件做篩選
+		if key == 'MonthRevenueContinuousAnnualGrowth': #月營收連續幾個月年增率>多少
+			# print 'start to check ' + stockid.symbol + ' MonthRevenueContinuousAnnualGrowth'
+			data = ''
+			monthCnt = value['MonthCnt']
+			MonthRevenueAnnualGrowth = value['MonthRevenueAnnualGrowth']
+
+			dates = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')
+			print str(dates[0]['year']) + '-' + str(dates[0]['month'])
+
+			# revenues = MonthRevenue.objects.filter(symbol=stockid.symbol).order_by('-year', '-month')
+			if monthCnt == '' or MonthRevenueAnnualGrowth == '':
+				#print 'empty input to filter MonthRevenueContinuousAnnualGrowth'
+				continue
+
+			if len(dates) >= int(monthCnt):
+				yearStr = ''
+				monthStr = ''
+				for i in range(0, int(monthCnt)):
+					yearStr += str(dates[i]['year']) +','
+					monthStr += str(dates[i]['month']) + ','
+				yearStr = yearStr[:-1]
+				monthStr = monthStr[:-1]
+				whereStr = 'stocks_monthrevenue.year in (' + yearStr + ') and stocks_monthrevenue.month in (' + monthStr + ') and stocks_monthrevenue.year_growth_rate > ' + MonthRevenueAnnualGrowth
+				filters = MonthRevenue.objects.extra(where=[whereStr])
+				for item in filters:
+					print item.symbol
+				
+			# 	data += str(revenues[i].year) + '-' + str(revenues[i].month) + '=' + str(revenues[i].year_growth_rate) + '%; '
+			# 	if passed:
+			# 		dataArr.append('[' + data + ']')
+			# else:
+			# 	passed = False
+		elif key == 'SeasonOPM':
+			# print 'start to check ' + stockid.symbol + ' OPM'
+			SeasonCnt = value['SeasonCnt']
+			SeasonOPM = value['SeasonOPM']
+			OverUnder = value['OverUnder']
+			ratios = SeasonFinancialRatio.objects.filter(symbol=stockid.symbol).order_by('-year','-season')
+			dataList = [d.operating_profit_margin for d in ratios]
+			data = checkData(dataList, SeasonCnt, OverUnder, SeasonOPM)
+			#print 'get checkData return=' + data
+			if data != '':
+				dataArr.append('SeasonOPM=' + data)
+			else:
+				passed = False
+		elif key == 'SeasonGPM':
+			# print 'start to check ' + stockid.symbol + ' GPM'
+			SeasonCnt = value['SeasonCnt']
+			SeasonGPM = value['SeasonGPM']
+			OverUnder = value['OverUnder']
+			ratios = SeasonFinancialRatio.objects.filter(symbol=stockid.symbol).order_by('-year','-season')
+			dataList = [d.gross_profit_margin for d in ratios]
+			data = checkData(dataList, SeasonCnt, OverUnder, SeasonGPM)
+			# print 'get GPM checkData return=' + data
+			if data != '':
+				dataArr.append('SeasonGPM=' + data)
+			else:
+				passed = False
+
+	# if passed:
+	# 	results[stockid.symbol] = ';'.join(dataArr)
+	# 	#print stockid.symbol
+	# 	print 'key=' + stockid.symbol + ', value=' + results[stockid.symbol]
+		#print revenues[0].year
+	return render_to_response(
+				'filter/filter_result.html', {
+				"results": results},
+				context_instance = RequestContext(request))
+
+def filter_start_old(request):
+	print 'Start to Filter'
+	conditions = {}
+	for key, value in request.POST.iteritems():
+		condition = key.split('-')[0];
+		para = key.split('-')[1];
+		if conditions.has_key(condition) is False:
+			conditions[condition] = {para: value}
+		else:
+			conditions[condition][para] = value
+		print 'condition=' + condition + ', para=' + para + ', value=' + value
+		print len(conditions[condition])
+
+	results = {}
 	stock_ids = StockId.objects.all()
 	for stockid in stock_ids:
 		passed = True
 		dataArr = []
 		for key, value in conditions.iteritems(): #逐一條件做篩選
 			if key == 'MonthRevenueContinuousAnnualGrowth': #月營收連續幾個月年增率>多少
+				# print 'start to check ' + stockid.symbol + ' MonthRevenueContinuousAnnualGrowth'
 				data = ''
 				monthCnt = value['MonthCnt']
 				MonthRevenueAnnualGrowth = value['MonthRevenueAnnualGrowth']
@@ -264,6 +404,7 @@ def filter_start(request):
 				else:
 					passed = False
 			elif key == 'SeasonOPM':
+				# print 'start to check ' + stockid.symbol + ' OPM'
 				SeasonCnt = value['SeasonCnt']
 				SeasonOPM = value['SeasonOPM']
 				OverUnder = value['OverUnder']
@@ -276,13 +417,14 @@ def filter_start(request):
 				else:
 					passed = False
 			elif key == 'SeasonGPM':
+				# print 'start to check ' + stockid.symbol + ' GPM'
 				SeasonCnt = value['SeasonCnt']
 				SeasonGPM = value['SeasonGPM']
 				OverUnder = value['OverUnder']
 				ratios = SeasonFinancialRatio.objects.filter(symbol=stockid.symbol).order_by('-year','-season')
 				dataList = [d.gross_profit_margin for d in ratios]
 				data = checkData(dataList, SeasonCnt, OverUnder, SeasonGPM)
-				print 'get GPM checkData return=' + data
+				# print 'get GPM checkData return=' + data
 				if data != '':
 					dataArr.append('SeasonGPM=' + data)
 				else:
@@ -369,7 +511,12 @@ def getProfitabilityChart(request):
 			operating_profit_margins.append(float(profitability.operating_profit_margin))
 			net_before_tax_profit_margins.append(float(profitability.net_before_tax_profit_margin))
 			net_after_tax_profit_margins.append(float(profitability.net_after_tax_profit_margin))
+	names = [r'毛利率', r'營益率', r'稅前淨利率', r'稅後淨利率']
+	totalProfitability = [gross_profit_margins, operating_profit_margins, net_before_tax_profit_margins, 
+						  net_after_tax_profit_margins]
 	data = {'categories': xAxis_categories, 'gross_profit_margins': gross_profit_margins, 
-			'operating_profit_margins': operating_profit_margins, 'net_before_tax_profit_margins': net_before_tax_profit_margins,
-			'net_after_tax_profit_margins': net_after_tax_profit_margins}
+			'operating_profit_margins': operating_profit_margins, 
+			'net_before_tax_profit_margins': net_before_tax_profit_margins,
+			'net_after_tax_profit_margins': net_after_tax_profit_margins, 'names': names, 
+			'totalProfitability': totalProfitability}
 	return HttpResponse(json.dumps(data), content_type="application/json")
