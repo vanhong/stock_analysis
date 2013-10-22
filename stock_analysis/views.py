@@ -7,6 +7,7 @@ from django.template.loader import get_template
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.template import Context
+from django.db.models import Count
 from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit
