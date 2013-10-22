@@ -1,13 +1,13 @@
 <table class="table table-bordered">
   <thead>
     <tr>
-      {% for head in revenue_head %}
+      {% for head in heads %}
       <td>{{ head }}</td>
       {% endfor %}
     </tr>
   </thead>
   <tbody>
-    {% for revenue_items in revenue_body %}
+    {% for revenue_items in bodys %}
     <tr>
       {% for item in revenue_items %}
       <td>{{ item }}</td>

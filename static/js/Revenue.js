@@ -33,3 +33,21 @@
 	
 	Revenue.Tool = Tool;
 }(window.Revenue = window.Revenue || {}));
+
+(function(Dividend) {
+
+	function Tool(){
+		var drawTool = new DrawDividend.Tool();
+		this.Init = function(){
+			$(window).load(function(){
+				drawTool.Draw();
+				$('#revenue_type').html('股利政策');
+				$('#table_result').html('&nbsp;').load('/dividend_table/', function () {
+					$('#symbol').html($('#stock_id').html());
+				});
+			});
+		}
+	}
+	
+	Dividend.Tool = Tool;
+}(window.Dividend = window.Dividend || {}));
