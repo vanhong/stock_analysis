@@ -36,7 +36,7 @@
                 }
             });
             $('#Message').html('<b>Processing...</b>');
-            $('#FilterResult').html('&nbsp;').load('/filter/start/', conditions, function(){
+            $('#FilterResult').load('/filter/start/', conditions, function(){
                 //alert('finish');
                 $('#Message').html('');
             });
