@@ -251,7 +251,7 @@
             });
         }
 
-        this.Draw = function() {
+        this.Init = function() {
             //alert("Init");
             $(window).load(function() {
                 //Default figure
@@ -268,7 +268,7 @@
     function Tool () {
         var GetData = function(url) {
             $.get(url, function(jData){
-                alert(JSON.stringify(jData));
+                //alert(JSON.stringify(jData));
                 //$('#Result').html(jData);
                 $('#Result').highcharts({
                     title: {
