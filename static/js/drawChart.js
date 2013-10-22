@@ -2,14 +2,6 @@
 
     function Tool() {
 
-        var doFilter = function() {
-            $.post('{% url "dofilter" %}' , 
-                function(data, status) { 
-                    alert("after load, get data=" + data + ", status=" + status); 
-                    $('#FilterResult').css('display','block');
-                }).fail(function(xhr){alert('error=' + xhr.statusText);});
-        }
-
         String.prototype.endsWith = function(pattern) {
             var d = this.length - pattern.length;
             return d >= 0 && this.lastIndexOf(pattern) === d;
@@ -17,8 +9,13 @@
 
         var GetData = function(url) {
             $.get(url, function(jData){
-                //alert(JSON.stringify(jData));
+                // alert(JSON.stringify(jData));
                 //$('#Result').html(jData);
+                if (jData.dataNum >= 24) {
+                    scroll = true;
+                } else {
+                    scroll = false;
+                }
                 $('#Result').highcharts({
                     chart: {
                         zoomType: 'xy',
@@ -31,12 +28,12 @@
                             labels: {
                                 //step: 6,
                                 formatter: function() {
-                                    if (this.value.endsWith('01')){
+                                    if (this.value.endsWith('01') || this.value.endsWith('07')){
                                         return this.value;
                                     }
                                 }
                             },
-                            max: 12,
+                            max: jData.dataNum - 1,
                             //minRange: 12,
                     }],
                     yAxis: [{ // Primary yAxis
@@ -98,7 +95,7 @@
                         }
                     }],
                     scrollbar: {
-                        enabled: true
+                        enabled: scroll
                     }
                 });    
             });
@@ -190,26 +187,10 @@
             });
         }
 
-        this.Init = function() {
+        this.Draw = function() {
             //alert("Init");
-            $(window).load(function() {
                 //Default figure
                 GetData('/getDividendChart/');
-
-                //$('#Data').click(function(){
-                //    GetData('url2');
-                //    alert('revenue data');
-                //});
-                //$('#Data2').click(function(){
-                //    //FilterResult
-                //    GetData('url2');
-                //});
-
-                //$('#Data3').click(function(){
-                //    //FilterResult
-                //    GetData('url3');
-                //});
-            });
         }
     }
     DrawDividend.Tool = Tool;
@@ -270,7 +251,7 @@
             });
         }
 
-        this.Init = function() {
+        this.Draw = function() {
             //alert("Init");
             $(window).load(function() {
                 //Default figure
@@ -285,7 +266,60 @@
 
 (function(DrawPerformancePerShare) {
     function Tool () {
-        // body...
+        var GetData = function(url) {
+            $.get(url, function(jData){
+                alert(JSON.stringify(jData));
+                //$('#Result').html(jData);
+                $('#Result').highcharts({
+                    title: {
+                        text: '經營績效',
+                        x: -20 //center
+                    },
+                    xAxis: {
+                        categories: jData.categories
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
+                        },
+                        labels: {
+                                    format: '{value}'
+                                },
+                        plotLines: [{
+                            value: 0,
+                            width: 1,
+                            color: '#808080'
+                        }]
+                    },
+                    tooltip: {
+                        valueSuffix: ''
+                    },
+                    legend: {
+                        layout: 'vertical',
+                        align: 'right',
+                        verticalAlign: 'middle',
+                        borderWidth: 0
+                    },
+                    series: [{
+                        name: '稅前每股盈餘',
+                        data: jData.net_before_tax_profit_per_shares
+                    }, {
+                        name: '稅後每股盈餘',
+                        data: jData.net_after_tax_profit_per_shares
+                    }]
+                });
+            });
+        }
+
+        this.Init = function() {
+            //alert("Init");
+            $(window).load(function() {
+                //Default figure
+                GetData('/get_performance_per_share/');
+
+                
+            });
+        }
     }
     DrawPerformancePerShare.Tool = Tool;
 } (window.DrawPerformancePerShare = window.DrawPerformancePerShare || {}));

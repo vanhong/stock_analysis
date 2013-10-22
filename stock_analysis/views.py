@@ -40,18 +40,44 @@ def getSymbol(request):
 		symbol = '2330'
 	return symbol
 
-def dividend(request):
+def performance_per_share(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	dividend_head = []
-	dividend_head.append(r'年度')
-	dividend_head.append(r'現金股利')
-	dividend_head.append(r'盈餘配股')
-	dividend_head.append(r'公積配股')
-	dividend_head.append(r'股票股利')
-	dividend_head.append(r'合計')
-	dividend_head.append(r'員工配股率%')
-	dividend_body = []
+	performance_head = []
+	performance_head.append(r'年/季')
+	performance_head.append(r'每股稅前盈餘')
+	performance_head.append(r'每股稅後盈餘')
+	performance_body = []
+	if StockId.objects.filter(symbol=symbol):
+		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		if ratios:
+			for ratio in ratios:
+				item = []
+				item.append(str(ratio.year) + 'Q' + str(ratio.season))
+				item.append(ratio.net_before_tax_profit_per_share)
+				item.append(ratio.net_after_tax_profit_per_share)
+				performance_body.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/performance_per_share.html', {"stock_id": name, "performance_head": performance_head,
+				"performance_body": performance_body},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/performance_per_share.html',{"stock_id": getSymbol(request)},
+		context_instance = RequestContext(request))
+
+def dividend_table(request):
+	symbol = getSymbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	heads = []
+	heads.append(r'年度')
+	heads.append(r'現金股利')
+	heads.append(r'盈餘配股')
+	heads.append(r'公積配股')
+	heads.append(r'股票股利')
+	heads.append(r'合計')
+	heads.append(r'員工配股率%')
+	bodys = []
 	if StockId.objects.filter(symbol=symbol):
 		dividends = Dividend.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if dividends:
@@ -64,14 +90,14 @@ def dividend(request):
 				item.append(round(dividend.stock_dividends, 2))
 				item.append(round(dividend.total_dividends, 2))
 				item.append(round(dividend.employee_stock_rate, 2))
-				dividend_body.append(item)
+				bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/dividend.html', {"stock_id": name, "dividend_head": dividend_head,
-				"dividend_body": dividend_body},
+				'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
+				"bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/dividend.html',{"stock_id": getSymbol(request)},
+		'analysis/analysis_table.html',{"stock_id": getSymbol(request)},
 		context_instance = RequestContext(request))
 
 def profitability(request):
@@ -105,19 +131,28 @@ def profitability(request):
 		'analysis/profitability.html',{"stock_id": getSymbol(request)},
 		context_instance = RequestContext(request))
 
+def revenue(request):
+	return render_to_response(
+		'analysis/revenue.html',
+		context_instance = RequestContext(request))
+
+def dividend(request):
+	return render_to_response(
+		'analysis/dividend.html',
+		context_instance = RequestContext(request))
+
 def month_revenue(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	revenue_title = r'月營收明細'
-	revenue_head = []
-	revenue_head.append(r'年/月')
-	revenue_head.append(r'營收(仟元)')
-	revenue_head.append(r'月增率')
-	revenue_head.append(r'去年同期(仟元)')
-	revenue_head.append(r'年增率')
-	revenue_head.append(r'累計營收(仟元)')
-	revenue_head.append(r'年增率')
-	revenue_body = []
+	heads = []
+	heads.append(r'年/月')
+	heads.append(r'營收(仟元)')
+	heads.append(r'月增率')
+	heads.append(r'去年同期(仟元)')
+	heads.append(r'年增率')
+	heads.append(r'累計營收(仟元)')
+	heads.append(r'年增率')
+	bodys = []
 	if StockId.objects.filter(symbol=symbol):
 		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if month_revenues:
@@ -130,12 +165,12 @@ def month_revenue(request):
 				item.append(revenue.year_growth_rate)
 				item.append(revenue.acc_revenue)
 				item.append(revenue.acc_year_growth_rate)
-				revenue_body.append(item)
+				bodys.append(item)
 
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/revenue.html', {"stock_id": name, "revenue_title": revenue_title,
-				"revenue_head": revenue_head, "revenue_body": revenue_body},
+				'analysis/analysis_table.html', {"stock_id": name,
+				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
 		'analysis/index.html',{"stock_id": symbol},
@@ -144,16 +179,15 @@ def month_revenue(request):
 def season_revenue(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	revenue_title = r'季盈餘明細'
-	revenue_head = []
-	revenue_head.append(r'年/季')
-	revenue_head.append(r'稅後盈餘(仟元)')
-	revenue_head.append(r'季增率')
-	revenue_head.append(r'去年同期(仟元)')
-	revenue_head.append(r'年增率')
-	revenue_head.append(r'累計盈餘(仟元)')
-	revenue_head.append(r'年增率')
-	revenue_body = []
+	heads = []
+	heads.append(r'年/季')
+	heads.append(r'稅後盈餘(仟元)')
+	heads.append(r'季增率')
+	heads.append(r'去年同期(仟元)')
+	heads.append(r'年增率')
+	heads.append(r'累計盈餘(仟元)')
+	heads.append(r'年增率')
+	bodys = []
 	if StockId.objects.filter(symbol=symbol):
 		season_revenues = SeasonProfit.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if season_revenues:
@@ -166,16 +200,14 @@ def season_revenue(request):
 				item.append(revenue.year_growth_rate)
 				item.append(revenue.acc_profit)
 				item.append(revenue.acc_year_growth_rate)
-				revenue_body.append(item)
+				bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/revenue.html', {
-				"stock_id": name, "revenue_title": revenue_title,
-				"revenue_head": revenue_head, "revenue_body": revenue_body},
+				'analysis/analysis_table.html', {
+				"stock_id": name,
+				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
-	return render_to_response(
-		'analysis/index.html', {"stock_id": request.session["stock_id"]},
-		context_instance = RequestContext(request))
+	return HttpResponse('error')
 
 def filter(request):
 	symbol = request.session['stock_id']
@@ -268,6 +300,20 @@ def getDividendChart(request):
 			cash_dividends.append(round(float(dividend.cash_dividends), 2))
 			stock_dividends.append(round(float(dividend.stock_dividends), 2))
 	data = {'categories': xAxis_categories[::-1], 'cash_dividends': cash_dividends[::-1], 'stock_dividends': stock_dividends[::-1]}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
+def get_performance_per_share(request):
+	data = {}
+	symbol = getSymbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		net_before_tax_profit_per_shares = []
+		net_after_tax_profit_per_shares = []
+		for ratio in season_financial_ratios:
+			net_before_tax_profit_per_shares.append(float(ratio.net_before_tax_profit_per_share))
+			net_after_tax_profit_per_shares.append(float(ratio.net_after_tax_profit_per_share))
+	data = {'net_before_tax_profit_per_shares': net_before_tax_profit_per_shares,
+			'net_after_tax_profit_per_shares': net_after_tax_profit_per_shares}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
 def filter_index(request):

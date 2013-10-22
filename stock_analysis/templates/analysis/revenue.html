@@ -1,35 +1,15 @@
 {% extends "analysis/index.html" %}
 
 {% block analysis_content %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/Revenue.js"></script>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
   <script type="text/javascript">
-
-  // $( document ).ready( function() {
-  //     $( '#season_revenue' ).click( function() {
-  //         path = '/revenue/season/';
-  //         var drawTool = new Draw.Tool();
-  //           drawTool.DrawMonth();
-  //         if (window.location.pathname != path) {
-            
-  //             //window.location.replace('/revenue/season/');
-  //         }
-  //     });
-  //     $( '#month_revenue' ).click( function() {
-  //       var drawTool = new Draw.Tool();
-  //   drawTool.DrawSeason();
-  //         path = '/revenue/month';
-  //         if (window.location.pathname != path) {
-  //             //window.location.replace('/revenue/month/');
-  //         }
-  //     });
-  // });
     var obj = new Revenue.Tool();
     obj.Init();
   </script>
   <br>
   <div class="row-fluid">
     <div class="span4">
-      <h4>{{ stock_id }}{{ revenue_title }}</h4>
+      <h4><span id="symbol" ></span><span id="revenue_type"></span></h4>
     </div>
     <div class="span4 offset4">
       <button id="month_revenue" class="btn btn-primary">月營收</button>
@@ -37,6 +17,7 @@
     </div>
     </button>
   </div>
+<<<<<<< HEAD
   <script type="text/javascript">
   // if (window.location.pathname == '/revenue/month/') {
   //   var drawTool = new Draw.Tool();
@@ -46,24 +27,10 @@
   //   drawTool.DrawSeason();
   // }
   </script>
+=======
+>>>>>>> 5be90fe6c7763a41aa65a007e7f6818bdc0597af
   <div id="Result">
   </div>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        {% for head in revenue_head %}
-        <td>{{ head }}</td>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for revenue_items in revenue_body %}
-      <tr>
-        {% for item in revenue_items %}
-        <td>{{ item }}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div id="table_result">
+  </div>
 {% endblock %}

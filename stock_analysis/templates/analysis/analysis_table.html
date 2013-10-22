@@ -1,0 +1,19 @@
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      {% for head in heads %}
+      <td>{{ head }}</td>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for revenue_items in bodys %}
+    <tr>
+      {% for item in revenue_items %}
+      <td>{{ item }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div id="stock_id" style="display:none;">{{ stock_id }}</div>
