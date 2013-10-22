@@ -1,0 +1,12 @@
+
+
+<fieldset>
+  <legend>篩選結果</legend>
+  <table class="table table-bordered" style=" margin:2em; width:60%">
+  	{% for key, value in results.items %}
+      <tr>
+        <td style="width:6em">{{ key }}</td><td>{{ value }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</fieldset>

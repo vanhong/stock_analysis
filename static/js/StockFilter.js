@@ -35,7 +35,7 @@
                     });
                 }
             });
-            $('#Message').html('<b>Processing...</b>');
+            $('#Message').html('<b> | Processing...</b>');
             $('#FilterResult').load('/filter/start/', conditions, function(){
                 //alert('finish');
                 $('#Message').html('');

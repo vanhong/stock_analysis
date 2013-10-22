@@ -51,7 +51,7 @@ urlpatterns += patterns('',
     # url(r'^admin/', include(admin.site.urls)),
 )
 
-urlpatterns += patterns('stock_analysis.views',
+urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
 )
