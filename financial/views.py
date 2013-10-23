@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+import urllib2
 import urllib
 from django.http import HttpResponse
 from HTMLParser import HTMLParser
@@ -9,6 +9,19 @@ from decimal import Decimal
 from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet
 from bs4 import BeautifulSoup
+
+
+#balance sheet from TWSE
+def update_season_balance_sheet_new(request):
+    url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
+    values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
+    'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
+    'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id':'1537', 'year':'102','season':'01' }
+    data = urllib.urlencode(values)
+    req = urllib2.Request(url, data)
+    response = urllib2.urlopen(req)
+    the_page = response.read()
+    return HttpResponse(the_page)
 
 #資產負債表
 def update_season_balance_sheet(request):
