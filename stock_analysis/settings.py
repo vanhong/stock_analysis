@@ -134,6 +134,7 @@ INSTALLED_APPS = (
     'financial',
     'chip',
     'price',
+    'us_stocks',
 
 
     # Uncomment the next line to enable the admin:

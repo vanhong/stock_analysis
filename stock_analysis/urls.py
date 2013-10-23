@@ -55,3 +55,7 @@ urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
 )
+
+urlpatterns += patterns('us_stocks.views',
+    url( r'^us/update_finance/$', 'update_finance', name= 'us_update_finance'),
+)
