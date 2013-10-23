@@ -7,20 +7,99 @@ from HTMLParser import HTMLParser
 import time
 from decimal import Decimal
 from stocks.models import StockId
-from financial.models import SeasonFinancialRatio, SeasonBalanceSheet
+from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement
 from bs4 import BeautifulSoup
+import html5lib
+from html5lib import sanitizer
+from html5lib import treebuilders
 
 
-#balance sheet from TWSE
+#income statement from TWSE
 def update_season_balance_sheet_new(request):
+    stock_symbol = '1537'
+    year = 102
+    season = 1
     url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
     values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
     'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
-    'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id':'1537', 'year':'102','season':'01' }
-    data = urllib.urlencode(values)
-    req = urllib2.Request(url, data)
+    'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
+    url_data = urllib.urlencode(values)
+
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+
+    soup = BeautifulSoup(response,from_encoding="utf-8")
+    season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+
+    income_statement = SeasonIncomeStatement()
+    income_statement.symbol = stock_symbol
+    income_statement.year = str(1911+year)
+    income_statement.season = season
+    income_statement.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
+    for data in season_income_datas:
+        print data.string.encode('utf-8')
+        if '營業收入合計' in data.string.encode('utf-8'):
+            income_statement.operating_revenue = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '營業成本合計' in data.string.encode('utf-8'):
+            income_statement.operating_cost = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '營業毛利（毛損）' in data.string.encode('utf-8'):
+            income_statement.gross_profit_from_operations = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '推銷費用' in data.string.encode('utf-8'):
+            income_statement.selling_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '管理費用' in data.string.encode('utf-8'):
+            print 'hello'
+            income_statement.administrative_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '研究發展費用' in data.string.encode('utf-8'):
+            income_statement.research_and_development_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '營業費用合計' in data.string.encode('utf-8'):
+            income_statement.operating_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '營業利益（損失）' in data.string.encode('utf-8'):
+            income_statement.net_operating_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '其他收入' in data.string.encode('utf-8'):
+            income_statement.other_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif '其他利益及損失淨額' in data.string.encode('utf-8'):
+            income_statement.other_gains_and_losses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'財務成本淨額' in data.string.encode('utf-8'):
+            income_statement.finance_costs = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'營業外收入及支出合計' in data.string.encode('utf-8'):
+            income_statement.non_operating_income_and_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'稅前淨利（淨損）' in data.string.encode('utf-8'):
+            income_statement.profit_from_continuing_operations_before_tax = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'所得稅費用（利益）合計' in data.string.encode('utf-8'):
+            income_statement.tax_expense = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'繼續營業單位本期淨利（淨損）' in data.string.encode('utf-8'):
+            income_statement.profit_from_continuing_operations = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'本期淨利（淨損）' in data.string.encode('utf-8'):
+            income_statement.profit = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'國外營運機構財務報表換算之兌換差額' in data.string.encode('utf-8'):
+            income_statement.exchange_differences_on_translation = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'備供出售金融資產未實現評價損益' in data.string.encode('utf-8'):
+            income_statement.unrealised_gains_on_valuation_of_available_for_sale_financial_assets = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'與其他綜合損益組成部分相關之所得稅' in data.string.encode('utf-8'):
+            income_statement.income_tax_related_to_components_of_other_comprehensive_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'其他綜合損益（淨額）' in data.string.encode('utf-8'):
+            income_statement.other_comprehensive_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'本期綜合損益總額' in data.string.encode('utf-8'):
+            income_statement.comprehensive_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'母公司業主（淨利／損）' in data.string.encode('utf-8'):
+            income_statement.profit_attributable_to_owners_of_parent = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'非控制權益（淨利／損）' in data.string.encode('utf-8'):
+            income_statement.profit_attributable_to_non_controlling_interests = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'母公司業主（綜合損益）' in data.string.encode('utf-8'):
+            income_statement.comprehensive_income_attributable_to_owners_of_parent = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'非控制權益（綜合損益）' in data.string.encode('utf-8'):
+            income_statement.comprehensive_income_attributable_to_non_controlling_interests = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'基本每股盈餘' in data.string.encode('utf-8'):
+            income_statement.basic_earnings_per_share = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+        elif r'稀釋每股盈餘' in data.string.encode('utf-8'):
+            income_statement.diluted_earnings_per_share = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+
+    income_statement.save()
+
+
     response = urllib2.urlopen(req)
     the_page = response.read()
+
     return HttpResponse(the_page)
 
 #資產負債表
