@@ -477,7 +477,6 @@ def update_season_balance_sheet(request):
     # print season_datas
     return HttpResponse('BeautifulSoup')
 
-
 def update_season_financial_ratio(request):
     stock_ids = StockId.objects.all()
     for stock_id in stock_ids:
