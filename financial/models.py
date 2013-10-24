@@ -23,15 +23,15 @@ class SeasonIncomeStatement(models.Model):
     profit = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     exchange_differences_on_translation = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     unrealised_gains_for_sale_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-    income_tax__of_other_comprehensive_income= models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    income_tax_of_other_comprehensive_income= models.DecimalField(max_digits=20, decimal_places=0, null=True)
     other_comprehensive_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     total_comprehensive_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     profit_to_owners_of_parent = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     profit_to_non_controlling_interests = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     comprehensive_income_to_owners_of_parent = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     comprehensive_income_to_non_controlling_interests = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-    total_basic_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-    total_diluted_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    basic_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    diluted_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
 
 class SeasonFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
