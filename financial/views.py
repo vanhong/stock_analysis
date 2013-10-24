@@ -29,7 +29,7 @@ def update_season_balance_sheet_new(request):
     response = urllib2.urlopen(req)
 
     soup = BeautifulSoup(response,from_encoding="utf-8")
-    season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+    season_income_datas = soup.find_all("td", {'class':'td' 'style' : 'text-align:left;white-space:nowrap;'})
 
     income_statement = SeasonIncomeStatement()
     income_statement.symbol = stock_symbol
@@ -37,8 +37,9 @@ def update_season_balance_sheet_new(request):
     income_statement.season = season
     income_statement.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
     for data in season_income_datas:
-        print data.string.encode('utf-8')
-        if '營業收入合計' in data.string.encode('utf-8'):
+        if data is None:
+            x = 1
+        elif '營業收入合計' in data.string.encode('utf-8'):
             income_statement.operating_revenue = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
         elif '營業成本合計' in data.string.encode('utf-8'):
             income_statement.operating_cost = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
