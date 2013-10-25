@@ -23,7 +23,7 @@ class SeasonIncomeStatement(models.Model):
     profit = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     exchange_differences_on_translation = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     unrealised_gains_for_sale_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-    income_tax_of_other_comprehensive_income= models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    income_tax_of_other_comprehensive_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     other_comprehensive_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     total_comprehensive_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     profit_to_owners_of_parent = models.DecimalField(max_digits=20, decimal_places=0, null=True)
@@ -32,6 +32,55 @@ class SeasonIncomeStatement(models.Model):
     comprehensive_income_to_non_controlling_interests = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     basic_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     diluted_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+
+    def percent_operating_revenue(self):
+        return operating_revenue / operating_revenue
+    def percent_operating_cost(self):
+        return operating_cost / operating_revenue
+    def percent_gross_profit_from_operations(self):
+        return gross_profit_from_operations / operating_revenue
+    def percent_selling_expenses(self):
+        return selling_expenses / operating_revenue
+    def percent_administrative_expenses(self):
+        return administrative_expenses / operating_revenue
+    def percent_research_and_development_expenses(self):
+        return research_and_development_expenses / operating_revenue
+    def percent_operating_expenses(self):
+        return operating_expenses / operating_revenue
+    def percent_net_operating_income(self):
+        return net_operating_income / operating_revenue
+    def percent_other_income(self):
+        return other_income / operating_revenue
+    def percent_other_gains_and_losses(self):
+        return other_gains_and_losses / operating_revenue
+    def percent_finance_costs(self):
+        return finance_costs / operating_revenue
+    def percent_non_operating_income_and_expenses(self):
+        return non_operating_income_and_expenses / operating_revenue
+    def percent_profit_from_continuing_operations_before_tax(self):
+        return profit_from_continuing_operations_before_tax / operating_revenue
+    def percent_tax_expense(self):
+        return tax_expense / operating_revenue
+    def percent_profit_from_continuing_operations(self):
+        return profit_from_continuing_operations / operating_revenue
+    def percent_profit(self):
+        return profit / operating_revenue
+    def percent_exchange_differences_on_translation(self):
+        return exchange_differences_on_translation / operating_revenue
+    def percent_unrealised_gains_for_sale_financial_assets(self):
+        return unrealised_gains_for_sale_financial_assets / operating_revenue
+    def percent_income_tax_of_other_comprehensive_income(self):
+        return other_comprehensive_income / operating_revenue
+    def percent_total_comprehensive_income(self):
+        return total_comprehensive_income / operating_revenue
+    def percent_profit_to_owners_of_parent(self):
+        return profit_to_owners_of_parent / operating_revenue
+    def percent_profit_to_non_controlling_interests(self):
+        return profit_to_non_controlling_interests / operating_revenue
+    def percent_comprehensive_income_to_owners_of_parent(self):
+        return comprehensive_income_to_owners_of_parent / operating_revenue
+    def percent_comprehensive_income_to_non_controlling_interests(self):
+        return comprehensive_income_to_non_controlling_interests / operating_revenue
 
 class SeasonFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
