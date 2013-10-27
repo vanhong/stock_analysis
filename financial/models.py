@@ -1,5 +1,8 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 from django.db import models
 
+# 綜合損益表
 class SeasonIncomeStatement(models.Model):
     surrogate_key = models.CharField(max_length=50, primary_key=True)
     symbol = models.CharField(max_length=20, db_index=True)
@@ -32,6 +35,24 @@ class SeasonIncomeStatement(models.Model):
     comprehensive_income_to_non_controlling_interests = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     basic_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     diluted_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    interest_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    interest_expenses = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    net_income_of_interest = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    net_service_fee_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    gain_on_financial_assets_or_liabilities_measured = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    realized_gains_for_sale_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    realized_gains_on_held_to_maturity_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    foreign_exchange_gain = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    reversal_of_impairment_loss_on_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    gain_on_disposal_of_investments_accounted = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    net_other_non_interest_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    net_non_interest_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    net_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    total_bad_debts_expense = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    employee_benefits_expenses = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    depreciation_and_amortization_expense = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    income_from_discontinued_operations = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+
 
     def percent_operating_revenue(self):
         return operating_revenue / operating_revenue
