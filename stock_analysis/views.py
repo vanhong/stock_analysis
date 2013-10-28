@@ -187,6 +187,12 @@ def month_revenue(request):
 		context_instance = RequestContext(request))
 
 def season_revenue(request):
+	symbol = getSymbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	
+	if StockId.objects.filter(symbol=symbol):
+		income_statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('surrogate_key')
+
 	return HttpResponse('hello')
 
 def season_profit(request):

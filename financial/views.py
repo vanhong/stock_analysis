@@ -16,7 +16,7 @@ from html5lib import treebuilders
 
 #income statement from TWSE 綜合損益表
 def show_season_income_statement(request):
-    stock_symbol = '1468'
+    stock_symbol = '1558'
     year = 102
     season = 2
     url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
@@ -39,6 +39,7 @@ def show_season_income_statement(request):
                 print 'init is none'
             if data.next_sibling.next_sibling.string is not None:
                 income_statement.basic_earnings_per_share = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                print data.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string
                 if income_statement.basic_earnings_per_share is not None:
                     print 'hello'
                     print Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
@@ -51,9 +52,8 @@ def update_season_income_statement(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 1
-
-        if not SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
+        season = 2
+        if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1911, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1910, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
             'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
@@ -71,113 +71,258 @@ def update_season_income_statement(request):
             income_statement.season = season
             income_statement.surrogate_key = stock_symbol + '_' + str(1911+year) + str(season).zfill(2)
 
+            last_income_statement = SeasonIncomeStatement()
+            last_income_statement.symbol = stock_symbol
+            last_income_statement.year = str(1910+year)
+            last_income_statement.season = season
+            last_income_statement.surrogate_key = stock_symbol + '_' + str(1910+year) + str(season).zfill(2)
+
             owners_of_parent = 0
             print stock_symbol + ' loaded'
             for data in season_income_datas:
                 if r'營業收入合計' in data.string.encode('utf-8'):
-                    income_statement.operating_revenue = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.operating_revenue = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.operating_revenue = Decimal(next_data.string.strip().replace(',',''))
                 elif r'營業成本合計' in data.string.encode('utf-8'):
-                    income_statement.operating_cost = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.operating_cost = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.operating_cost = Decimal(next_data.string.strip().replace(',',''))
                 elif r'營業毛利（毛損）' in data.string.encode('utf-8'):
-                    income_statement.gross_profit_from_operations = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.gross_profit_from_operations = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.gross_profit_from_operations = Decimal(next_data.string.strip().replace(',',''))
                 elif r'推銷費用' in data.string.encode('utf-8'):
-                    income_statement.selling_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.selling_expenses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.selling_expenses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'管理費用' in data.string.encode('utf-8'):
-                    income_statement.administrative_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.administrative_expenses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.administrative_expenses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'研究發展費用' in data.string.encode('utf-8'):
-                    income_statement.research_and_development_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.research_and_development_expenses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.research_and_development_expenses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'營業費用合計' in data.string.encode('utf-8'):
-                    income_statement.operating_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.operating_expenses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.operating_expenses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'營業利益（損失）' in data.string.encode('utf-8'):
-                    income_statement.net_operating_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_operating_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.net_operating_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'其他收入' in data.string.encode('utf-8'):
-                    income_statement.other_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.other_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.other_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'其他利益及損失淨額' in data.string.encode('utf-8'):
-                    income_statement.other_gains_and_losses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.other_gains_and_losses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.other_gains_and_losses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'財務成本淨額' in data.string.encode('utf-8'):
-                    income_statement.finance_costs = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.finance_costs = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.finance_costs = Decimal(next_data.string.strip().replace(',',''))
                 elif r'營業外收入及支出合計' in data.string.encode('utf-8'):
-                    income_statement.non_operating_income_and_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.non_operating_income_and_expenses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.non_operating_income_and_expenses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'稅前淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位稅前淨利（淨損）' in data.string.encode('utf-8'):
-                    income_statement.profit_from_continuing_operations_before_tax = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_from_continuing_operations_before_tax = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.profit_from_continuing_operations_before_tax = Decimal(next_data.string.strip().replace(',',''))
                 elif r'所得稅費用（利益）合計' in data.string.encode('utf-8') or r'所得稅（費用）利益' in data.string.encode('utf-8'):
-                    income_statement.tax_expense = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.tax_expense = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.tax_expense = Decimal(next_data.string.strip().replace(',',''))
                 elif r'繼續營業單位本期淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位本期稅後淨利（淨損）' in data.string.encode('utf-8'):
-                    income_statement.profit_from_continuing_operations = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_from_continuing_operations = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.profit_from_continuing_operations = Decimal(next_data.string.strip().replace(',',''))
                 elif r'本期淨利（淨損）' in data.string.encode('utf-8') or r'本期稅後淨利（淨損）' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
-                        income_statement.profit = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.profit = Decimal(next_data.string.strip().replace(',',''))
+                        next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                        last_income_statement.profit = Decimal(next_data.string.strip().replace(',',''))
                 elif r'國外營運機構財務報表換算之兌換差額' in data.string.encode('utf-8'):
-                    income_statement.exchange_differences_on_translation = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.exchange_differences_on_translation = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.exchange_differences_on_translation = Decimal(next_data.string.strip().replace(',',''))
                 elif r'備供出售金融資產未實現評價損益' in data.string.encode('utf-8'):
-                    income_statement.unrealised_gains_for_sale_financial_assets = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.unrealised_gains_for_sale_financial_assets = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.unrealised_gains_for_sale_financial_assets = Decimal(next_data.string.strip().replace(',',''))
                 elif r'與其他綜合損益組成部分相關之所得稅' in data.string.encode('utf-8'):
-                    income_statement.income_tax_of_other_comprehensive_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.income_tax_of_other_comprehensive_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.income_tax_of_other_comprehensive_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'其他綜合損益（淨額）' in data.string.encode('utf-8') or r'其他綜合損益（稅後）淨額' in data.string.encode('utf-8'):
-                    income_statement.other_comprehensive_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.other_comprehensive_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.other_comprehensive_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'本期綜合損益總額' in data.string.encode('utf-8') or r'本期綜合損益總額（稅後）' in data.string.encode('utf-8'):
-                    income_statement.total_comprehensive_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_comprehensive_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.total_comprehensive_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'母公司業主（淨利／損）' in data.string.encode('utf-8'):
-                    income_statement.profit_to_owners_of_parent = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.profit_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
                 elif r'非控制權益（淨利／損）' in data.string.encode('utf-8'):
-                    income_statement.profit_to_non_controlling_interests = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_to_non_controlling_interests = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.profit_to_non_controlling_interests = Decimal(next_data.string.strip().replace(',',''))
                 elif r'母公司業主（綜合損益）' in data.string.encode('utf-8'):
-                    income_statement.comprehensive_income_to_owners_of_parent = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.comprehensive_income_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.comprehensive_income_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
                 elif r'母公司業主' in data.string.encode('utf-8'):
                     if owners_of_parent == 0:
-                        income_statement.profit_to_owners_of_parent = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.profit_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
+                        next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                        last_income_statement.profit_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
                         owners_of_parent = 1
                     else:
-                        income_statement.comprehensive_income_to_owners_of_parent = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.comprehensive_income_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
+                        next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                        last_income_statement.comprehensive_income_to_owners_of_parent = Decimal(next_data.string.strip().replace(',',''))
                 elif r'非控制權益（綜合損益）' in data.string.encode('utf-8'):
-                    income_statement.comprehensive_income_to_non_controlling_interests = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.comprehensive_income_to_non_controlling_interests = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.comprehensive_income_to_non_controlling_interests = Decimal(next_data.string.strip().replace(',',''))
                 elif r'基本每股盈餘' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
-                        income_statement.basic_earnings_per_share = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.basic_earnings_per_share = Decimal(next_data.string.strip().replace(',',''))
+                        next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                        last_income_statement.basic_earnings_per_share = Decimal(next_data.string.strip().replace(',',''))
                 elif r'稀釋每股盈餘' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
-                        income_statement.diluted_earnings_per_share = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.diluted_earnings_per_share = Decimal(next_data.string.strip().replace(',',''))
+                        next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                        last_income_statement.diluted_earnings_per_share = Decimal(next_data.string.strip().replace(',',''))
                 elif r'利息收入' in data.string.encode('utf-8'):
-                    income_statement.interest_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.interest_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.interest_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'減：利息費用' in data.string.encode('utf-8'):
-                    income_statement.interest_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.interest_expenses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.interest_expenses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'利息淨收益' in data.string.encode('utf-8'):
-                    income_statement.net_income_of_interest = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_income_of_interest = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.net_income_of_interest = Decimal(next_data.string.strip().replace(',',''))
                 elif r'手續費淨收益' in data.string.encode('utf-8'):
-                    income_statement.net_service_fee_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_service_fee_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.net_service_fee_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'透過損益按公允價值衡量之金融資產及負債損益' in data.string.encode('utf-8'):
-                    income_statement.gain_on_financial_assets_or_liabilities_measured = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.gain_on_financial_assets_or_liabilities_measured = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.gain_on_financial_assets_or_liabilities_measured = Decimal(next_data.string.strip().replace(',',''))
                 elif r'備供出售金融資產之已實現損益' in data.string.encode('utf-8'):
-                    income_statement.realized_gains_for_sale_financial_assets = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.realized_gains_for_sale_financial_assets = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.realized_gains_for_sale_financial_assets = Decimal(next_data.string.strip().replace(',',''))
                 elif r'持有至到期日金融資產之已實現損益' in data.string.encode('utf-8'):
-                    income_statement.realized_gains_on_held_to_maturity_financial_assets = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.realized_gains_on_held_to_maturity_financial_assets = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.realized_gains_on_held_to_maturity_financial_assets = Decimal(next_data.string.strip().replace(',',''))
                 elif r'兌換損益' in data.string.encode('utf-8'):
-                    income_statement.foreign_exchange_gain = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.foreign_exchange_gain = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.foreign_exchange_gain = Decimal(next_data.string.strip().replace(',',''))
                 elif r'資產減損（損失）迴轉利益淨額' in data.string.encode('utf-8'):
-                    income_statement.reversal_of_impairment_loss_on_assets = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.reversal_of_impairment_loss_on_assets = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.reversal_of_impairment_loss_on_assets = Decimal(next_data.string.strip().replace(',',''))
                 elif r'採用權益法認列之關聯企業及合資損益之份額' in data.string.encode('utf-8'):
-                    income_statement.gain_on_disposal_of_investments_accounted = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.gain_on_disposal_of_investments_accounted = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.gain_on_disposal_of_investments_accounted = Decimal(next_data.string.strip().replace(',',''))
                 elif r'其他利息以外淨損益' in data.string.encode('utf-8'):
-                    income_statement.net_other_non_interest_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_other_non_interest_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.net_other_non_interest_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'利息以外淨損益' in data.string.encode('utf-8'):
-                    income_statement.net_non_interest_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_non_interest_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.net_non_interest_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'淨收益' in data.string.encode('utf-8'):
-                    income_statement.net_income = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_income = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.net_income = Decimal(next_data.string.strip().replace(',',''))
                 elif r'呆帳費用及保證責任準備提存（各項提存）' in data.string.encode('utf-8'):
-                    income_statement.total_bad_debts_expense = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_bad_debts_expense = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.total_bad_debts_expense = Decimal(next_data.string.strip().replace(',',''))
                 elif r'員工福利費用' in data.string.encode('utf-8'):
-                    income_statement.employee_benefits_expenses = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.employee_benefits_expenses = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.employee_benefits_expenses = Decimal(next_data.string.strip().replace(',',''))
                 elif r'折舊及攤銷費用' in data.string.encode('utf-8'):
-                    income_statement.depreciation_and_amortization_expense = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.depreciation_and_amortization_expense = Decimal(next_data.string.strip().replace(',',''))
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_income_statement.depreciation_and_amortization_expense = Decimal(next_data.string.strip().replace(',',''))
                 elif r'停業單位損益' in data.string.encode('utf-8') or r'停業單位損益合計' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
-                        income_statement.income_from_discontinued_operations = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.income_from_discontinued_operations = Decimal(next_data.string.strip().replace(',',''))
+                        next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                        last_income_statement.income_from_discontinued_operations = Decimal(next_data.string.strip().replace(',',''))
             if income_statement.basic_earnings_per_share is not None:
                 income_statement.save()
+                last_income_statement.save()
                 print stock_symbol + ' data updated'
             else:
                 print stock_symbol + 'time sleep'
-                time.sleep(10)
+                time.sleep(30)
 
     return HttpResponse("update_season_income_statement")
 
@@ -214,7 +359,7 @@ def update_season_balance_sheet(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 2
+        season = 102
 
         if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
 

@@ -131,6 +131,21 @@ def update_month_revenue(request):
                 print("update " + stock_symbol)
     return HttpResponse("update revenue")
 
+def update_season_revenue(request):
+    symbol = '1558'
+    statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('surrogate_key')
+    for statement in statements:
+        if statement.season == 1:
+            last_season_statement = statements.get(year=statement.year-1, season=4)
+        else:
+            last_season_statement = statements.get(year=statement.year, season=statement.season-1)
+        revenue = SeasonRevenue()
+        revenue.year = statement.year
+        revenue.season = statement.season
+        revenue.symbol = symbol
+        revenue.revenue = statement.operating_revenue
+    return HttpResponse('not finish')
+
 def update_dividend_new(request):
     stock_symbol = '2454'
     url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stock_symbol + ".djhtm"
