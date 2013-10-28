@@ -9,16 +9,6 @@
 				$('#table_result').html('&nbsp;').load('/month_revenue/', function () {
 					$('#symbol').html($('#stock_id').html());
 				});
-				$( '#season_revenue' ).click( function() {
-					if ($('#revenue_type').html() != '季盈餘明細') {
-						drawTool = new Draw.Tool();
-						$('#revenue_type').html('季盈餘明細');
-						$('#table_result').html('&nbsp;').load('/season_revenue/', function(){
-							$('#symbol').html($('#stock_id').html());
-						});
-						drawTool.DrawSeason();
-					}
-				});
 				$( '#month_revenue' ).click( function() {
 					if ($('#revenue_type').html() != '月營收明細'){
 						drawTool = new Draw.Tool();
@@ -27,6 +17,26 @@
 							$('#symbol').html($('#stock_id').html());
 						});
 						drawTool.DrawMonth();
+					}
+				});
+				$( '#season_revenue' ).click( function() {
+					if ($('#revenue_type').html() != '季營收明細') {
+						drawTool = new Draw.Tool();
+						$('#revenue_type').html('季營收明細');
+						$('#table_result').html('&nbsp;').load('/season_revenue/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.DrawSeason();
+					}
+				});
+				$( '#season_profit').click(function () {
+					if ($('#revenue_type').html() != '季盈餘明細') {
+						drawTool = new Draw.Tool();
+						$('#revenue_type').html('季盈餘明細');
+						$('#table_result').html('&nbsp').load('/season_profit/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.DrawSeasonProfit();
 					}
 				});
 			});

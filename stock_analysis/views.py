@@ -187,6 +187,9 @@ def month_revenue(request):
 		context_instance = RequestContext(request))
 
 def season_revenue(request):
+	return HttpResponse('hello')
+
+def season_profit(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
@@ -224,6 +227,9 @@ def roi(request):
 	return HttpResponse('roi')
 
 def getSeasonRevenueChart(request):
+	return HttpResponse('hello')
+
+def getSeasonProfitChart(request):
 	symbol = getSymbol(request)
 	maxProfit = 0
 	maxGrowthRate = -100

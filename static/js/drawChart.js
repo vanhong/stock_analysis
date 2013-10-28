@@ -98,10 +98,13 @@
             });
         }
         this.DrawMonth = function() {
-                GetData('/getRevenueChart/');
+            GetData('/getRevenueChart/');
         }
         this.DrawSeason = function() {
-                GetData('/getSeasonRevenueChart/');
+            GetData('/getSeasonRevenueChart/');
+        }
+        this.DrawSeasonProfit = function(){
+            GetData('/getSeasonProfitChart');
         }
     }
     Draw.Tool = Tool;

@@ -1,7 +1,7 @@
 ﻿from django.conf.urls import patterns, include, url
 from django.conf.urls import *
 from django.conf import settings
-from stock_analysis.views import ajax_user_search, set_stockid
+from stock_analysis.views import set_stockid
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
@@ -16,11 +16,13 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^performance_per_share_table/$', 'performance_per_share_table'),
     (r'^getRevenueChart/$', 'getRevenueChart'),
     (r'^getSeasonRevenueChart/$', 'getSeasonRevenueChart'),
+    (r'^getSeasonProfitChart/$', 'getSeasonProfitChart'),
     (r'^getDividendChart/$', 'getDividendChart'),
     (r'^getProfitabilityChart/$', 'getProfitabilityChart'),
     (r'^get_performance_per_share/$', 'get_performance_per_share'),
     (r'^month_revenue/$', 'month_revenue'),
     (r'^season_revenue/$', 'season_revenue'),
+    (r'^season_profit/$', 'season_profit'),
     (r'^dividend_table/$', 'dividend_table'),
     (r'^season_profitability/$', 'season_profitability'),
     (r'^roi/$', 'roi'),
