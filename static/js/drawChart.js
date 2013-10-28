@@ -1,22 +1,19 @@
 (function(Draw) {
-
     function Tool() {
-
         String.prototype.endsWith = function(pattern) {
             var d = this.length - pattern.length;
             return d >= 0 && this.lastIndexOf(pattern) === d;
         };
-
         var GetData = function(url) {
             $.get(url, function(jData){
                 // alert(JSON.stringify(jData));
-                //$('#Result').html(jData);
+                //$('#chart_result').html(jData);
                 if (jData.dataNum >= 24) {
                     scroll = true;
                 } else {
                     scroll = false;
                 }
-                $('#Result').highcharts({
+                $('#chart_result').highcharts({
                     chart: {
                         zoomType: 'xy',
                         plotBorderWidth: 1
@@ -100,33 +97,23 @@
                 });    
             });
         }
-
         this.DrawMonth = function() {
-            //alert("Init");
-            // $(window).load(function() {
-                //Default figure
                 GetData('/getRevenueChart/');
-            // });
         }
         this.DrawSeason = function() {
-            // $(window).load(function() {
-                //Default figure
                 GetData('/getSeasonRevenueChart/');
-            // });
         }
     }
     Draw.Tool = Tool;
 } (window.Draw = window.Draw || {}));
 
 (function(DrawDividend) {
-
     function Tool() {
-
         var GetData = function(url) {
             $.get(url, function(jData){
                 //alert(JSON.stringify(jData));
-                //$('#Result').html(jData);
-                $('#Result').highcharts({
+                //$('#chart_result').html(jData);
+                $('#chart_result').highcharts({
                     chart: {
                         type: 'column'
                     },
@@ -186,27 +173,29 @@
                 });
             });
         }
-
         this.Draw = function() {
-            //alert("Init");
-                //Default figure
                 GetData('/getDividendChart/');
         }
     }
     DrawDividend.Tool = Tool;
 } (window.DrawDividend = window.DrawDividend || {}));
 
-(function(DrawProfitbility) {
-
+(function(DrawBasicLine) {
     function Tool() {
-
         var GetData = function(url) {
             $.get(url, function(jData){
-                //alert(JSON.stringify(jData));
-                //$('#Result').html(jData);
-                $('#Result').highcharts({
+                // alert(JSON.stringify(jData));
+                //$('#chart_result').html(jData);
+                var series = [];
+                for(i=0; i<jData.names.length; i++){
+                     series.push({
+                         name: jData.names[i],
+                         data: jData.datas[i],
+                     });
+                }
+                $('#chart_result').highcharts({
                     title: {
-                        text: '獲利能力',
+                        text: '',
                         x: -20 //center
                     },
                     xAxis: {
@@ -217,7 +206,7 @@
                             text: ''
                         },
                         labels: {
-                                    format: '{value}%'
+                                    format: '{value}' + jData.yUnit
                                 },
                         plotLines: [{
                             value: 0,
@@ -234,92 +223,13 @@
                         verticalAlign: 'middle',
                         borderWidth: 0
                     },
-                    series: [{
-                        name: '毛利率',
-                        data: jData.gross_profit_margins
-                    }, {
-                        name: '營益率',
-                        data: jData.operating_profit_margins
-                    }, {
-                        name: '稅前淨利率',
-                        data: jData.net_before_tax_profit_margins
-                    }, {
-                        name: '稅後淨利率',
-                        data: jData.net_after_tax_profit_margins
-                    }]
+                    series: series
                 });
             });
         }
-
-        this.Init = function() {
-            //alert("Init");
-            $(window).load(function() {
-                //Default figure
-                GetData('/getProfitabilityChart/');
-
-                
-            });
+        this.Init = function(data_url) {
+            GetData(data_url);
         }
     }
-    DrawProfitbility.Tool = Tool;
-} (window.DrawProfitbility = window.DrawProfitbility || {}));
-
-(function(DrawPerformancePerShare) {
-    function Tool () {
-        var GetData = function(url) {
-            $.get(url, function(jData){
-                //alert(JSON.stringify(jData));
-                //$('#Result').html(jData);
-                $('#Result').highcharts({
-                    title: {
-                        text: '經營績效',
-                        x: -20 //center
-                    },
-                    xAxis: {
-                        categories: jData.categories
-                    },
-                    yAxis: {
-                        title: {
-                            text: ''
-                        },
-                        labels: {
-                                    format: '{value}'
-                                },
-                        plotLines: [{
-                            value: 0,
-                            width: 1,
-                            color: '#808080'
-                        }]
-                    },
-                    tooltip: {
-                        valueSuffix: ''
-                    },
-                    legend: {
-                        layout: 'vertical',
-                        align: 'right',
-                        verticalAlign: 'middle',
-                        borderWidth: 0
-                    },
-                    series: [{
-                        name: '稅前每股盈餘',
-                        data: jData.net_before_tax_profit_per_shares
-                    }, {
-                        name: '稅後每股盈餘',
-                        data: jData.net_after_tax_profit_per_shares
-                    }]
-                });
-            });
-        }
-
-        this.Init = function() {
-            //alert("Init");
-            $(window).load(function() {
-                //Default figure
-                GetData('/get_performance_per_share/');
-
-                
-            });
-        }
-    }
-    DrawPerformancePerShare.Tool = Tool;
-} (window.DrawPerformancePerShare = window.DrawPerformancePerShare || {}));
+    DrawBasicLine.Tool = Tool;
+} (window.DrawBasicLine = window.DrawBasicLine || {}));

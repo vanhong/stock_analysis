@@ -1,29 +1,18 @@
 {% extends "analysis/index.html" %}
 
 {% block analysis_content %}
-  <h4>{{ stock_id }}</h4>
+  <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
   <script type="text/javascript">
-  var drawTool = new DrawPerformancePerShare.Tool();
-  drawTool.Init();
+    var obj = new PerformancePerShare.Tool();
+    obj.Init();
   </script>
-  <div id="Result">
+  <div class="row-fluid">
+    <div class="span4">
+      <h4><span id="symbol" ></span><span id="data_type"></span></h4>
+    </div>
+    <div id="chart_result">
+    </div>
+    <div id="table_result">
+    </div>
   </div>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        {% for head in performance_head %}
-        <td>{{ head }}</td>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for performance_items in performance_body %}
-      <tr>
-        {% for item in performance_items %}
-        <td>{{ item }}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 {% endblock %}

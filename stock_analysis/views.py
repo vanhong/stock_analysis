@@ -40,14 +40,30 @@ def getSymbol(request):
 		symbol = '2330'
 	return symbol
 
+def revenue(request):
+	return render_to_response(
+		'analysis/revenue.html',
+		context_instance = RequestContext(request))
+
+def dividend(request):
+	return render_to_response(
+		'analysis/dividend.html',
+		context_instance = RequestContext(request))
+
 def performance_per_share(request):
+	return render_to_response(
+		'analysis/performance_per_share.html',
+		context_instance = RequestContext(request))
+
+def performance_per_share_table(request):
+	print 'hello'
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	performance_head = []
-	performance_head.append(r'年/季')
-	performance_head.append(r'每股稅前盈餘')
-	performance_head.append(r'每股稅後盈餘')
-	performance_body = []
+	heads = []
+	heads.append(r'年/季')
+	heads.append(r'每股稅前盈餘')
+	heads.append(r'每股稅後盈餘')
+	bodys = []
 	if StockId.objects.filter(symbol=symbol):
 		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if ratios:
@@ -56,14 +72,14 @@ def performance_per_share(request):
 				item.append(str(ratio.year) + 'Q' + str(ratio.season))
 				item.append(ratio.net_before_tax_profit_per_share)
 				item.append(ratio.net_after_tax_profit_per_share)
-				performance_body.append(item)
+				bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/performance_per_share.html', {"stock_id": name, "performance_head": performance_head,
-				"performance_body": performance_body},
+				'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
+				"bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/performance_per_share.html',{"stock_id": getSymbol(request)},
+		'analysis/analysis_table.html',{"stock_id": getSymbol(request)},
 		context_instance = RequestContext(request))
 
 def dividend_table(request):
@@ -101,44 +117,38 @@ def dividend_table(request):
 		context_instance = RequestContext(request))
 
 def profitability(request):
+	return render_to_response(
+		'analysis/profitability.html',
+		context_instance = RequestContext(request))
+
+def season_profitability(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	profit_title = r'季獲利能力'
-	profit_head = []
-	profit_head.append(r'季度')
-	profit_head.append(r'毛利率')
-	profit_head.append(r'營益率')
-	profit_head.append(r'稅前盈利率')
-	profit_head.append(r'稅後盈利率')
-	profit_body = []
+	heads = []
+	heads.append(r'季度')
+	heads.append(r'毛利率')
+	heads.append(r'營益率')
+	heads.append(r'稅前盈益率')
+	heads.append(r'稅後盈利率')
+	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		season_profits = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
-		if season_profits:
-			for profit in season_profits:
+		season_profitabilitys = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		if season_profitabilitys:
+			for profitability in season_profitabilitys:
 				item = []
-				item.append(str(profit.year)+'Q'+str(profit.season))
-				item.append(profit.gross_profit_margin)
-				item.append(profit.operating_profit_margin)
-				item.append(profit.net_before_tax_profit_margin)
-				item.append(profit.net_after_tax_profit_margin)
-				profit_body.append(item)
+				item.append(str(profitability.year)+'Q'+str(profitability.season))
+				item.append(profitability.gross_profit_margin)
+				item.append(profitability.operating_profit_margin)
+				item.append(profitability.net_before_tax_profit_margin)
+				item.append(profitability.net_after_tax_profit_margin)
+				bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/profitability.html', {"stock_id": name, "profit_title": profit_title,
-				"profit_head": profit_head, "profit_body": profit_body},
+				'analysis/analysis_table.html', {"stock_id": name,
+				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/profitability.html',{"stock_id": getSymbol(request)},
-		context_instance = RequestContext(request))
-
-def revenue(request):
-	return render_to_response(
-		'analysis/revenue.html',
-		context_instance = RequestContext(request))
-
-def dividend(request):
-	return render_to_response(
-		'analysis/dividend.html',
+		'analysis/index.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
 def month_revenue(request):
@@ -209,16 +219,9 @@ def season_revenue(request):
 				context_instance = RequestContext(request))
 	return HttpResponse('error')
 
-def filter(request):
-	symbol = request.session['stock_id']
-
-def ajax_user_search(request):
-	q = request.GET.get('q')
-	if q is not None:
-		return HttpResponse('ajax_usr_search ' + q)
-
-def index(request):
-	return HttpResponse('index')
+def roi(request):
+	symbol = getSymbol(request)
+	return HttpResponse('roi')
 
 def getSeasonRevenueChart(request):
 	symbol = getSymbol(request)
@@ -307,13 +310,17 @@ def get_performance_per_share(request):
 	symbol = getSymbol(request)
 	if StockId.objects.filter(symbol=symbol):
 		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		xAxis_categories = []
 		net_before_tax_profit_per_shares = []
 		net_after_tax_profit_per_shares = []
 		for ratio in season_financial_ratios:
+			xAxis_categories.append(str(ratio.year) + "Q" + str(ratio.season))
 			net_before_tax_profit_per_shares.append(float(ratio.net_before_tax_profit_per_share))
 			net_after_tax_profit_per_shares.append(float(ratio.net_after_tax_profit_per_share))
-	data = {'net_before_tax_profit_per_shares': net_before_tax_profit_per_shares,
-			'net_after_tax_profit_per_shares': net_after_tax_profit_per_shares}
+	names = [r'稅前每股盈餘', r'稅後每股盈餘']
+	datas = [net_before_tax_profit_per_shares, net_after_tax_profit_per_shares]
+	yUnit = '元'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
 
@@ -335,11 +342,8 @@ def getProfitabilityChart(request):
 			net_before_tax_profit_margins.append(float(profitability.net_before_tax_profit_margin))
 			net_after_tax_profit_margins.append(float(profitability.net_after_tax_profit_margin))
 	names = [r'毛利率', r'營益率', r'稅前淨利率', r'稅後淨利率']
-	totalProfitability = [gross_profit_margins, operating_profit_margins, net_before_tax_profit_margins, 
+	datas = [gross_profit_margins, operating_profit_margins, net_before_tax_profit_margins, 
 						  net_after_tax_profit_margins]
-	data = {'categories': xAxis_categories, 'gross_profit_margins': gross_profit_margins, 
-			'operating_profit_margins': operating_profit_margins, 
-			'net_before_tax_profit_margins': net_before_tax_profit_margins,
-			'net_after_tax_profit_margins': net_after_tax_profit_margins, 'names': names, 
-			'totalProfitability': totalProfitability}
+	yUnit = '%'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")

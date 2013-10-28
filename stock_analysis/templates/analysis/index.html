@@ -32,7 +32,7 @@ $( document ).ajaxStart( function() {
 {% endblock %}
 
 {% block content %}
-  <div class="container" id="results">
+  <div class="container">
     <div class="row-fluid">
       <div class="span4 offset4">
         <input id="q" type="search" class="search-query">
@@ -45,15 +45,20 @@ $( document ).ajaxStart( function() {
           <li class="dropdown-submenu">
             <a class="" href="#">  基本分析</a>
             <ul class="dropdown-menu">
-              <li><a id="revenue" href="/revenue/">營收盈餘</a></li>
+              <li><a href="/revenue/">營收盈餘</a></li>
               <li><a href="/dividend/">股利政策</a></li>
-              <li><a id="profitability" href="/profitability/">獲利能力</a></li>
+              <li><a href="/profitability/">獲利能力</a></li>
               <li><a href="/performance_per_share/">經營績效</a></li>
               <li><a href="#">重大行事歷</a></li>
               <li><a href="#">產銷組合</a></li>
             </ul>
           </li>
-          <li><a href="#">  財務分析</a></li>
+          <li class="dropdown-submenu">
+            <a href="#">  財務分析</a>
+            <ul class="dropdown-menu">
+              <li><a herf="/roi/">報酬率</a></li>
+            </ul>
+          </li>
           <li><a href="#">  籌碼分析</a></li>
         </ul>
       </div>

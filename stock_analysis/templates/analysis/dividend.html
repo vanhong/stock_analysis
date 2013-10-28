@@ -8,30 +8,12 @@
   </script>
   <div class="row-fluid">
     <div class="span4">
-      <h4><span id="symbol" ></span><span id="revenue_type"></span></h4>
+      <h4><span id="symbol" ></span><span id="data_type"></span></h4>
     </div>
     </button>
   </div>
-  <div id="Result">
+  <div id="chart_result">
   </div>
   <div id="table_result">
   </div>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        {% for head in dividend_head %}
-        <td>{{ head }}</td>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for dividend_items in dividend_body %}
-      <tr>
-        {% for item in dividend_items %}
-        <td>{{ item }}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 {% endblock %}
