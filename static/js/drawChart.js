@@ -67,9 +67,9 @@
                     legend: {
                         layout: 'vertical',
                         align: 'left',
-                        x: 120,
+                        x: 50,
                         verticalAlign: 'top',
-                        y: 100,
+                        y: 10,
                         floating: true,
                         backgroundColor: '#FFFFFF'
                     },
@@ -140,10 +140,10 @@
                         }
                     },
                     legend: {
-                        align: 'right',
-                        x: -70,
+                        align: 'left',
+                        x: 50,
                         verticalAlign: 'top',
-                        y: 20,
+                        y: 10,
                         floating: true,
                         backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColorSolid) || 'white',
                         borderColor: '#CCC',

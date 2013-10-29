@@ -10,7 +10,7 @@ from django.template import Context
 from django.db.models import Count
 from stock_analysis.settings import STATIC_URL
 
-from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit
+from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
 
@@ -189,11 +189,37 @@ def month_revenue(request):
 def season_revenue(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	
+	heads = []
+	heads.append(r'年/季')
+	heads.append(r'營收(仟元)')
+	heads.append(r'季增率')
+	heads.append(r'去年同期(仟元)')
+	heads.append(r'年增率')
+	heads.append(r'累計營收(仟元)')
+	heads.append(r'年增率')
+	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		income_statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('surrogate_key')
+		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		if season_revenues:
+			for revenue in season_revenues:
+				item = []
+				item.append(str(revenue.year)+r'/'+str(revenue.season))
+				item.append(revenue.revenue)
+				item.append(revenue.season_growth_rate)
+				item.append(revenue.last_year_revenue)
+				item.append(revenue.year_growth_rate)
+				item.append(revenue.acc_revenue)
+				item.append(revenue.acc_year_growth_rate)
+				bodys.append(item)
 
-	return HttpResponse('hello')
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {"stock_id": name,
+				"heads": heads, "bodys": bodys},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/index.html',{"stock_id": symbol},
+		context_instance = RequestContext(request))
 
 def season_profit(request):
 	symbol = getSymbol(request)
@@ -233,7 +259,37 @@ def roi(request):
 	return HttpResponse('roi')
 
 def getSeasonRevenueChart(request):
-	return HttpResponse('hello')
+	symbol = getSymbol(request)
+	maxRevenue = 0
+	maxGrowthRate = -100
+	minGrowthRate = 10000
+	dataNum = 0
+	if StockId.objects.filter(symbol=symbol):
+		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('surrogate_key')
+		revenue_data = []
+		growth_rate_data = []
+		xAxis_categories = []
+		for revenue in season_revenues:
+			if revenue.revenue is not None and revenue.year_growth_rate is not None:
+				int_season_revenue = int(revenue.revenue)
+				if int_season_revenue > maxRevenue:
+					maxRevenue = int_season_revenue
+				revenue_data.append(int_season_revenue)
+				float_year_growth_rate = float(revenue.year_growth_rate)
+				if float_year_growth_rate > maxGrowthRate:
+					maxGrowthRate = float_year_growth_rate
+				if float_year_growth_rate < minGrowthRate:
+					minGrowthRate = float_year_growth_rate
+				growth_rate_data.append(float_year_growth_rate)
+				xAxis_categories.append(str(revenue.year) + 'Q' + str(revenue.season))
+		if len(revenue_data) > 24:
+			dataNum = 24
+		else:
+			dataNum = len(revenue_data)
+	data = {'revenue' : revenue_data, 'growth_rate': growth_rate_data, 'categories' : xAxis_categories,
+			'maxRevenue': maxRevenue, 'maxGrowthRate' : maxGrowthRate, 'minGrowthRate': minGrowthRate,
+			'dataNum' : dataNum}
+	return HttpResponse(json.dumps(data), content_type="application/json")
 
 def getSeasonProfitChart(request):
 	symbol = getSymbol(request)
