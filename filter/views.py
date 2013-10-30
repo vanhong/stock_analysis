@@ -8,9 +8,10 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.template import Context
 from django.db.models import Count
+from django.db.models import Q
 from stock_analysis.settings import STATIC_URL
 
-from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit
+from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
 
@@ -66,6 +67,15 @@ def filter_start(request):
 					if item['mycount'] >= cnt:
 						filterList.append(item['symbol'])
 				print filterList
+		elif key == 'SeasonRevenueContinuousAnnualGrowth':
+			data = ''
+			cnt = int(value['SeasonCnt'])
+			SeasonRevenueAnnualGrowth = value['SeasonRevenueAnnualGrowth']
+			if cnt == '' or SeasonRevenueAnnualGrowth == '':
+				continue
+			datas = SeasonRevenue.objects.values('year', 'season').distinct().order_by('-year', '-season')
+			if len(dates) >= cnt:
+				print 'not yet'
 		elif key == 'SeasonOPM':
 			# print 'start to check ' + stockid.symbol + ' OPM'
 			cnt = int(value['SeasonCnt'])
@@ -155,6 +165,16 @@ def checkData(dataList, cnt, overunder, condition):
 	else:
 		return ''
 
+def query_con_season_revenue_ann_growth_rate(request):
+	con_cnt = 2
+	growth_rate = 10
+	seasons = SeasonRevenue.objects.values('year', 'season').distinct().order_by('-year', '-season')[:con_cnt]
+	for season in seasons:
+		print season
+	symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=growth_rate, year__gte=seasons[len(seasons)-1]['year']).exclude(year=seasons[len(seasons)-1]['year'], season__lt=seasons[len(seasons)-1]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=con_cnt)
+	for symbol in symbols:
+		print symbol['symbol']
+	return HttpResponse('test')
 
 def daterange(start_date, end_date):
 	for n in range(int ((end_date - start_date).days)):

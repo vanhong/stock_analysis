@@ -16,7 +16,7 @@ from html5lib import treebuilders
 
 #income statement from TWSE 綜合損益表
 def show_season_income_statement(request):
-    stock_symbol = '1558'
+    stock_symbol = '1409'
     year = 102
     season = 2
     url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
@@ -80,7 +80,7 @@ def update_season_income_statement(request):
             owners_of_parent = 0
             print stock_symbol + ' loaded'
             for data in season_income_datas:
-                if r'營業收入合計' in data.string.encode('utf-8'):
+                if r'營業收入合計' in data.string.encode('utf-8') or r'收入合計' == data.string.encode('utf-8') or r'淨收益' == data.string.encode('utf-8') or r'收益合計' == data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     income_statement.operating_revenue = Decimal(next_data.string.strip().replace(',',''))
                     next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling

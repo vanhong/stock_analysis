@@ -6,7 +6,7 @@
         };
         var GetData = function(url) {
             $.get(url, function(jData){
-                // alert(JSON.stringify(jData));
+                //alert(JSON.stringify(jData));
                 //$('#chart_result').html(jData);
                 if (jData.dataNum >= 24) {
                     scroll = true;
@@ -25,7 +25,7 @@
                             labels: {
                                 //step: 6,
                                 formatter: function() {
-                                    if (this.value.endsWith('01') || this.value.endsWith('07')){
+                                    if (this.value.endsWith('01') || this.value.endsWith('07') || this.value.endsWith('Q1')){
                                         return this.value;
                                     }
                                 }
