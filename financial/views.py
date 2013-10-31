@@ -112,7 +112,7 @@ def update_season_balance_sheet(request):
     url = 'http://mops.twse.com.tw/mops/web/t164sb03'
     values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
             'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
-            'queryName':'co_id', 'TYPEK':'all', 'isnew':'false', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
+            'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
     url_data = urllib.urlencode(values) 
 
     req = urllib2.Request(url, url_data)
