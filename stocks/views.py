@@ -78,13 +78,13 @@ class ParseStockId(HTMLParser):
 def update_month_revenue(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()
-    if today.day >= 10:
-        last_revenue_day = today.replace(month=today.month-1)
-    else:
-        last_revenue_day = today.replace(month=today.month-2)
+    # if today.day >= 10:
+    #     last_revenue_day = today.replace(month=today.month-1)
+    # else:
+    #     last_revenue_day = today.replace(month=today.month-2)
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=last_revenue_day.year, month=last_revenue_day.month)
+        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=2013, month=9)
         if revenueInDb:
             print 'stockid ' + stock_symbol + ' exists'
         else:
