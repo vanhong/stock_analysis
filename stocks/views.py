@@ -7,7 +7,9 @@ from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
 import time
 from decimal import Decimal
-from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend
+from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue
+from financial.models import SeasonIncomeStatement
+from django.db.models import Sum
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -76,13 +78,13 @@ class ParseStockId(HTMLParser):
 def update_month_revenue(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()
-    if today.day >= 10:
-        last_revenue_day = today.replace(month=today.month-1)
-    else:
-        last_revenue_day = today.replace(month=today.month-2)
+    # if today.day >= 10:
+    #     last_revenue_day = today.replace(month=today.month-1)
+    # else:
+    #     last_revenue_day = today.replace(month=today.month-2)
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=last_revenue_day.year, month=last_revenue_day.month)
+        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=2013, month=9)
         if revenueInDb:
             print 'stockid ' + stock_symbol + ' exists'
         else:
@@ -130,6 +132,55 @@ def update_month_revenue(request):
                       totaldata[6].decode("cp950").encode("utf-8"))"""
                 print("update " + stock_symbol)
     return HttpResponse("update revenue")
+
+def update_season_revenue(request):
+    stock_ids = StockId.objects.all()
+    for stockid in stock_ids:
+        symbol = stockid.symbol
+        statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('surrogate_key')
+        if statements:
+            for statement in statements:
+                season_revenue = SeasonRevenue.objects.filter(symbol=symbol, year=statement.year, season=statement.season)
+                if not season_revenue:
+                    if statement.season == 1:
+                        if statements.filter(year=statement.year-1, season=4):
+                            last_season_statement = statements.get(year=statement.year-1, season=4)
+                        else:
+                            last_season_statement = None
+                    else:
+                        if statements.filter(year=statement.year, season=statement.season-1):
+                            last_season_statement = statements.get(year=statement.year, season=statement.season-1)
+                        else:
+                            last_season_statement = None
+                    if statements.filter(year=statement.year-1, season=statement.season):
+                        last_year_statement = statements.get(year=statement.year-1, season=statement.season)
+                    else:
+                        last_year_statement = None
+                    revenue = SeasonRevenue()
+                    revenue.surrogate_key = symbol + "_" + str(statement.year) + str(statement.season).zfill(2)
+                    revenue.year = statement.year
+                    revenue.season = statement.season
+                    revenue.symbol = symbol
+                    revenue.revenue = statement.operating_revenue
+                    if last_season_statement:
+                        if last_season_statement.operating_revenue > 0:
+                            revenue.season_growth_rate = Decimal(((revenue.revenue / last_season_statement.operating_revenue) - 1) * 100)
+                    if last_year_statement:
+                        revenue.last_year_revenue = Decimal(last_year_statement.operating_revenue)
+                        if revenue.last_year_revenue > 0:
+                            revenue.year_growth_rate = Decimal(((revenue.revenue / revenue.last_year_revenue) - 1) * 100)
+                    revenue.acc_revenue = SeasonIncomeStatement.objects.filter(symbol=symbol, year=statement.year, season__lte=statement.season).aggregate(Sum('operating_revenue'))['operating_revenue__sum']
+                    #revenue.acc_revenue = SeasonIncomeStatement.objects.filter(symbol=symbol, year=statement.year, season__lte=statement.season)
+                    if last_year_statement:
+                        last_acc_revenue = SeasonIncomeStatement.objects.filter(symbol=symbol, year=statement.year-1, season__lte=statement.season).aggregate(Sum('operating_revenue'))['operating_revenue__sum']
+                        #print revenue.acc_revenue
+                        #print last_acc_revenue
+                        if last_acc_revenue > 0:
+                            revenue.acc_year_growth_rate = Decimal(((revenue.acc_revenue / last_acc_revenue) - 1) * 100)
+                    revenue.save()
+                    print symbol + ' season revenue updated'
+
+    return HttpResponse('not finish')
 
 def update_dividend_new(request):
     stock_symbol = '2454'

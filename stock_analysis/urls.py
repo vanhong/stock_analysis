@@ -1,7 +1,7 @@
 ﻿from django.conf.urls import patterns, include, url
 from django.conf.urls import *
 from django.conf import settings
-from stock_analysis.views import ajax_user_search, set_stockid
+from stock_analysis.views import set_stockid
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
@@ -13,14 +13,19 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^dividend/$', 'dividend'),
     (r'^profitability/$', 'profitability'),
     (r'^performance_per_share/$', 'performance_per_share'),
+    (r'^performance_per_share_table/$', 'performance_per_share_table'),
     (r'^getRevenueChart/$', 'getRevenueChart'),
     (r'^getSeasonRevenueChart/$', 'getSeasonRevenueChart'),
+    (r'^getSeasonProfitChart/$', 'getSeasonProfitChart'),
     (r'^getDividendChart/$', 'getDividendChart'),
     (r'^getProfitabilityChart/$', 'getProfitabilityChart'),
     (r'^get_performance_per_share/$', 'get_performance_per_share'),
     (r'^month_revenue/$', 'month_revenue'),
     (r'^season_revenue/$', 'season_revenue'),
+    (r'^season_profit/$', 'season_profit'),
     (r'^dividend_table/$', 'dividend_table'),
+    (r'^season_profitability/$', 'season_profitability'),
+    (r'^roi/$', 'roi'),
 )
 
 urlpatterns += patterns('stocks.views',
@@ -28,12 +33,15 @@ urlpatterns += patterns('stocks.views',
     (r'^update_dividend/$', 'update_dividend'),
     (r'^update_month_revenue/$', 'update_month_revenue'),
     (r'^update_season_profit/$', 'update_season_profit'),
+    (r'^update_season_revenue/$', 'update_season_revenue'),
 )
 
 urlpatterns += patterns('financial.views',
     (r'^update_season_financial_ratio/$', 'update_season_financial_ratio'),
     (r'^update_season_income_statement/$', 'update_season_income_statement'),
     (r'^update_season_balance_sheet/$', 'update_season_balance_sheet'),
+    (r'^show_season_balance_sheet/$', 'show_season_balance_sheet'),
+    (r'^show_season_income_statement/$', 'show_season_income_statement'),
 )
 
 urlpatterns += patterns('',
@@ -55,6 +63,7 @@ urlpatterns += patterns('',
 urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
+    url( r'^filter/test/$', 'query_con_month_revenue_ann_growth_rate'),
 )
 
 urlpatterns += patterns('us_stocks.views',
