@@ -179,10 +179,10 @@ def query_con_season_revenue_ann_growth_rate(request):
 def query_con_month_revenue_ann_growth_rate(request):
 	con_cnt = 1
 	growth_rate = 10
-	seasons = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')[:con_cnt]
-	for season in seasons:
-		print season
-	symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=growth_rate, year__gte=seasons[len(seasons)-1]['month']).exclude(year=seasons[len(seasons)-1]['month'], season__lt=seasons[len(seasons)-1]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=con_cnt)
+	months = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')[:con_cnt]
+	for month in months:
+		print month
+	symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=growth_rate, year__gte=months[len(months)-1]['year']).exclude(year=months[len(months)-1]['year'], month__lt=months[len(months)-1]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=con_cnt)
 	for symbol in symbols:
 		print symbol['symbol']
 	return HttpResponse('test')
