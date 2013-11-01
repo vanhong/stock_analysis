@@ -73,10 +73,21 @@ def filter_start(request):
 			data = ''
 			cnt = int(value['Cnt'])
 			SeasonRevenueAnnualGrowth = value['SeasonRevenueAnnualGrowth']
-			seasons = SeasonRevenue.objects.values('year', 'season').distinct().order_by('-year', '-season')[:cnt]
-			symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=growth_rate, year__gte=seasons[len(seasons)-1]['year']).exclude(year=seasons[len(seasons)-1]['year'], season__lt=seasons[len(seasons)-1]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
-			print 'SeasonRevenueContinuousAnnualGrowth:'
-			print symbols
+			seasons = SeasonRevenue.objects.values('year', 'season').distinct().order_by('-year', '-season')[:cnt + 1]
+			not_update_symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, year_gte=seasons[len(seasons)-1]['year']).exclude(year=seasons[len(season)-1]['year'], season__lt=seasons[len(seasons)-1]['season']).exclude(year=seasons[0]['year'], season=seasons[0]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			not_update_lists = []
+			update_lists = []
+			newest_update_lists = []
+			for symbol in not_update_symbols:
+				not_update_lists.append(symbol['symbol'])
+			update_symbols = SeasonRevenue.objects.values('symbol').filter(year=seasons[0]['year'], month=seasons[0]['season'])
+			for symbol in update_symbols:
+				update_lists.append(symbol['symbol'])
+			not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
+			symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, year__gte=seasons[len(seasons)-2]['year']).exclude(year=seasons[len(seasons)-2]['year'], season__lt=seasons[len(seasons)-2]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			for symbol in symbols:
+				newest_update_lists.append(symbol['symbol'])
+			newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
 			filterList.append(symbols)
 		elif key == 'SeasonOPM':
 			# print 'start to check ' + stockid.symbol + ' OPM'
