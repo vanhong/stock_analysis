@@ -34,6 +34,7 @@ urlpatterns += patterns('stocks.views',
     (r'^update_month_revenue/$', 'update_month_revenue'),
     (r'^update_season_profit/$', 'update_season_profit'),
     (r'^update_season_revenue/$', 'update_season_revenue'),
+    (r'^stock/test/$', 'update_new_month_revenue'),
 )
 
 urlpatterns += patterns('financial.views',
