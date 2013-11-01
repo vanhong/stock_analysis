@@ -10,9 +10,6 @@ from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement
 from bs4 import BeautifulSoup
 import html5lib
-from html5lib import sanitizer
-from html5lib import treebuilders
-
 
 #income statement from TWSE 綜合損益表
 def show_season_income_statement(request):
