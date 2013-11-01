@@ -47,30 +47,23 @@ def filter_start(request):
 			MonthRevenueAnnualGrowth = value['MonthRevenueAnnualGrowth']
 			if cnt == '' or MonthRevenueAnnualGrowth == '':
 				continue
-			dates = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')[:cnt]
-			symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, year__gte=dates[len(dates)-1]['year']).exclude(year=dates[len(dates)-1]['year'], month__lt=dates[len(dates)-1]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
-			print 'MonthRevenueContinuousAnnualGrowth:'
-			print symbols
-			filterList.append(symbols)
-			# dates = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')
-			# print str(dates[0]['year']) + '-' + str(dates[0]['month'])
-
-			# if len(dates) >= cnt:
-			# 	yearStr = ''
-			# 	monthStr = ''
-			# 	for i in range(0, int(cnt)):
-			# 		yearStr += str(dates[i]['year']) +','
-			# 		monthStr += str(dates[i]['month']) + ','
-			# 	yearStr = yearStr[:-1]
-			# 	monthStr = monthStr[:-1]
-			# 	whereStr = 'stocks_monthrevenue.year in (' + yearStr + ') and stocks_monthrevenue.month in (' + monthStr + ') and stocks_monthrevenue.year_growth_rate > ' + MonthRevenueAnnualGrowth
-			# 	# print whereStr
-			# 	queryset = MonthRevenue.objects.extra(where=[whereStr]).values('symbol').annotate(mycount = Count('symbol'))
-			# 	# print 'after query len=' + str(len(queryset))
-			# 	for item in queryset:
-			# 		if item['mycount'] >= cnt:
-			# 			filterList.append(item['symbol'])
-			# 	print filterList
+			months = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')[:cnt + 1]
+			not_update_symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, year__gte=months[len(months)-1]['year']).exclude(year=months[len(months)-1]['year'], month__lt=months[len(months)-1]['month']).exclude(year=months[0]['year'], month=months[0]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			not_update_lists = []
+			update_lists = []
+			newest_update_lists = []
+			for symbol in not_update_symbols:
+				not_update_lists.append(symbol['symbol'])
+			update_symbols = MonthRevenue.objects.values('symbol').filter(year=months[0]['year'], month=months[0]['month'])
+			for symbol in update_symbols:
+				update_lists.append(symbol['symbol'])
+			not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
+			symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, year__gte=months[len(months)-2]['year']).exclude(year=months[len(months)-2]['year'], month__lt=months[len(months)-2]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			for symbol in symbols:
+				newest_update_lists.append(symbol['symbol'])
+			newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
+			print newest_update_lists
+			filterList.append(newest_update_lists)
 		elif key == 'MonthRevenueAnnualGrowthBecomeBetter':
 			Cnt = int(value['Cnt'])
 			AnnualGrowthLowerBound = value['AnnualGrowthLowerBound']
@@ -128,7 +121,7 @@ def filter_start(request):
 	print filterIntersection
 	finalResults = {}
 	for item in filterIntersection:
-		finalResults[item['symbol']] = ''
+		finalResults[item] = ''
 
 	return render_to_response(
 				'filter/filter_result.html', {
