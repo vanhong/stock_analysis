@@ -10,9 +10,6 @@ from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement
 from bs4 import BeautifulSoup
 import html5lib
-from html5lib import sanitizer
-from html5lib import treebuilders
-
 
 #income statement from TWSE 綜合損益表
 def show_season_income_statement(request):
@@ -333,18 +330,9 @@ def show_season_balance_sheet(request):
     season = 2
     url = 'http://mops.twse.com.tw/mops/web/t164sb03'
     values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
-<<<<<<< HEAD
             'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
             'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
     url_data = urllib.urlencode(values) 
-
-=======
-              'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
-              'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
-    values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'sii', 'step' : '2',
-              'year' : '102', 'season' : '2', 'co_id' : '2823', 'firstin' : '1'}
-    url_data = urllib.urlencode(values)
->>>>>>> 82b03a188e4a2a8e8d0cb6ee40b46b2d2d9379c6
     req = urllib2.Request(url, url_data)
     response = urllib2.urlopen(req)
 

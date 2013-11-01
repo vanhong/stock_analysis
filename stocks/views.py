@@ -75,65 +75,105 @@ class ParseStockId(HTMLParser):
                 self.totaldata.append(self.stockdata)
                 self.stockdata = []
 
-def last_month(day):
-    return day.replace(day=1) - datetime.timedelta(days=1)
+def last_season(day):
+    year = day.year
+    month = day.month
+    if month <= 3:
+        season = 4
+        year -= 1
+    elif month >= 4 and month <= 6:
+        season = 1
+    elif month >= 7 and month <= 9:
+        season = 2
+    elif month >= 10:
+        season = 3
+    return year, season
+
+def update_season_profit(request):
+    stock_ids = StockId.objects.all()
+    today = datetime.date.today()
+    for stock_id in stock_ids:
+        stock_symbol = stock_id.symbol
+        (last_season_year, last_season_season) = last_season(today)
+        revenueInDb = SeasonRevenue.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
+        if revenueInDb:
+            continue
+        else:
+            url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zcha_" + stock_symbol + ".djhtm"
+            webcode = urllib.urlopen(url)
+            soup = BeautifulSoup(webcode, from_encoding='utf-8')
+            seasons = soup.find_all('td', {'class':'t3n0'})
+            print 'stockid ' + stock_symbol + ' loaded'
+            for season_data in seasons:
+                year = int(season_data.string.split("Q")[0].split(".")[0]) + 1911
+                season = int(season_data.string.split("Q")[0].split(".")[1])
+                profit = SeasonProfit()
+                profit.surrogate_key = stock_symbol + "_" + str(year) + str(season).zfill(2)
+                profit.year = year
+                profit.season = season
+                profit.symbol = stock_symbol
+                next = season_data.next_sibling
+                if next.string and next.string != 'N/A':
+                    profit.profit = Decimal(next.string.replace(",", ""))
+                next = next.next_sibling
+                if next.string and next.string != 'N/A':
+                    profit.season_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
+                next = next.next_sibling
+                if next.string and next.string != 'N/A':
+                    profit.last_year_profit = Decimal(next.string.replace(",", ""))
+                next = next.next_sibling
+                if next.string and next.string != 'N/A':
+                    profit.year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
+                next = next.next_sibling
+                if next.string and next.string != 'N/A':
+                    profit.acc_profit = Decimal(next.string.replace(",", ""))
+                next = next.next_sibling
+                if next.string and next.string != 'N/A':
+                    profit.acc_year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
+                profit.save()
+    return HttpResponse("update revenue")
 
 def update_month_revenue(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()
-    if today.day >= 10:
-        last_revenue_day = last_month(today)
-    else:
-        last_revenue_day = last_month(last_month(today))
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=last_revenue_day.year, month=last_revenue_day.month)
+        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month)
         if revenueInDb:
-            print 'stockid ' + stock_symbol + ' exists'
+            continue
         else:
             url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zch_" + stock_symbol + ".djhtm"
             webcode = urllib.urlopen(url)
-            revenue = ParseStockRevenue()
-            if webcode.code == 200:
-                revenue.feed(webcode.read())
-                webcode.close()
-            else:
-                return HttpResponse("update revenue failed")
-            
-            if not revenue.totaldata:
-                time.sleep(0.5)
-                webcode = urllib.urlopen(url)
-                revenue.feed(webcode.read())
-                webcode.close()
-
-            if revenue.totaldata:
-                for i in xrange(len(revenue.totaldata)):
-                    totaldata = revenue.totaldata[i]
-                    year = int(totaldata[0].split("/")[0]) + 1911
-                    month = int(totaldata[0].split("/")[1])
-                    monthRevenue = MonthRevenue()
-                    monthRevenue.surrogate_key = stock_symbol + "_" + str(year) + str(month).zfill(2)
-                    monthRevenue.year = year
-                    monthRevenue.month = month
-                    monthRevenue.symbol = stock_symbol
-                    if totaldata[1] != "nil":
-                        monthRevenue.revenue = Decimal(totaldata[1].replace(",", ""))
-                    if totaldata[2] != "nil":
-                        monthRevenue.month_growth_rate = Decimal(totaldata[2].replace("%", "").replace(",", ""))
-                    if totaldata[3] != "nil":
-                        monthRevenue.last_year_revenue = Decimal(totaldata[3].replace(",", ""))
-                    if totaldata[4] != "nil":
-                        monthRevenue.year_growth_rate = Decimal(totaldata[4].replace("%", "").replace(",", ""))
-                    if totaldata[5] != "nil":
-                        monthRevenue.acc_revenue = Decimal(totaldata[5].replace(",", ""))
-                    if totaldata[6] != "nil":
-                        monthRevenue.acc_year_growth_rate = Decimal(totaldata[6].replace("%", "").replace(",", ""))
-                    monthRevenue.save()
-                    """print(str(year) + " " + str(month) + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
-                      totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8") + " " +
-                      totaldata[4].decode("cp950").encode("utf-8") + " " + totaldata[5].decode("cp950").encode("utf-8") + " " +
-                      totaldata[6].decode("cp950").encode("utf-8"))"""
-                print("update " + stock_symbol)
+            soup = BeautifulSoup(webcode, from_encoding='utf-8')
+            months = soup.find_all('td', {'class':'t3n0'})
+            print 'stockid ' + stock_symbol + ' loaded'
+            for month_data in months:
+                year = int(month_data.string.split("/")[0]) + 1911
+                month = int(month_data.string.split("/")[1])
+                revenue = MonthRevenue()
+                revenue.surrogate_key = stock_symbol + "_" + str(year) + str(month).zfill(2)
+                revenue.year = year
+                revenue.month = month
+                revenue.symbol = stock_symbol
+                next = month_data.next_sibling
+                if next.string:
+                    revenue.revenue = Decimal(next.string.replace(",", ""))
+                next = next.next_sibling
+                if next.string:
+                    revenue.month_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
+                next = next.next_sibling
+                if next.string:
+                    revenue.last_year_revenue = Decimal(next.string.replace(",", ""))
+                next = next.next_sibling
+                if next.string:
+                    revenue.year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
+                next = next.next_sibling
+                if next.string:
+                    revenue.acc_revenue = Decimal(next.string.replace(",", ""))
+                next = next.next_sibling
+                if next.string:
+                    revenue.acc_year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
+                revenue.save()
     return HttpResponse("update revenue")
 
 def update_season_revenue(request):
@@ -185,226 +225,35 @@ def update_season_revenue(request):
 
     return HttpResponse('not finish')
 
-def update_dividend_new(request):
-    stock_symbol = '2454'
-    url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stock_symbol + ".djhtm"
-    web = urllib.urlopen(url)
-    soup = BeautifulSoup(web)
-    dividend_datas = soup.find_all("td", { "class": "t2" })
-    for dividend_data in dividend_datas:
-        try:
-            year = int(dividend_data.contents[0])
-            cash_dividends = dividend_data.next_sibling
-            print year
-            print cash_dividends
-        except:
-            print "error"
-
-    return HttpResponse("update dividend")
-
 def update_dividend(request):
     stock_ids = StockId.objects.all()
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stock_symbol + ".djhtm"
         web = urllib.urlopen(url)
-        dividend_page = ParseDividend()
-        if web.code == 200:
-            dividend_page.feed(web.read())
-            web.close()
-        else:
-            return HttpResponse("update dividend error")
-        if not dividend_page.totaldata:
-            time.sleep(0.5)
-            web = urllib.urlopen(url)
-            dividend_page.feed(web.read())
-            web.close()
-        if dividend_page.totaldata:
-            for i in xrange(len(dividend_page.totaldata)):
-                totaldata = dividend_page.totaldata[i]
+        soup = BeautifulSoup(web)
+        dividend_datas = soup.find_all("td", { "class": "t2" })
+        for dividend_data in dividend_datas:
+            try:
+                year = int(dividend_data.string)
                 dividend = Dividend()
-                year = int(totaldata[0]) + 1911
                 dividend.year = year
                 dividend.surrogate_key = stock_symbol + "_" + str(year)
                 dividend.symbol = stock_symbol
-                dividend.cash_dividends = Decimal(totaldata[1])
-                dividend.stock_dividends_from_retained_earnings = Decimal(totaldata[2])
-                dividend.stock_dividends_from_capital_reserve = Decimal(totaldata[3])
-                dividend.stock_dividends = Decimal(totaldata[4])
-                dividend.total_dividends = Decimal(totaldata[5])
-                dividend.employee_stock_rate = Decimal(totaldata[6])
+                next = dividend_data.next_sibling.next_sibling
+                dividend.cash_dividends = Decimal(next.string)
+                next = next.next_sibling.next_sibling
+                dividend.stock_dividends_from_retained_earnings = Decimal(next.string)
+                next = next.next_sibling.next_sibling
+                dividend.stock_dividends_from_capital_reserve = Decimal(next.string)
+                next = next.next_sibling.next_sibling
+                dividend.stock_dividends = Decimal(next.string)
+                next = next.next_sibling.next_sibling
+                dividend.total_dividends = Decimal(next.string)
+                next = next.next_sibling.next_sibling
+                dividend.employee_stock_rate = Decimal(next.string)
                 dividend.save()
-            print("update dividend " + stock_symbol)
+            except:
+                pass
+
     return HttpResponse("update dividend")
-
-class ParseDividend(HTMLParser):
-    def reset(self):
-        HTMLParser.reset(self)
-        self.dividendinfo = False
-        self.cell = 0
-        self.dividenddata = []
-        self.totaldata = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'td':
-            if attrs[0][1] == 't2':
-                self.dividendinfo = True
-                self.cell %= 7
-                self.cell += 1
-            elif attrs[0][1] == 't3n1':
-                self.dividendinfo = True
-                self.cell %= 7
-                self.cell += 1
-    def handle_endtag(self, tag):
-        if tag == 'tr':
-            self.dividendinfo = False
-            self.cell = 0
-        if tag == 'td':
-            self.dividendinfo = False
-    def handle_data(self, text):
-        if self.dividendinfo:
-            if text:
-                try:
-                    data = Decimal(text)
-                    self.dividenddata.append(data)
-                except:
-                    self.cell = 0
-                    self.dividenddata = []
-                    self.dividendinfo = False
-                if self.cell == 7:
-                    self.totaldata.append(self.dividenddata)
-                    self.dividenddata = []
-
-class ParseStockRevenue(HTMLParser):
-    def reset(self):
-        HTMLParser.reset(self)
-        self.revenueinfo = False
-        self.cell = 0
-        self.revenuedata = []
-        self.totaldata = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'td':
-            if attrs[0][1] == 't3n0':
-                self.revenueinfo = True
-                self.cell %= 7
-                self.cell += 1
-            elif self.revenueinfo == True:
-                self.cell %= 7
-                self.cell += 1
-
-    def handle_endtag(self, tag):
-        if tag == 'tr':
-            self.revenueinfo = False
-            self.cell = 0
-        if self.revenueinfo == True and tag == 'td' and len(self.revenuedata) != 0:
-            if len(self.revenuedata) < self.cell:
-                self.revenuedata.append("nil")
-                if len(self.revenuedata) == 7:
-                    self.totaldata.append(self.revenuedata)
-                    self.revenuedata = []
-
-    def handle_data(self, text):
-        if self.revenueinfo:
-            if self.cell < 7:
-                if text == []:
-                    self.revenuedata.append("nil")
-                else:
-                    self.revenuedata.append(text.strip())
-            elif self.cell == 7:
-                if text == []:
-                    self.revenuedata.append("nil")
-                else:
-                    self.revenuedata.append(text.strip())
-                self.totaldata.append(self.revenuedata)
-                self.revenuedata = []
-
-def update_season_profit(request):
-    stock_ids = StockId.objects.all()
-    season_revenue = SeasonProfit.objects.all()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zcha_" + stock_symbol + ".djhtm"
-        webcode = urllib.urlopen(url)
-        revenue = ParseStockSeasonRevenue()
-        if webcode.code == 200:
-            revenue.feed(webcode.read())
-            webcode.close()
-        else:
-            return HttpResponse("update season revenue failed")
-
-        if not revenue.total_data:
-            time.sleep(0.5)
-            webcode = urllib.urlopen(url)
-            revenue.feed(webcode.read())
-            webcode.close()
-        
-        if revenue.total_data:
-            for i in xrange(len(revenue.total_data)):
-                totaldata = revenue.total_data[i]
-                year = int(totaldata[0].split("Q")[0].split(".")[0]) + 1911
-                season = int(totaldata[0].split("Q")[0].split(".")[1])
-                season_revenue = SeasonProfit()
-                season_revenue.surrogate_key = stock_symbol + "_" + str(year) + str(season).zfill(2)
-                season_revenue.year = year
-                season_revenue.season = season
-                season_revenue.symbol = stock_symbol
-                if totaldata[1] != "nil" and totaldata[1] != "N/A":
-                    season_revenue.profit = Decimal(totaldata[1].replace(",", ""))
-                if totaldata[2] != "nil" and totaldata[2] != "N/A":
-                    season_revenue.season_growth_rate = Decimal(totaldata[2].replace("%", "").replace(",", ""))
-                if totaldata[3] != "nil" and totaldata[3] != "N/A":
-                    season_revenue.last_year_profit = Decimal(totaldata[3].replace(",", ""))
-                if totaldata[4] != "nil" and totaldata[4] != "N/A":
-                    season_revenue.year_growth_rate = Decimal(totaldata[4].replace("%", "").replace(",", ""))
-                if totaldata[5] != "nil" and totaldata[5] != "N/A":
-                    season_revenue.acc_profit = Decimal(totaldata[5].replace(",", ""))
-                if totaldata[6] != "nil" and totaldata[6] != "N/A":
-                    season_revenue.acc_year_growth_rate = Decimal(totaldata[6].replace("%", "").replace(",", ""))
-                season_revenue.save()
-                """print(totaldata[0].decode("cp950").encode("utf-8") + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
-                      totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8") + " " +
-                      totaldata[4].decode("cp950").encode("utf-8") + " " + totaldata[5].decode("cp950").encode("utf-8") + " " +
-                      totaldata[6].decode("cp950").encode("utf-8"))"""
-            print("update " + stock_symbol + "season revenue")
-    return HttpResponse("update season revenue")
-
-class ParseStockSeasonRevenue(HTMLParser):
-    def reset(self):
-        HTMLParser.reset(self)
-        self.season_revenue_info = False
-        self.cell = 0
-        self.revenue_data = []
-        self.total_data = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'td':
-            if attrs[0][1] == 't3n0':
-                self.season_revenue_info = True
-                self.cell %= 7
-                self.cell += 1
-            elif self.season_revenue_info:
-                self.cell %= 7
-                self.cell += 1
-
-    def handle_endtag(self, tag):
-        if tag == 'tr':
-            self.season_revenue_info = False
-            self.cell = 0
-        if self.season_revenue_info and tag == 'td' and self.revenue_data:
-            if len(self.revenue_data) < self.cell:
-                self.revenue_data.append('nil')
-                if len(self.revenue_data) == 7:
-                    self.total_data.append(self.revenue_data)
-                    self.revenue_data = []
-
-    def handle_data(self, text):
-        if self.season_revenue_info:
-            if self.cell < 7:
-                self.revenue_data.append(text.strip())
-            elif self.cell == 7:
-                self.revenue_data.append(text.strip())
-                self.total_data.append(self.revenue_data)
-                self.revenue_data = []
-                
-
