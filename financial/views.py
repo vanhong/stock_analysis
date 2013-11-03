@@ -409,7 +409,7 @@ def update_season_balance_sheet(request):
                 balance_sheet.date = datetime.date(1911+year, 10, 1)
             balance_sheet.surrogate_key = stock_symbol + '_' + str(1911+year) + str(season).zfill(2)
 
-            last_balance_sheet = SeasonIncomeStatement()
+            last_balance_sheet = SeasonBalanceSheet()
             last_balance_sheet.symbol = stock_symbol
             last_balance_sheet.year = str(1910+year)
             last_balance_sheet.season = season
@@ -486,7 +486,7 @@ def update_season_balance_sheet(request):
                         next_data = data.next_sibling.next_sibling
                         balance_sheet.intangible_assets = Decimal(next_data.string.strip().replace(',',''))
                         next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.intangible_assets = Decimal(next_data.string.strip().replace(',',''))
+                        last_balance_sheet.intangible_assets = Decimal(next_data.string.strip().replace(',',''))
                 elif r'遞延所得稅資產' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.deferred_tax_assets = Decimal(next_data.string.strip().replace(',',''))
