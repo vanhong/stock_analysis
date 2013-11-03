@@ -95,7 +95,7 @@ def update_season_profit(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         (last_season_year, last_season_season) = last_season(today)
-        revenueInDb = SeasonRevenue.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
+        revenueInDb = SeasonProfit.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
         if revenueInDb:
             continue
         else:
@@ -111,6 +111,14 @@ def update_season_profit(request):
                 profit.surrogate_key = stock_symbol + "_" + str(year) + str(season).zfill(2)
                 profit.year = year
                 profit.season = season
+                if season == 1:
+                    profit.date = datetime.date(year, 1, 1)
+                elif season == 2:
+                    profit.date = datetime.date(year, 4, 1)
+                elif season == 3:
+                    profit.date = datetime.date(year, 7, 1)
+                elif season == 4:
+                    profit.date = datetime.date(year, 10, 1)
                 profit.symbol = stock_symbol
                 next = season_data.next_sibling
                 if next.string and next.string != 'N/A':
@@ -138,7 +146,7 @@ def update_month_revenue(request):
     today = datetime.date.today()
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month)
+        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month-2)
         if revenueInDb:
             continue
         else:
@@ -154,6 +162,7 @@ def update_month_revenue(request):
                 revenue.surrogate_key = stock_symbol + "_" + str(year) + str(month).zfill(2)
                 revenue.year = year
                 revenue.month = month
+                revenue.date = datetime.date(year, month, 1)
                 revenue.symbol = stock_symbol
                 next = month_data.next_sibling
                 if next.string:
