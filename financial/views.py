@@ -51,7 +51,7 @@ def update_season_income_statement(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 1
+        season = 2
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1911, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1910, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
@@ -380,8 +380,9 @@ def update_season_balance_sheet(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 1
+        season = 2
         if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
+            print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb03'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
                     'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',

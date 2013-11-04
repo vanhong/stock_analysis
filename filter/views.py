@@ -48,17 +48,24 @@ def filter_start(request):
 			if cnt == '' or MonthRevenueAnnualGrowth == '':
 				continue
 			months = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')[:cnt + 1]
-			not_update_symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, year__gte=months[len(months)-1]['year']).exclude(year=months[len(months)-1]['year'], month__lt=months[len(months)-1]['month']).exclude(year=months[0]['year'], month=months[0]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			not_update_symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, 
+								 year__gte=months[len(months)-1]['year']).exclude(year=months[len(months)-1]['year'], 
+								 month__lt=months[len(months)-1]['month']).exclude(year=months[0]['year'], 
+								 month=months[0]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
 			not_update_lists = []
 			update_lists = []
 			newest_update_lists = []
 			for symbol in not_update_symbols:
 				not_update_lists.append(symbol['symbol'])
-			update_symbols = MonthRevenue.objects.values('symbol').filter(year=months[0]['year'], month=months[0]['month'])
+			update_symbols = MonthRevenue.objects.values('symbol').filter(year=months[0]['year'], 
+							 month=months[0]['month'])
 			for symbol in update_symbols:
 				update_lists.append(symbol['symbol'])
 			not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
-			symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, year__gte=months[len(months)-2]['year']).exclude(year=months[len(months)-2]['year'], month__lt=months[len(months)-2]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, 
+					  year__gte=months[len(months)-2]['year']).exclude(year=months[len(months)-2]['year'], 
+					  month__lt=months[len(months)-2]['month']).annotate(symbol_count=Count('symbol')).\
+					  filter(symbol_count=cnt)
 			for symbol in symbols:
 				newest_update_lists.append(symbol['symbol'])
 			newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
@@ -74,17 +81,24 @@ def filter_start(request):
 			cnt = int(value['Cnt'])
 			SeasonRevenueAnnualGrowth = value['SeasonRevenueAnnualGrowth']
 			seasons = SeasonRevenue.objects.values('year', 'season').distinct().order_by('-year', '-season')[:cnt + 1]
-			not_update_symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, year_gte=seasons[len(seasons)-1]['year']).exclude(year=seasons[len(season)-1]['year'], season__lt=seasons[len(seasons)-1]['season']).exclude(year=seasons[0]['year'], season=seasons[0]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			not_update_symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, 
+								 year_gte=seasons[len(seasons)-1]['year']).exclude(year=seasons[len(season)-1]['year'], 
+								 season__lt=seasons[len(seasons)-1]['season']).exclude(year=seasons[0]['year'], 
+								 season=seasons[0]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
 			not_update_lists = []
 			update_lists = []
 			newest_update_lists = []
 			for symbol in not_update_symbols:
 				not_update_lists.append(symbol['symbol'])
-			update_symbols = SeasonRevenue.objects.values('symbol').filter(year=seasons[0]['year'], month=seasons[0]['season'])
+			update_symbols = SeasonRevenue.objects.values('symbol').filter(year=seasons[0]['year'], 
+							 month=seasons[0]['season'])
 			for symbol in update_symbols:
 				update_lists.append(symbol['symbol'])
 			not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
-			symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, year__gte=seasons[len(seasons)-2]['year']).exclude(year=seasons[len(seasons)-2]['year'], season__lt=seasons[len(seasons)-2]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
+			symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, 
+					  year__gte=seasons[len(seasons)-2]['year']).exclude(year=seasons[len(seasons)-2]['year'], 
+					  season__lt=seasons[len(seasons)-2]['season']).annotate(symbol_count=Count('symbol')).\
+					  filter(symbol_count=cnt)
 			for symbol in symbols:
 				newest_update_lists.append(symbol['symbol'])
 			newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
@@ -168,36 +182,34 @@ def query_con_season_revenue_ann_growth_rate(request):
 	strSymbol = 'symbol'
 	con_cnt = 10
 	growth_rate = 10
-	seasons = SeasonRevenue.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
-	not_update_symbols = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gt=growth_rate, date__gte=seasons[len(seasons)-1][strDate], date__lte=seasons[1][strDate]).exclude(date=seasons[0][strDate]).annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt)
-	not_update_lists = []
-	update_lists = []
-	newest_update_lists = []
-	for symbol in not_update_symbols:
-		not_update_lists.append(symbol[strSymbol])
-	update_symbols = SeasonRevenue.objects.values(strSymbol).filter(date=seasons[0][strDate])
-	for symbol in update_symbols:
-		update_lists.append(symbol[strSymbol])
-	not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
-	symbols = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gt=growth_rate, date__gte=seasons[len(seasons)-2][strDate], date__lte=seasons[0][strDate]).annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt)
-	for symbol in symbols:
-		newest_update_lists.append(symbol[strSymbol])
-	newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
+	dates = SeasonRevenue.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+	not_update_lists = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+					   exclude(symbol__in=SeasonRevenue.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   values_list(strSymbol, flat=True)
+	update_lists = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+				   date__gte=seasons[len(seasons)-2][strDate], date__lte=seasons[0][strDate]).\
+				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return HttpResponse('test')
 
 def query_con_month_revenue_ann_growth_rate(request):
+	strDate = 'date'
+	strSymbol = 'symbol'
 	con_cnt = 10
 	growth_rate = 10
-	months = MonthRevenue.objects.values('date').distinct().order_by('-date')[:con_cnt + 1]
-	not_update_lists = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=growth_rate, date__gte=months[len(months)-1]['date'], date__lte=months[1]['date']).annotate(symbol_count=Count('symbol')).filter(symbol_count=con_cnt).values_list('symbol')
-	update_lists = MonthRevenue.objects.values('symbol').filter(date=months[0]['date']).values_list('symbol')
-	not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
-	newest_update_lists = []
-	symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=growth_rate, date__gte=months[len(months)-2]['date'], date__lte=months[0]['date']).annotate(symbol_count=Count('symbol')).filter(symbol_count=con_cnt)
-	for symbol in symbols:
-		newest_update_lists.append(symbol['symbol'])
-	newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
-	print newest_update_lists
+	dates = MonthRevenue.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+	not_update_lists = MonthRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+					   exclude(symbol__in=MonthRevenue.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   values_list(strSymbol, flat=True)
+	update_lists = MonthRevenue.objects.values(strSymbol).filter(year_growth_rate__gt=growth_rate, 
+				   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
+				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	print update_lists
 	return HttpResponse('test')
 
 def daterange(start_date, end_date):

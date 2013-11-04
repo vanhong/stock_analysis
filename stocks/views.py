@@ -212,6 +212,14 @@ def update_season_revenue(request):
                     revenue.surrogate_key = symbol + "_" + str(statement.year) + str(statement.season).zfill(2)
                     revenue.year = statement.year
                     revenue.season = statement.season
+                    if revenue.season == 1:
+                        revenue.date = datetime.date(revenue.year, 1, 1)
+                    elif revenue.season == 2:
+                        revenue.date = datetime.date(revenue.year, 4, 1)
+                    elif revenue.season == 3:
+                        revenue.date = datetime.date(revenue.year, 7, 1)
+                    elif revenue.season == 4:
+                        revenue.date = datetime.date(revenue.year, 10, 1)
                     revenue.symbol = symbol
                     revenue.revenue = statement.operating_revenue
                     if last_season_statement:
