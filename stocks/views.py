@@ -95,7 +95,7 @@ def update_season_profit(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         (last_season_year, last_season_season) = last_season(today)
-        revenueInDb = SeasonProfit.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
+        revenueInDb = SeasonProfit.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season-1)
         if revenueInDb:
             continue
         else:
@@ -146,7 +146,7 @@ def update_month_revenue(request):
     today = datetime.date.today()
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month-2)
+        revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month-1)
         if revenueInDb:
             continue
         else:
@@ -192,7 +192,7 @@ def update_season_revenue(request):
         statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('surrogate_key')
         if statements:
             for statement in statements:
-                season_revenue = SeasonRevenue.objects.filter(symbol=symbol, year=statement.year, season=statement.season)
+                season_revenue = SeasonRevenue.objects.filter(symbol=symbol, year=statement.year, season=statement.season-1)
                 if not season_revenue:
                     if statement.season == 1:
                         if statements.filter(year=statement.year-1, season=4):

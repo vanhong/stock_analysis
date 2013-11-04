@@ -109,7 +109,6 @@ class YearFinancialRatio(models.Model):
     year = models.IntegerField(db_index=True)
     season = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
-    date = models.DateField(db_index=True)
     gross_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     operating_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     net_before_tax_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
