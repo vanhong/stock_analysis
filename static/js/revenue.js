@@ -78,6 +78,22 @@
 	PerformancePerShare.Tool = Tool;
 }(window.PerformancePerShare = window.PerformancePerShare || {}));
 
+(function(ROE) {
+	function Tool () {
+		var drawTool = new DrawBasicLine.Tool();
+		this.Init = function(){
+			$(window).load(function(){
+				$('#data_type').html('ROE/ROA');
+				$('#table_result').html('&nbsp;').load('/season_roe_table/', function(){
+					$('#symbol').html($('#stock_id').html());
+				})
+			});
+			drawTool.Init('/get_season_roe_chart/');
+		}
+	}
+	ROE.Tool = Tool;
+}(window.ROE = window.ROE || {}));
+
 (function(Dividend) {
 	function Tool(){
 		var drawTool = new DrawDividend.Tool();

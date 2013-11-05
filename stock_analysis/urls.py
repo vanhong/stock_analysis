@@ -25,7 +25,9 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^season_profit/$', 'season_profit'),
     (r'^dividend_table/$', 'dividend_table'),
     (r'^season_profitability/$', 'season_profitability'),
-    (r'^roi/$', 'roi'),
+    (r'^season_roe/$', 'season_roe'),
+    (r'^season_roe_table/$', 'season_roe_table'),
+    (r'^get_season_roe_chart/$', 'get_season_roe_chart'),
 )
 
 urlpatterns += patterns('stocks.views',

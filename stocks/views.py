@@ -192,7 +192,7 @@ def update_season_revenue(request):
         statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('surrogate_key')
         if statements:
             for statement in statements:
-                season_revenue = SeasonRevenue.objects.filter(symbol=symbol, year=statement.year, season=statement.season-1)
+                season_revenue = SeasonRevenue.objects.filter(symbol=symbol, year=statement.year, season=statement.season)
                 if not season_revenue:
                     if statement.season == 1:
                         if statements.filter(year=statement.year-1, season=4):
@@ -240,7 +240,7 @@ def update_season_revenue(request):
                     revenue.save()
                     print symbol + ' season revenue updated'
 
-    return HttpResponse('not finish')
+    return HttpResponse('update season revenue')
 
 def update_dividend(request):
     stock_ids = StockId.objects.all()

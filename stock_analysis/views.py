@@ -55,6 +55,7 @@ def performance_per_share(request):
 		'analysis/performance_per_share.html',
 		context_instance = RequestContext(request))
 
+#經營績效
 def performance_per_share_table(request):
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
@@ -253,9 +254,38 @@ def season_profit(request):
 				context_instance = RequestContext(request))
 	return HttpResponse('error')
 
-def roi(request):
+def season_roe(request):
+	return render_to_response(
+		'analysis/roe_roa.html',
+		context_instance = RequestContext(request))
+
+def season_roe_table(request):
 	symbol = getSymbol(request)
-	return HttpResponse('roi')
+	stockname = StockId.objects.get(symbol=symbol)
+	heads = []
+	heads.append(r'年/季')
+	heads.append(r'股東權益報酬率')
+	heads.append(r'資產報酬率')
+	bodys = []
+	if StockId.objects.filter(symbol=symbol):
+		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		if ratios:
+			for ratio in ratios:
+				item = []
+				item.append(str(ratio.year) + 'Q' + str(ratio.season))
+				item.append(ratio.return_on_equity)
+				item.append(ratio.return_on_assets)
+				bodys.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
+				"bodys": bodys},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/analysis_table.html',{"stock_id": getSymbol(request)},
+		context_instance = RequestContext(request))
+
+	return HttpResponse('roe')
 
 def getSeasonRevenueChart(request):
 	symbol = getSymbol(request)
@@ -390,7 +420,23 @@ def get_performance_per_share(request):
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-
+def get_season_roe_chart(request):
+	data = {}
+	symbol = getSymbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		xAxis_categories = []
+		return_on_equity = []
+		return_on_assets = []
+		for ratio in season_financial_ratios:
+			xAxis_categories.append(str(ratio.year) + "Q" + str(ratio.season))
+			return_on_equity.append(float(ratio.return_on_equity))
+			return_on_assets.append(float(ratio.return_on_assets))
+	names = [r'股東權益報酬率', r'資產報酬率']
+	datas = [return_on_equity, return_on_assets]
+	yUnit = '%'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
+	return HttpResponse(json.dumps(data), content_type="application/json")
 
 def getProfitabilityChart(request):
 	data = {}
