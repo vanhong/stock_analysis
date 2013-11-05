@@ -140,7 +140,6 @@ class YearFinancialRatio(models.Model):
     debt_equity_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     long_term_funds_to_fixed_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
-
 class SeasonFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
@@ -178,6 +177,7 @@ class SeasonFinancialRatio(models.Model):
     debt_equity_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     long_term_funds_to_fixed_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
+# 資產負債表
 class SeasonBalanceSheet(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
@@ -231,4 +231,3 @@ class SeasonBalanceSheet(models.Model):
     total_equity = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     equivalent_issue_shares_of_advance_receipts = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     number_of_shares_in_entity_held_by_entity = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-

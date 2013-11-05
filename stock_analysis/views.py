@@ -56,7 +56,6 @@ def performance_per_share(request):
 		context_instance = RequestContext(request))
 
 def performance_per_share_table(request):
-	print 'hello'
 	symbol = getSymbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
