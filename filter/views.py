@@ -177,6 +177,28 @@ def check_season_data(cnt, overunder, condition, conditionValue):
 
 		return filterList
 
+def query_con_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	if revenue_type == 'month':
+		revenue_model = MonthRevenue
+	elif revenue_type == 'season':
+		revenue_model = SeasonRevenue
+	else:
+		return None
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+	not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   values_list(strSymbol, flat=True)
+	update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+				   date__gte=seasons[len(seasons)-2][strDate], date__lte=seasons[0][strDate]).\
+				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	return update_lists
+
+
 def query_con_season_revenue_ann_growth_rate(request):
 	strDate = 'date'
 	strSymbol = 'symbol'
@@ -199,13 +221,14 @@ def query_con_month_revenue_ann_growth_rate(request):
 	strSymbol = 'symbol'
 	con_cnt = 10
 	growth_rate = 10
-	dates = MonthRevenue.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
-	not_update_lists = MonthRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+	revenue_model = MonthRevenue
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+	not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
 					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
 					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
-					   exclude(symbol__in=MonthRevenue.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
 					   values_list(strSymbol, flat=True)
-	update_lists = MonthRevenue.objects.values(strSymbol).filter(year_growth_rate__gt=growth_rate, 
+	update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gt=growth_rate, 
 				   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
 				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
