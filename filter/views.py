@@ -14,6 +14,7 @@ from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
+from django.db.models import Avg
 
 def filter_index(request):
 	return render_to_response(
@@ -197,6 +198,20 @@ def query_con_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
+
+def query_gross_profit_margin_gtn_pre_avg(request):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	con_cnt = 4
+	dates = SeasonFinancialRatio.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
+	if dates:
+		avg_gross_profit_margins = SeasonFinancialRatio.objects.filter(date__gte=dates[len(dates)-1][strDate], date__lte=dates[0][strDate]).\
+			    				   annotate(Avg('gross_profit_margin'))
+		for margin in avg_gross_profit_margins:
+			print margin.gross_profit_margin__avg
+		# gtn_lists = SeasonFinancialRatio.objects.filter(date=dates[0]).\
+		# filter(gross_profit_margin__gte=SeasonFinancialRatio.filter())
+	return HttpResponse('todo')
 
 
 def query_con_season_revenue_ann_growth_rate(request):
