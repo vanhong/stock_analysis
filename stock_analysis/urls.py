@@ -7,12 +7,13 @@ from stock_analysis.views import set_stockid
 # admin.autodiscover()
 
 urlpatterns = patterns('stock_analysis.views',
-    (r'^home/index/$', 'home'),
-    (r'^analysis/$', 'revenue'),
-    (r'^revenue/$', 'revenue'),
-    (r'^dividend/$', 'dividend'),
-    (r'^profitability/$', 'profitability'),
-    (r'^performance_per_share/$', 'performance_per_share'),
+    (r'^analysis/$', 'analysis', {'template_name': 'revenue.html', 'drawTool': 'new Revenue.Tool();'}),
+    (r'^revenue/$', 'analysis', {'template_name': 'revenue.html', 'drawTool': 'new Revenue.Tool();'}),
+    (r'^dividend/$', 'analysis', {'template_name': 'dividend.html'}),
+    (r'^profitability/$', 'analysis', {'template_name': 'profitability.html'}),
+    (r'^performance_per_share/$', 'analysis', {'template_name': 'performance_per_share.html'}),
+    (r'^season_roe/$', 'analysis', {'template_name': 'roe_roa.html'}),
+
     (r'^performance_per_share_table/$', 'performance_per_share_table'),
     (r'^getRevenueChart/$', 'getRevenueChart'),
     (r'^getSeasonRevenueChart/$', 'getSeasonRevenueChart'),
@@ -25,10 +26,9 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^season_profit/$', 'season_profit'),
     (r'^dividend_table/$', 'dividend_table'),
     (r'^season_profitability/$', 'season_profitability'),
-    (r'^season_roe/$', 'season_roe'),
+    
     (r'^season_roe_table/$', 'season_roe_table'),
     (r'^get_season_roe_chart/$', 'get_season_roe_chart'),
-    (r'^season_current_ratio/$', 'season_current_ratio'),
 )
 
 urlpatterns += patterns('stocks.views',

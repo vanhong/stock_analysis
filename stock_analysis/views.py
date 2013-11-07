@@ -17,8 +17,8 @@ from financial.models import SeasonFinancialRatio
 def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))
 
-def analysis(request):
-	return render_to_response('analysis/index.html', 
+def analysis(request, template_name, drawTool):
+	return render_to_response('analysis/' + template_name, {'drawTool': drawTool},
 							  context_instance = RequestContext(request))
 
 def set_stockid(request):
@@ -39,21 +39,6 @@ def getSymbol(request):
 	except:
 		symbol = '2330'
 	return symbol
-
-def revenue(request):
-	return render_to_response(
-		'analysis/revenue.html',
-		context_instance = RequestContext(request))
-
-def dividend(request):
-	return render_to_response(
-		'analysis/dividend.html',
-		context_instance = RequestContext(request))
-
-def performance_per_share(request):
-	return render_to_response(
-		'analysis/performance_per_share.html',
-		context_instance = RequestContext(request))
 
 #經營績效
 def performance_per_share_table(request):
@@ -114,11 +99,6 @@ def dividend_table(request):
 				context_instance = RequestContext(request))
 	return render_to_response(
 		'analysis/analysis_table.html',{"stock_id": getSymbol(request)},
-		context_instance = RequestContext(request))
-
-def profitability(request):
-	return render_to_response(
-		'analysis/profitability.html',
 		context_instance = RequestContext(request))
 
 def season_profitability(request):
@@ -253,14 +233,6 @@ def season_profit(request):
 				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
 	return HttpResponse('error')
-
-def season_current_ratio(request):
-	return HttpResponse('todo')
-
-def season_roe(request):
-	return render_to_response(
-		'analysis/roe_roa.html',
-		context_instance = RequestContext(request))
 
 def season_roe_table(request):
 	symbol = getSymbol(request)
