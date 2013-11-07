@@ -66,6 +66,7 @@ urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
     url( r'^filter/test/$', 'query_con_month_revenue_ann_growth_rate'),
+    url( r'^filter/mytest/$', 'test'),
 )
 
 urlpatterns += patterns('us_stocks.views',

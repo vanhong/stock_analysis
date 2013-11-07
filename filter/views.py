@@ -8,6 +8,7 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.template import Context
 from django.db.models import Count
+from django.db.models import Avg
 from django.db.models import Q
 from stock_analysis.settings import STATIC_URL
 
@@ -134,6 +135,7 @@ def filter_start(request):
 			
 			print 'hello'
 
+
 	filterIntersection = []
 	if len(filterList) == 1:
 		filterIntersection = filterList[0]
@@ -234,6 +236,24 @@ def query_con_month_revenue_ann_growth_rate(request):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	print update_lists
 	return HttpResponse('test')
+
+def test(request):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	avg_cnt = 3
+	filter_model = SeasonFinancialRatio
+	dates = SeasonFinancialRatio.objects.values(strDate).distinct().order_by('-'+strDate).values_list(strDate, flat=True)
+	print dates
+	length = len(dates)
+	pre_avg_query = SeasonFinancialRatio.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
+	pre_avg_dic = {}
+	for item in pre_avg_query:
+		pre_avg_dic[item['symbol']] = item['preAvg']
+	filter_list = SeasonFinancialRatio.objects.filter(gross_profit_margin__gt=pre_avg_dic[symbol])
+	print filter_list
+	#print pre_avg_dic
+	return HttpResponse('mytest')
+
 
 def daterange(start_date, end_date):
 	for n in range(int ((end_date - start_date).days)):
