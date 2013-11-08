@@ -26,7 +26,7 @@
         var startFilter = function() {
             var conditions = {};
 
-            $('input[id^=Con-]').each(function(){
+            $('input[id^=con-]').each(function(){
                 if($(this).attr('checked')){
                     var condition = $(this).attr('id').split('-')[1];
                     var params;
@@ -45,7 +45,7 @@
         this.Init = function() {
             //alert("Init");
             $(window).load(function() {
-                $('input[id^=Con-]').click(function(){
+                $('input[id^=con-]').click(function(){
                     if($(this).attr('checked') == 'checked'){
                         $(this).attr('checked',false)
                     }else{

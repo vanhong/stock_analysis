@@ -40,126 +40,74 @@ def filter_start(request):
 		#print len(conditions[condition])
 
 	passed = True
-	filterList = []
+	filter_list = []
 	for key, value in conditions.iteritems(): #逐一條件做篩選
-		if key == 'MonthRevenueContinuousAnnualGrowth': #月營收連續幾個月年增率>多少
-			# print 'start to check ' + stockid.symbol + ' MonthRevenueContinuousAnnualGrowth'
-			data = ''
+		if key == 'reveune_ann_growth_rate': #月營收連續幾個月年增率>多少
 			#參數名需與前端對應
-			cnt = int(value['Cnt'])
-			MonthRevenueAnnualGrowth = value['MonthRevenueAnnualGrowth']
-			if cnt == '' or MonthRevenueAnnualGrowth == '':
+			cnt = int(value['cnt'])
+			value = int(value['value'])
+			print str(cnt) + ';' + str(value)
+			if cnt == '' or value == '':
 				continue
-			months = MonthRevenue.objects.values('year', 'month').distinct().order_by('-year', '-month')[:cnt + 1]
-			not_update_symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, 
-								 year__gte=months[len(months)-1]['year']).exclude(year=months[len(months)-1]['year'], 
-								 month__lt=months[len(months)-1]['month']).exclude(year=months[0]['year'], 
-								 month=months[0]['month']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
-			not_update_lists = []
-			update_lists = []
-			newest_update_lists = []
-			for symbol in not_update_symbols:
-				not_update_lists.append(symbol['symbol'])
-			update_symbols = MonthRevenue.objects.values('symbol').filter(year=months[0]['year'], 
-							 month=months[0]['month'])
-			for symbol in update_symbols:
-				update_lists.append(symbol['symbol'])
-			not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
-			symbols = MonthRevenue.objects.values('symbol').filter(year_growth_rate__gt=MonthRevenueAnnualGrowth, 
-					  year__gte=months[len(months)-2]['year']).exclude(year=months[len(months)-2]['year'], 
-					  month__lt=months[len(months)-2]['month']).annotate(symbol_count=Count('symbol')).\
-					  filter(symbol_count=cnt)
-			for symbol in symbols:
-				newest_update_lists.append(symbol['symbol'])
-			newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
-			print newest_update_lists
-			filterList.append(newest_update_lists)
-		elif key == 'MonthRevenueAnnualGrowthBecomeBetter':
-			Cnt = int(value['Cnt'])
-			AnnualGrowthLowerBound = value['AnnualGrowthLowerBound']
-			if Cnt == '' or AnnualGrowthLowerBound == '':
-				print 'todo'
-		elif key == 'SeasonRevenueContinuousAnnualGrowth':
-			data = ''
-			cnt = int(value['Cnt'])
-			SeasonRevenueAnnualGrowth = value['SeasonRevenueAnnualGrowth']
-			seasons = SeasonRevenue.objects.values('year', 'season').distinct().order_by('-year', '-season')[:cnt + 1]
-			not_update_symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, 
-								 year_gte=seasons[len(seasons)-1]['year']).exclude(year=seasons[len(season)-1]['year'], 
-								 season__lt=seasons[len(seasons)-1]['season']).exclude(year=seasons[0]['year'], 
-								 season=seasons[0]['season']).annotate(symbol_count=Count('symbol')).filter(symbol_count=cnt)
-			not_update_lists = []
-			update_lists = []
-			newest_update_lists = []
-			for symbol in not_update_symbols:
-				not_update_lists.append(symbol['symbol'])
-			update_symbols = SeasonRevenue.objects.values('symbol').filter(year=seasons[0]['year'], 
-							 month=seasons[0]['season'])
-			for symbol in update_symbols:
-				update_lists.append(symbol['symbol'])
-			not_update_lists = list(set(not_update_lists).difference(set(update_lists)))
-			symbols = SeasonRevenue.objects.values('symbol').filter(year_growth_rate__gt=SeasonRevenueAnnualGrowth, 
-					  year__gte=seasons[len(seasons)-2]['year']).exclude(year=seasons[len(seasons)-2]['year'], 
-					  season__lt=seasons[len(seasons)-2]['season']).annotate(symbol_count=Count('symbol')).\
-					  filter(symbol_count=cnt)
-			for symbol in symbols:
-				newest_update_lists.append(symbol['symbol'])
-			newest_update_lists = list(set(newest_update_lists).union(set(not_update_lists)))
-			filterList.append(symbols)
-		elif key == 'SeasonOPM':
+			update_lists = query_reveune_ann_growth_rate(cnt, value, 'month')
+			filter_list.append(update_lists)
+		elif key == 'reveune_s_ann_growth_rate':
+			cnt = int(value['cnt'])
+			value = int(value['value'])
+			if cnt == '' or value == '':
+				continue
+			update_lists = query_reveune_ann_growth_rate(cnt, value, 'season')
+			filter_list.append(update_lists)
+		elif key == 'opm_s':
 			# print 'start to check ' + stockid.symbol + ' OPM'
-			cnt = int(value['Cnt'])
-			SeasonOPM = value['SeasonOPM']
-			OverUnder = value['OverUnder']
-			if cnt == '' or SeasonOPM == '' or OverUnder == '':
+			cnt = int(value['cnt'])
+			value = value['value']
+			if cnt == '' or value == '' :
 				continue
-			thisList = check_season_data(cnt, OverUnder, 'operating_profit_margin', SeasonOPM)
+			update_lists = check_season_data(cnt, 'over', 'operating_profit_margin', value)
 			print thisList
-			filterList.extend(thisList)
-
-		elif key == 'SeasonGPM':
+			filter_list.append(thisList)
+		elif key == 'gpm_s':
 			# print 'start to check ' + stockid.symbol + ' GPM'
-			cnt = int(value['Cnt'])
-			SeasonOPM = value['SeasonGPM']
-			OverUnder = value['OverUnder']
-			if cnt == '' or SeasonOPM == '' or OverUnder == '':
+			cnt = int(value['cnt'])
+			value = value['value']
+			if cnt == '' or value == '' :
 				continue
-			thisList = check_season_data(cnt, OverUnder, 'gross_profit_margin', SeasonOPM)
+			update_lists = check_season_data(cnt, 'over', 'gross_profit_margin', value)
 			print thisList
-			filterList.extend(thisList)
+			filter_list.extend(thisList)
 		elif key == 'CorpOverBuy':
-			DayCnt = int(value['Cnt'])
-			NumOverTrade = value['NumOverTrade']
-			OverUnder = value['OverUnder']
-			if DayCnt == '' or NumOverTrade == '' or OverUnder == '':
+			cnt = int(value['cnt'])
+			value = value['value']
+			if cnt == '' or value == '':
 				continue
-			dates = CorpTrade.objects.values('trade_date').distinct().order_by('-trade_date')[:DayCnt]
+			dates = CorpTrade.objects.values('trade_date').distinct().order_by('-trade_date')[:cnt]
 			
 			print 'hello'
 
 
 	filterIntersection = []
-	if len(filterList) == 1:
-		filterIntersection = filterList[0]
-	elif len(filterList) >= 2:
-		filterIntersection = list(set(filterList[0]).intersection(set(filterList[1])))
-		if len(filterList) > 2:
-			for i in range(2,len(filterList)-1):
+	if len(filter_list) == 1:
+		filterIntersection = filter_list[0]
+	elif len(filter_list) >= 2:
+		filterIntersection = list(set(filter_list[0]).intersection(set(filter_list[1])))
+		if len(filter_list) > 2:
+			for i in range(2,len(filter_list)-1):
 				filterIntersection = list(set(filterIntersection).intersection(set(thisSymbols)))
 
 	print filterIntersection
-	finalResults = {}
-	for item in filterIntersection:
-		finalResults[item] = ''
+	results_dic = {}
+	for item in filterIntersection.sort():
+		results_dic[item] = ''
 
 	return render_to_response(
 				'filter/filter_result.html', {
-				"results": finalResults},
+				"results": results_dic},
 				context_instance = RequestContext(request))
 
 
 def check_season_data(cnt, overunder, condition, conditionValue):
-	filterList = []
+	filter_list = []
 	dates = SeasonFinancialRatio.objects.values('year', 'season').distinct().order_by('-year', '-season')
 	if len(dates) >= cnt:
 		year_str = ''
@@ -177,9 +125,9 @@ def check_season_data(cnt, overunder, condition, conditionValue):
 		# print 'after query len=' + str(len(queryset))
 		for item in queryset:
 			if item['mycount'] >= cnt:
-				filterList.append(item['symbol'])
+				filter_list.append(item['symbol'])
 
-		return filterList
+		return filter_list
 
 def query_con_margin_gt(request):
 	strDate = 'date'
@@ -201,7 +149,7 @@ def query_con_margin_gt(request):
 		print update_lists
 	return HttpResponse('todo')
 
-def query_con_reveune_ann_growth_rate(retuest):
+def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	if revenue_type == 'month':
@@ -221,6 +169,10 @@ def query_con_reveune_ann_growth_rate(retuest):
 				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
+
+def query_financial_ratio(cnt, value, field, time_type):
+
+	print 'todo'
 
 def query_gross_profit_margin_gtn_pre_avg(request):
 	strDate = 'date'
@@ -281,7 +233,7 @@ def query_gross_profit_margin_gtn_pre_avg(request):
 	# return HttpResponse('todo')
 
 
-def query_con_season_revenue_ann_growth_rate(request):
+def query_season_revenue_ann_growth_rate(request):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	con_cnt = 10
@@ -298,7 +250,7 @@ def query_con_season_revenue_ann_growth_rate(request):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return HttpResponse('test')
 
-def query_con_month_revenue_ann_growth_rate(request):
+def query_month_revenue_ann_growth_rate(request):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	con_cnt = 10
