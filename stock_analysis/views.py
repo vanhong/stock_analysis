@@ -41,7 +41,7 @@ def get_symbol(request):
 	return symbol
 
 #經營績效
-def get_performance_per_share_table(request):
+def get_season_performance_per_share_table(request):
 	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
@@ -61,8 +61,7 @@ def get_performance_per_share_table(request):
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
 				'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
-				"bodys": bodys},
-				context_instance = RequestContext(request))
+				"bodys": bodys}, context_instance = RequestContext(request))
 	return render_to_response(
 		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},
 		context_instance = RequestContext(request))
@@ -404,7 +403,7 @@ def get_season_performance_per_share_chart(request):
 	data = {}
 	symbol = get_symbol(request)
 	if StockId.objects.filter(symbol=symbol):
-		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('surrogate_key')
 		xAxis_categories = []
 		net_before_tax_profit_per_shares = []
 		net_after_tax_profit_per_shares = []
@@ -422,7 +421,7 @@ def get_season_roe_chart(request):
 	data = {}
 	symbol = get_symbol(request)
 	if StockId.objects.filter(symbol=symbol):
-		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('surrogate_key')
 		xAxis_categories = []
 		return_on_equity = []
 		return_on_assets = []

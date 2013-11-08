@@ -15,7 +15,7 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^season_roe/$', 'analysis', {'template_name': 'roe_roa.html', 'drawTool': 'new Revenue.Tool();'}),
     (r'^season_current_ratio/$', 'analysis', {'template_name': 'current_ratio.html', 'drawTool': 'new CurrentRatio.Tool();'}),
 
-    (r'^get_performance_per_share_table/$', 'get_performance_per_share_table'),
+    (r'^get_season_performance_per_share_table/$', 'get_season_performance_per_share_table'),
     (r'^get_month_revenue_table/$', 'get_month_revenue_table'),
     (r'^get_season_revenue_table/$', 'get_season_revenue_table'),
     (r'^get_season_profit_table/$', 'get_season_profit_table'),
@@ -69,7 +69,6 @@ urlpatterns += patterns('',
 urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
-    url( r'^filter/mytest/$', 'test'),
     url( r'^filter/test/$', 'query_con_margin_gt'),
 
 )
