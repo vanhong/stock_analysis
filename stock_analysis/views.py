@@ -33,7 +33,7 @@ def set_stockid(request):
 		else:
 			return HttpResponse('stockid error')
 
-def getSymbol(request):
+def get_symbol(request):
 	try:
 		symbol = request.session['stock_id']
 	except:
@@ -41,8 +41,8 @@ def getSymbol(request):
 	return symbol
 
 #經營績效
-def performance_per_share_table(request):
-	symbol = getSymbol(request)
+def get_performance_per_share_table(request):
+	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
 	heads.append(r'年/季')
@@ -64,11 +64,11 @@ def performance_per_share_table(request):
 				"bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/analysis_table.html',{"stock_id": getSymbol(request)},
+		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},
 		context_instance = RequestContext(request))
 
-def dividend_table(request):
-	symbol = getSymbol(request)
+def get_dividend_table(request):
+	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
 	heads.append(r'年度')
@@ -98,11 +98,11 @@ def dividend_table(request):
 				"bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/analysis_table.html',{"stock_id": getSymbol(request)},
+		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},
 		context_instance = RequestContext(request))
 
-def season_profitability(request):
-	symbol = getSymbol(request)
+def get_season_profitability_table(request):
+	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
 	heads.append(r'季度')
@@ -131,8 +131,8 @@ def season_profitability(request):
 		'analysis/analysis_table.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
-def month_revenue(request):
-	symbol = getSymbol(request)
+def get_month_revenue_table(request):
+	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
 	heads.append(r'年/月')
@@ -166,8 +166,8 @@ def month_revenue(request):
 		'analysis/index.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
-def season_revenue(request):
-	symbol = getSymbol(request)
+def get_season_revenue_table(request):
+	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
 	heads.append(r'年/季')
@@ -201,8 +201,8 @@ def season_revenue(request):
 		'analysis/index.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
-def season_profit(request):
-	symbol = getSymbol(request)
+def get_season_profit_table(request):
+	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
 	heads.append(r'年/季')
@@ -234,8 +234,8 @@ def season_profit(request):
 				context_instance = RequestContext(request))
 	return HttpResponse('error')
 
-def season_roe_table(request):
-	symbol = getSymbol(request)
+def get_season_roe_table(request):
+	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
 	heads.append(r'年/季')
@@ -257,13 +257,36 @@ def season_roe_table(request):
 				"bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/analysis_table.html',{"stock_id": getSymbol(request)},
+		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},
 		context_instance = RequestContext(request))
 
-	return HttpResponse('roe')
+def get_season_current_ratio_table(request):
+	symbol = get_symbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	heads = []
+	heads.append(r'年/季')
+	heads.append(r'流動比')
+	heads.append(r'速動比')
+	bodys = []
+	if StockId.objects.filter(symbol=symbol):
+		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-date')
+		if ratios:
+			for ratio in ratios:
+				item = []
+				item.append(str(ratio.year) + 'Q' + str(ratio.season))
+				item.append(ratio.current_ratio)
+				item.append(ratio.quick_ratio)
+				bodys.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {'stock_id': name, 'heads':heads,
+				'bodys': bodys}, context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/analysis_table.html', {'stock_id': get_symbol(request), 'heads':heads,
+		'bodys': bodys}, context_instance = RequestContext(request))
 
-def getSeasonRevenueChart(request):
-	symbol = getSymbol(request)
+def get_season_revenue_chart(request):
+	symbol = get_symbol(request)
 	maxRevenue = 0
 	maxGrowthRate = -100
 	minGrowthRate = 10000
@@ -295,8 +318,8 @@ def getSeasonRevenueChart(request):
 			'dataNum' : dataNum}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def getSeasonProfitChart(request):
-	symbol = getSymbol(request)
+def get_season_profit_chart(request):
+	symbol = get_symbol(request)
 	maxProfit = 0
 	maxGrowthRate = -100
 	minGrowthRate = 10000
@@ -328,8 +351,8 @@ def getSeasonProfitChart(request):
 			'dataNum' : dataNum}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def getRevenueChart(request):
-	symbol = getSymbol(request)
+def get_month_revenue_chart(request):
+	symbol = get_symbol(request)
 	maxRevenue = 0
 	maxGrowthRate = -100
 	minGrowthRate = 10000
@@ -362,9 +385,9 @@ def getRevenueChart(request):
 	
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def getDividendChart(request):
+def get_dividend_chart(request):
 	data = {}
-	symbol = getSymbol(request)
+	symbol = get_symbol(request)
 	if StockId.objects.filter(symbol=symbol):
 		dividends = Dividend.objects.filter(symbol=symbol).order_by('-surrogate_key')[0:10]
 		xAxis_categories = []
@@ -377,9 +400,9 @@ def getDividendChart(request):
 	data = {'categories': xAxis_categories[::-1], 'cash_dividends': cash_dividends[::-1], 'stock_dividends': stock_dividends[::-1]}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def get_performance_per_share(request):
+def get_season_performance_per_share_chart(request):
 	data = {}
-	symbol = getSymbol(request)
+	symbol = get_symbol(request)
 	if StockId.objects.filter(symbol=symbol):
 		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		xAxis_categories = []
@@ -397,7 +420,7 @@ def get_performance_per_share(request):
 
 def get_season_roe_chart(request):
 	data = {}
-	symbol = getSymbol(request)
+	symbol = get_symbol(request)
 	if StockId.objects.filter(symbol=symbol):
 		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		xAxis_categories = []
@@ -413,9 +436,9 @@ def get_season_roe_chart(request):
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def getProfitabilityChart(request):
+def get_season_profitability_chart(request):
 	data = {}
-	symbol = getSymbol(request)
+	symbol = get_symbol(request)
 	if StockId.objects.filter(symbol=symbol):
 		profitabilitys = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('surrogate_key')
 		xAxis_categories = []
@@ -432,6 +455,24 @@ def getProfitabilityChart(request):
 	names = [r'毛利率', r'營益率', r'稅前淨利率', r'稅後淨利率']
 	datas = [gross_profit_margins, operating_profit_margins, net_before_tax_profit_margins, 
 						  net_after_tax_profit_margins]
+	yUnit = '%'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
+def get_season_current_ratio_chart(request):
+	data = {}
+	symbol = get_symbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('date')
+		xAxis_categories = []
+		current_ratios = []
+		quick_ratios = []
+		for ratio in ratios:
+			xAxis_categories.append(str(ratio.year) + 'Q' + str(ratio.season))
+			current_ratios.append(float(ratio.current_ratio))
+			quick_ratios.append(float(ratio.quick_ratio))
+	names = [r'流動比', r'速動比']
+	datas = [current_ratios, quick_ratios]
 	yUnit = '%'
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")

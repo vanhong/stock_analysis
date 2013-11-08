@@ -98,13 +98,13 @@
             });
         }
         this.DrawMonth = function() {
-            GetData('/getRevenueChart/');
+            GetData('/get_month_revenue_chart/');
         }
         this.DrawSeason = function() {
-            GetData('/getSeasonRevenueChart/');
+            GetData('/get_season_revenue_chart/');
         }
         this.DrawSeasonProfit = function(){
-            GetData('/getSeasonProfitChart');
+            GetData('/get_season_profit_chart');
         }
     }
     Draw.Tool = Tool;
@@ -177,7 +177,7 @@
             });
         }
         this.Draw = function() {
-                GetData('/getDividendChart/');
+                GetData('/get_dividend_chart/');
         }
     }
     DrawDividend.Tool = Tool;

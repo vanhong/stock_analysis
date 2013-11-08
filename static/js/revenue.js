@@ -6,14 +6,14 @@
 			$(window).load(function(){
 				drawTool.DrawMonth();
 				$('#revenue_type').html('月營收明細');
-				$('#table_result').html('&nbsp;').load('/month_revenue/', function () {
+				$('#table_result').html('&nbsp;').load('/get_month_revenue_table/', function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 				$( '#month_revenue' ).click( function() {
 					if ($('#revenue_type').html() != '月營收明細'){
 						drawTool = new Draw.Tool();
 						$('#revenue_type').html('月營收明細');
-						$('#table_result').html('&nbsp;').load('/month_revenue/', function(){
+						$('#table_result').html('&nbsp;').load('/get_month_revenue_table/', function(){
 							$('#symbol').html($('#stock_id').html());
 						});
 						drawTool.DrawMonth();
@@ -23,7 +23,7 @@
 					if ($('#revenue_type').html() != '季營收明細') {
 						drawTool = new Draw.Tool();
 						$('#revenue_type').html('季營收明細');
-						$('#table_result').html('&nbsp;').load('/season_revenue/', function(){
+						$('#table_result').html('&nbsp;').load('/get_season_revenue_table/', function(){
 							$('#symbol').html($('#stock_id').html());
 						});
 						drawTool.DrawSeason();
@@ -33,7 +33,7 @@
 					if ($('#revenue_type').html() != '季盈餘明細') {
 						drawTool = new Draw.Tool();
 						$('#revenue_type').html('季盈餘明細');
-						$('#table_result').html('&nbsp').load('/season_profit/', function(){
+						$('#table_result').html('&nbsp').load('/get_season_profit_table/', function(){
 							$('#symbol').html($('#stock_id').html());
 						});
 						drawTool.DrawSeasonProfit();
@@ -52,10 +52,10 @@
 		this.Init = function(){
 			$(window).load(function(){
 				$('#profitability_type').html('季獲利能力');
-				$('#table_result').html('&nbsp;').load('/season_profitability/', function () {
+				$('#table_result').html('&nbsp;').load('/get_season_profitability_table/', function () {
 					$('#symbol').html($('#stock_id').html());
 				});
-				drawTool.Init('/getProfitabilityChart/');
+				drawTool.Init('/get_season_profitability_chart/');
 			});
 		}	
 	}
@@ -68,11 +68,11 @@
 		this.Init = function(){
 			$(window).load(function(){
 				$('#data_type').html('經營績效');
-				$('#table_result').html('&nbsp;').load('/performance_per_share_table/', function(){
+				$('#table_result').html('&nbsp;').load('/get_season_performance_per_share_table/', function(){
 					$('#symbol').html($('#stock_id').html());
 				})
 			});
-			drawTool.Init('/get_performance_per_share/');
+			drawTool.Init('/get_season_performance_per_share_chart/');
 		}
 	}
 	PerformancePerShare.Tool = Tool;
@@ -84,7 +84,7 @@
 		this.Init = function(){
 			$(window).load(function(){
 				$('#data_type').html('ROE/ROA');
-				$('#table_result').html('&nbsp;').load('/season_roe_table/', function(){
+				$('#table_result').html('&nbsp;').load('/get_season_roe_table/', function(){
 					$('#symbol').html($('#stock_id').html());
 				})
 			});
@@ -101,7 +101,7 @@
 			$(window).load(function(){
 				drawTool.Draw();
 				$('#data_type').html('股利政策');
-				$('#table_result').html('&nbsp;').load('/dividend_table/', function () {
+				$('#table_result').html('&nbsp;').load('/get_dividend_table/', function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 			});
@@ -109,3 +109,19 @@
 	}
 	Dividend.Tool = Tool;
 }(window.Dividend = window.Dividend || {}));
+
+(function(CurrentRatio) {
+	function Tool () {
+		var drawTool = new DrawBasicLine.Tool();
+		this.Init = function(){
+			$(window).load(function(){
+				$('#data_type').html('流動比/速動比');
+				$('#table_result').html('&nbsp;').load('/get_season_current_ratio_table/', function(){
+					$('#symbol').html($('#stock_id').html());
+				})
+			});
+			drawTool.Init('/get_season_current_ratio_chart/');
+		}
+	}
+	CurrentRatio.Tool = Tool;
+}(window.CurrentRatio = window.CurrentRatio || {}));
