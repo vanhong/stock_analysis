@@ -181,7 +181,27 @@ def check_season_data(cnt, overunder, condition, conditionValue):
 
 		return filterList
 
-def query_con_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
+def query_con_margin_gt(request):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	con_cnt = 4
+	margin_value = 10
+	margin_type = 'operating_profit_margin'
+	dates = SeasonFinancialRatio.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
+	if margin_type == 'operating_profit_margin':
+		not_update_lists = SeasonFinancialRatio.objects.values(strSymbol).filter(operating_profit_margin__gte=margin_value, 
+					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+					   exclude(symbol__in=SeasonFinancialRatio.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   values_list(strSymbol, flat=True)
+		update_lists = SeasonFinancialRatio.objects.values_list(strSymbol).filter(operating_profit_margin__gte=margin_value,
+					   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
+					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+		update_lists = list(set(update_lists).union(set(not_update_lists)))
+		print update_lists
+	return HttpResponse('todo')
+
+def query_con_reveune_ann_growth_rate(retuest):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	if revenue_type == 'month':
@@ -197,7 +217,7 @@ def query_con_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
 					   values_list(strSymbol, flat=True)
 	update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-				   date__gte=seasons[len(seasons)-2][strDate], date__lte=seasons[0][strDate]).\
+				   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
 				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists

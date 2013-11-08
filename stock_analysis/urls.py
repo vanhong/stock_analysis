@@ -70,7 +70,7 @@ urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
     url( r'^filter/mytest/$', 'test'),
-    url( r'^filter/test/$', 'query_gross_profit_margin_gtn_pre_avg'),
+    url( r'^filter/test/$', 'query_con_margin_gt'),
 
 )
 
