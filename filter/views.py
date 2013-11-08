@@ -42,7 +42,7 @@ def filter_start(request):
 	passed = True
 	filter_list = []
 	for key, value in conditions.iteritems(): #逐一條件做篩選
-		if key == 'reveune_ann_growth_rate': #月營收連續幾個月年增率>多少
+		if key == 'reveune_ann_growth_rate': #月營收連續幾個月年增率>
 			#參數名需與前端對應
 			cnt = int(value['cnt'])
 			value = int(value['value'])
@@ -50,32 +50,44 @@ def filter_start(request):
 			if cnt == '' or value == '':
 				continue
 			update_lists = query_reveune_ann_growth_rate(cnt, value, 'month')
+			print 'reveune_ann_growth_rate'
+			print update_lists
 			filter_list.append(update_lists)
-		elif key == 'reveune_s_ann_growth_rate':
+		elif key == 'reveune_s_ann_growth_rate': #季營收連續幾季年增率>
 			cnt = int(value['cnt'])
 			value = int(value['value'])
 			if cnt == '' or value == '':
 				continue
 			update_lists = query_reveune_ann_growth_rate(cnt, value, 'season')
+			print 'reveune_s_ann_growth_rate'
+			print update_lists
 			filter_list.append(update_lists)
-		elif key == 'opm_s':
+		elif key == 'opm_s': #季OPM連續幾季>
 			# print 'start to check ' + stockid.symbol + ' OPM'
 			cnt = int(value['cnt'])
-			value = value['value']
+			value = int(value['value'])
 			if cnt == '' or value == '' :
 				continue
-			update_lists = check_season_data(cnt, 'over', 'operating_profit_margin', value)
-			print thisList
-			filter_list.append(thisList)
+			update_lists = query_financial_ratio(cnt, value, 'operating_profit_margin', 'season')
+			print 'opm_s'
+			print update_lists
+			filter_list.append(update_lists)
 		elif key == 'gpm_s':
 			# print 'start to check ' + stockid.symbol + ' GPM'
 			cnt = int(value['cnt'])
-			value = value['value']
+			value = int(value['value'])
 			if cnt == '' or value == '' :
 				continue
 			update_lists = check_season_data(cnt, 'over', 'gross_profit_margin', value)
-			print thisList
-			filter_list.extend(thisList)
+			filter_list.append(update_lists)
+		elif key == 'gpm_s_gtn_pre_avg': #季GPM大於前幾季平均
+			cnt = int(value['cnt'])
+			if cnt == '' :
+				continue
+			update_lists = query_gpm_s_gtn_pre_avg(cnt)
+			print 'gpm_s_gtn_pre_avg'
+			print update_lists
+			filter_list.append(update_lists)
 		elif key == 'CorpOverBuy':
 			cnt = int(value['cnt'])
 			value = value['value']
@@ -93,11 +105,11 @@ def filter_start(request):
 		filterIntersection = list(set(filter_list[0]).intersection(set(filter_list[1])))
 		if len(filter_list) > 2:
 			for i in range(2,len(filter_list)-1):
-				filterIntersection = list(set(filterIntersection).intersection(set(thisSymbols)))
+				filterIntersection = list(set(filterIntersection).intersection(set(filter_list[i])))
 
 	print filterIntersection
 	results_dic = {}
-	for item in filterIntersection.sort():
+	for item in filterIntersection:
 		results_dic[item] = ''
 
 	return render_to_response(
@@ -129,25 +141,28 @@ def check_season_data(cnt, overunder, condition, conditionValue):
 
 		return filter_list
 
-def query_con_margin_gt(request):
+def query_financial_ratio(cnt, value, field, time_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
-	con_cnt = 4
-	margin_value = 10
-	margin_type = 'operating_profit_margin'
-	dates = SeasonFinancialRatio.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
+	con_cnt = cnt
+	margin_value = value
+	margin_type = field
+	if time_type == 'season':
+		financial_model = SeasonFinancialRatio
+	elif time_type == 'year':
+		financial_model = YearFinancialRatio
+	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
 	if margin_type == 'operating_profit_margin':
-		not_update_lists = SeasonFinancialRatio.objects.values(strSymbol).filter(operating_profit_margin__gte=margin_value, 
+		not_update_lists = financial_model.objects.values(strSymbol).filter(operating_profit_margin__gte=margin_value, 
 					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
 					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
-					   exclude(symbol__in=SeasonFinancialRatio.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   exclude(symbol__in=financial_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
 					   values_list(strSymbol, flat=True)
-		update_lists = SeasonFinancialRatio.objects.values_list(strSymbol).filter(operating_profit_margin__gte=margin_value,
+		update_lists = financial_model.objects.values_list(strSymbol).filter(operating_profit_margin__gte=margin_value,
 					   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
 					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
 		update_lists = list(set(update_lists).union(set(not_update_lists)))
-		print update_lists
-	return HttpResponse('todo')
+	return update_lists
 
 def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	strDate = 'date'
@@ -170,14 +185,10 @@ def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
-def query_financial_ratio(cnt, value, field, time_type):
-
-	print 'todo'
-
-def query_gross_profit_margin_gtn_pre_avg(request):
+def query_gpm_s_gtn_pre_avg(cnt):
 	strDate = 'date'
 	strSymbol = 'symbol'
-	avg_cnt = 4
+	avg_cnt = cnt
 	filter_model = SeasonFinancialRatio
 	dates = filter_model.objects.values(strDate).distinct().order_by('-'+strDate).values_list(strDate, flat=True)
 
@@ -207,9 +218,8 @@ def query_gross_profit_margin_gtn_pre_avg(request):
 	
 	results = list(set(update_lists).union(set(not_update_lists)))
 	result_symbols = map(lambda item: item.symbol, results)
-	print result_symbols
 	# pre_avg_query = filter_model.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
-	return HttpResponse(';'.join(result_symbols))
+	return result_symbols
 	# strDate = 'date'
 	# strSymbol = 'symbol'
 	# con_cnt = 4
