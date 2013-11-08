@@ -9,12 +9,14 @@ from django.template.context import RequestContext
 from django.template import Context
 from django.db.models import Count
 from django.db.models import Avg
-from django.db.models import Q
+from django.db.models import Q, F
 from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
+from django.db.models import Avg
+from django.core import serializers
 
 def filter_index(request):
 	return render_to_response(
@@ -200,6 +202,29 @@ def query_con_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
+def query_gross_profit_margin_gtn_pre_avg(request):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	con_cnt = 4
+	dates = SeasonFinancialRatio.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
+	symbol_list = []
+	if dates:
+		avg_gross_profit_margins = SeasonFinancialRatio.objects.filter(date__gte=dates[len(dates)-1][strDate], date__lte=dates[0][strDate]).\
+			    				   values('symbol').annotate(gross_profit_margin_avg=Avg('gross_profit_margin'))
+		# print SeasonFinancialRatio.objects.filter(date=dates[0][strDate]).prefetch_related('avg_gross_profit_margins__symbol')
+		update_lists = SeasonFinancialRatio.objects.filter(date=dates[0][strDate])
+		not_update_lists = SeasonFinancialRatio.objects.filter(date=dates[1][strDate]).\
+						   exclude(symbol__in=SeasonFinancialRatio.objects.filter(date=dates[0][strDate]))
+		# for margin in avg_gross_profit_margins:
+		# 	try:
+		# 		if update_lists.filter(symbol=margin[strSymbol], gross_profit_margin__gte=margin['gross_profit_margin_avg']):
+		# 			symbol_list.append(margin[strSymbol])
+		# 		elif not_update_lists.filter(symbol=margin[strSymbol], gross_profit_margin__gte=margin['gross_profit_margin_avg']):
+		# 			symbol_list.append(margin[strSymbol])
+		# 	except:
+		# 		pass
+	return HttpResponse('todo')
+
 
 def query_con_season_revenue_ann_growth_rate(request):
 	strDate = 'date'
@@ -242,15 +267,23 @@ def test(request):
 	strSymbol = 'symbol'
 	avg_cnt = 3
 	filter_model = SeasonFinancialRatio
-	dates = SeasonFinancialRatio.objects.values(strDate).distinct().order_by('-'+strDate).values_list(strDate, flat=True)
+	dates = filter_model.objects.values(strDate).distinct().order_by('-'+strDate).values_list(strDate, flat=True)
 	print dates
+	latest_date = str(dates[0])
+	pre_date_str = '('
+	for i in range(1, avg_cnt):
+		pre_date_str += '\'' + str(dates[i]) + '\','
+	pre_date_str = pre_date_str[:-1] + ')'
 	length = len(dates)
-	pre_avg_query = SeasonFinancialRatio.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
-	pre_avg_dic = {}
-	for item in pre_avg_query:
-		pre_avg_dic[item['symbol']] = item['preAvg']
-	filter_list = SeasonFinancialRatio.objects.filter(gross_profit_margin__gt=pre_avg_dic[symbol])
-	print filter_list
+	query = filter_model.objects.raw('SELECT * from stocks.financial_seasonfinancialratio A inner join (SELECT symbol, avg(gross_profit_margin) as preAvg FROM stocks.financial_seasonfinancialratio WHERE date in ' + pre_date_str + ' group by symbol ) as B on A.symbol = B.symbol where date = \'' + latest_date + '\' and gross_profit_margin > preAvg')
+	for item in query:
+		print item.get_all_fields 
+	# pre_avg_query = filter_model.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
+	# pre_avg_dic = {}
+	# for item in pre_avg_query:
+	# 	pre_avg_dic[item['symbol']] = item['preAvg']
+	# filter_list = filter_model.objects.filter(gross_profit_margin__gt=pre_avg_dic[symbol])
+	# print filter_list
 	#print pre_avg_dic
 	return HttpResponse('mytest')
 

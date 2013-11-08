@@ -148,7 +148,7 @@ def season_profitability(request):
 				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
-		'analysis/index.html',{"stock_id": symbol},
+		'analysis/analysis_table.html',{"stock_id": symbol},
 		context_instance = RequestContext(request))
 
 def month_revenue(request):
@@ -253,6 +253,9 @@ def season_profit(request):
 				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
 	return HttpResponse('error')
+
+def season_current_ratio(request):
+	return HttpResponse('todo')
 
 def season_roe(request):
 	return render_to_response(
