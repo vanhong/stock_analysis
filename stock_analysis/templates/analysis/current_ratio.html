@@ -1,0 +1,18 @@
+{% extends "analysis/index.html" %}
+
+{% block analysis_content %}
+  <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
+  <script type="text/javascript">
+    var obj = new CurrentRatio.Tool();
+    obj.Init();
+  </script>
+  <div class="row-fluid">
+    <div class="span4">
+      <h4><span id="symbol" ></span><span id="data_type"></span></h4>
+    </div>
+    <div id="chart_result">
+    </div>
+    <div id="table_result">
+    </div>
+  </div>
+{% endblock %}
