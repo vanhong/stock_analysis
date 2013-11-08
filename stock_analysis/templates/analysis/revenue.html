@@ -3,7 +3,7 @@
 {% block analysis_content %}
   <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
   <script type="text/javascript">
-    var obj = new Revenue.Tool();
+    var obj = {{ drawTool }}
     obj.Init();
   </script>
   <br>
