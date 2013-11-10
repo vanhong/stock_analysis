@@ -95,7 +95,7 @@ def update_season_profit(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         (last_season_year, last_season_season) = last_season(today)
-        revenueInDb = SeasonProfit.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season-1)
+        revenueInDb = SeasonProfit.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
         if revenueInDb:
             continue
         else:

@@ -12,7 +12,7 @@ from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from financial.models import SeasonFinancialRatio
+from financial.models import SeasonFinancialRatio, YearFinancialRatio
 
 def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))

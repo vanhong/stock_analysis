@@ -104,7 +104,7 @@ def filter_start(request):
 	elif len(filter_list) >= 2:
 		filterIntersection = list(set(filter_list[0]).intersection(set(filter_list[1])))
 		if len(filter_list) > 2:
-			for i in range(2,len(filter_list)-1):
+			for i in range(2,len(filter_list)):
 				filterIntersection = list(set(filterIntersection).intersection(set(filter_list[i])))
 
 	print filterIntersection
@@ -141,27 +141,59 @@ def check_season_data(cnt, overunder, condition, conditionValue):
 
 		return filter_list
 
+def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	con_cnt = cnt
+	filter_value = values
+	filter_field = field
+	if time_type == 'season':
+		financial_model = SeasonFinancialRatio
+	elif time_type == 'year':
+		financial_model = YearFinancialRatio
+	kwargs = {
+		'{0}__{1}'.format('field_avg', query_type):filter_value
+	}
+	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
+	print dates
+	not_update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
+					   date__lte=dates[1][strDate]).annotate(field_avg=Avg(filter_field)).\
+					   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
+				   date__lte=dates[0][strDate]).annotate(field_avg=Avg(filter_field)).\
+				   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	return update_lists
+
+
 def query_financial_ratio(cnt, value, field, time_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	con_cnt = cnt
-	margin_value = value
-	margin_type = field
+	filter_value = value
+	filter_field = field
 	if time_type == 'season':
 		financial_model = SeasonFinancialRatio
 	elif time_type == 'year':
 		financial_model = YearFinancialRatio
 	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
-	if margin_type == 'operating_profit_margin':
-		not_update_lists = financial_model.objects.values(strSymbol).filter(operating_profit_margin__gte=margin_value, 
-					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
-					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
-					   exclude(symbol__in=financial_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
-					   values_list(strSymbol, flat=True)
-		update_lists = financial_model.objects.values_list(strSymbol).filter(operating_profit_margin__gte=margin_value,
-					   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
-					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
-		update_lists = list(set(update_lists).union(set(not_update_lists)))
+	not_update_kwargs = {
+		'{0}__{1}'.format(filter_field, 'gte'):filter_value,
+		'{0}__{1}'.format('date', 'gte'):dates[len(dates)-1][strDate],
+		'{0}__{1}'.format('date', 'lte'):dates[1][strDate]
+	}
+	update_kwargs = {
+		'{0}__{1}'.format(filter_field, 'gte'):filter_value,
+		'{0}__{1}'.format('date', 'gte'):dates[len(dates)-2][strDate],
+		'{0}__{1}'.format('date', 'lte'):dates[0][strDate]
+	}
+	not_update_lists = financial_model.objects.values(strSymbol).filter(**not_update_kwargs).\
+				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+				   exclude(symbol__in=financial_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+				   values_list(strSymbol, flat=True)
+	update_lists = financial_model.objects.values_list(strSymbol).filter(**update_kwargs).\
+				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
 def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):

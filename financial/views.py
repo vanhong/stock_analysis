@@ -7,7 +7,7 @@ from HTMLParser import HTMLParser
 import time
 from decimal import Decimal
 from stocks.models import StockId
-from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement
+from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement, YearFinancialRatio
 from bs4 import BeautifulSoup
 import html5lib
 import datetime
@@ -51,7 +51,7 @@ def update_season_income_statement(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 2
+        season = 3
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1911, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1910, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
@@ -63,6 +63,11 @@ def update_season_income_statement(request):
             req = urllib2.Request(url, url_data)
             response = urllib2.urlopen(req)
             soup = BeautifulSoup(response,from_encoding="utf-8")
+            
+            has_data = soup.find_all('font', {'color': 'red'})
+            if has_data:
+                print stock_symbol + ' not updated'
+                continue
             season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
             income_statement = SeasonIncomeStatement()
             income_statement.symbol = stock_symbol
@@ -340,7 +345,7 @@ def update_season_income_statement(request):
                 print stock_symbol + ' data updated'
             else:
                 print stock_symbol + 'time sleep'
-                time.sleep(10)
+                time.sleep(30)
 
     return HttpResponse("update_season_income_statement")
 
@@ -380,7 +385,7 @@ def update_season_balance_sheet(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 2
+        season = 3
         if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb03'
@@ -394,7 +399,10 @@ def update_season_balance_sheet(request):
             req = urllib2.Request(url, url_data)
             response = urllib2.urlopen(req)
             soup = BeautifulSoup(response,from_encoding="utf-8")
-
+            has_data = soup.find_all('font', {'color': 'red'})
+            if has_data:
+                print stock_symbol + ' not updated'
+                continue
             balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
             balance_sheet = SeasonBalanceSheet()
             balance_sheet.symbol = stock_symbol
@@ -668,11 +676,197 @@ def update_season_balance_sheet(request):
                 last_balance_sheet.save()
             else:
                 print stock_symbol + ' time sleep'
-                time.sleep(10)
+                time.sleep(30)
 
             print stock_symbol + ' data updated'
     
     return HttpResponse('balance sheet updated')
+
+def update_year_financial_ratio(request):
+    stock_ids = StockId.objects.all()
+    today = datetime.date.today()
+    for stock_id in stock_ids:
+        stock_symbol = stock_id.symbol
+        ratioInDb = YearFinancialRatio.objects.filter(symbol=stock_symbol, year=today.year-1)
+        if ratioInDb:
+            continue
+        url = 'http://jsjustweb.jihsun.com.tw/z/zc/zcr/zcra/zcra_' + stock_symbol + '.djhtm'
+        webcode = urllib.urlopen(url)
+        soup = BeautifulSoup(webcode)
+        stage_datas = soup.find_all('td', {'class':'t2'})
+
+        isDataStart = False
+        arrRatioDatas = []
+        for stage_data in stage_datas:
+            if isDataStart:
+                if stage_data.string.encode('utf-8') == r'期別':
+                    break
+                year = int(stage_data.string.split('.')[0]) + 1911
+                year_ratio = YearFinancialRatio()
+                year_ratio.surrogate_key = stock_symbol + '_' + str(year)
+                year_ratio.year = year
+                year_ratio.symbol = stock_symbol
+                arrRatioDatas.append(year_ratio)
+            if stage_data.string.encode('utf-8') == r'期別':
+                isDataStart = True
+        ratio_datas = soup.find_all('td', {'class':'t4t1'})
+        for ratio_data in ratio_datas:
+            next = ratio_data.next_sibling.next_sibling
+            if ratio_data.string.encode('utf-8') == r'營業毛利率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.gross_profit_margin = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'營業利益率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.operating_profit_margin = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'稅前淨利率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_before_tax_profit_margin = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'稅後淨利率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_after_tax_profit_margin = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'每股淨值(元)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_value_per_share = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'每股營業額(元)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.revenue_per_share = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'每股營業利益(元)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.operating_profit_per_share = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'每股稅前淨利(元)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_before_tax_profit_per_share = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'股東權益報酬率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.return_on_equity = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'資產報酬率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.return_on_assets = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'每股稅後淨利(元)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_after_tax_profit_per_share = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'營收成長率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.revenue_growth_rate = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'營業利益成長率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.operating_profit_growth_rate = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'稅前淨利成長率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_before_tax_profit_growth_rate = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'稅後淨利成長率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_after_tax_profit_growth_rate = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'總資產成長率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.assets_growth_rate = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'淨值成長率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.net_value_growth_rate = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'固定資產成長率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.fixed_assets_growth_rate = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'流動比率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.current_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'速動比率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.quick_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'負債比率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.debt_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'利息保障倍數':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.interest_cover = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'應收帳款週轉率(次)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.account_receivable_turnover_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'存貨週轉率(次)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.inventory_turnover_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'固定資產週轉率(次)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.fixed_assets_turnover_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'總資產週轉率(次)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.assets_turnover_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'員工平均營業額(千元)':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.revenue_per_employee = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'淨值週轉率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.equity_turnover_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'負債對淨值比率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.debt_equity_ratio = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+            elif ratio_data.string.encode('utf-8') == r'長期資金適合率':
+                for ratio in arrRatioDatas:
+                    if next.string != 'nil' and next.string != 'N/A':
+                        ratio.long_term_funds_to_fixed_assets = Decimal(next.string.replace(',',''))
+                    next = next.next_sibling.next_sibling
+        for ratio in arrRatioDatas:
+            ratio.save()
+        print ('update ' + stock_symbol + ' season financial ratio')
+
+    return HttpResponse('update year financial ratio')
 
 def update_season_financial_ratio(request):
     stock_ids = StockId.objects.all()

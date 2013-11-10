@@ -47,6 +47,7 @@ urlpatterns += patterns('stocks.views',
 
 urlpatterns += patterns('financial.views',
     (r'^update_season_financial_ratio/$', 'update_season_financial_ratio'),
+    (r'^update_year_financial_ratio/$', 'update_year_financial_ratio'),
     (r'^update_season_income_statement/$', 'update_season_income_statement'),
     (r'^update_season_balance_sheet/$', 'update_season_balance_sheet'),
     (r'^show_season_balance_sheet/$', 'show_season_balance_sheet'),
@@ -72,7 +73,7 @@ urlpatterns += patterns('',
 urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
-    url( r'^filter/test/$', 'query_con_margin_gt'),
+    url( r'^filter/test/$', 'query_financial_ratio_avg'),
 
 )
 
