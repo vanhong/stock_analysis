@@ -51,7 +51,7 @@ def filter_start(request):
 				continue
 			update_lists = query_reveune_ann_growth_rate(cnt, value, 'month')
 			print 'reveune_ann_growth_rate'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'reveune_s_ann_growth_rate': #季營收連續幾季年增率>
 			cnt = int(value['cnt'])
@@ -60,7 +60,7 @@ def filter_start(request):
 				continue
 			update_lists = query_reveune_ann_growth_rate(cnt, value, 'season')
 			print 'reveune_s_ann_growth_rate'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'opm_s': #季OPM連續幾季>
 			# print 'start to check ' + stockid.symbol + ' OPM'
@@ -70,7 +70,7 @@ def filter_start(request):
 				continue
 			update_lists = query_financial_ratio(cnt, value, 'operating_profit_margin', 'season')
 			print 'opm_s'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'gpm_s':
 			# print 'start to check ' + stockid.symbol + ' GPM'
@@ -86,7 +86,7 @@ def filter_start(request):
 				continue
 			update_lists = query_gpm_s_gtn_pre_avg(cnt)
 			print 'gpm_s_gtn_pre_avg'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'CorpOverBuy':
 			cnt = int(value['cnt'])
@@ -104,7 +104,7 @@ def filter_start(request):
 	elif len(filter_list) >= 2:
 		filterIntersection = list(set(filter_list[0]).intersection(set(filter_list[1])))
 		if len(filter_list) > 2:
-			for i in range(2,len(filter_list)-1):
+			for i in range(2,len(filter_list)):
 				filterIntersection = list(set(filterIntersection).intersection(set(filter_list[i])))
 
 	print filterIntersection
@@ -162,6 +162,8 @@ def query_financial_ratio(cnt, value, field, time_type):
 					   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
 					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
 		update_lists = list(set(update_lists).union(set(not_update_lists)))
+	if u'2841' in update_lists:
+		print '---------------------------------------'
 	return update_lists
 
 def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
