@@ -51,7 +51,7 @@ def update_season_income_statement(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 3
+        season = 1
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1911, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1910, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
@@ -64,10 +64,6 @@ def update_season_income_statement(request):
             response = urllib2.urlopen(req)
             soup = BeautifulSoup(response,from_encoding="utf-8")
             
-            has_data = soup.find_all('font', {'color': 'red'})
-            if has_data:
-                print stock_symbol + ' not updated'
-                continue
             season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
             income_statement = SeasonIncomeStatement()
             income_statement.symbol = stock_symbol
@@ -371,7 +367,7 @@ def update_season_balance_sheet(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 3
+        season = 1
         if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb03'
@@ -385,10 +381,7 @@ def update_season_balance_sheet(request):
             req = urllib2.Request(url, url_data)
             response = urllib2.urlopen(req)
             soup = BeautifulSoup(response,from_encoding="utf-8")
-            has_data = soup.find_all('font', {'color': 'red'})
-            if has_data:
-                print stock_symbol + ' not updated'
-                continue
+           
             balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
             balance_sheet = SeasonBalanceSheet()
             balance_sheet.symbol = stock_symbol
