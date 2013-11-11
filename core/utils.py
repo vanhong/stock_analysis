@@ -1,18 +1,18 @@
 from decimal import Decimal
-import time
+import datetime
 
 def st_to_decimal(data):
 	return Decimal(data.strip().replace(',', ''))
 
 def season_to_date(year, season):
 	if season == 1:
-		last_income_statement.date = datetime.date(1910+year, 1, 1)
+		return datetime.date(1910+year, 1, 1)
 	elif season == 2:
-		last_income_statement.date = datetime.date(1910+year, 4, 1)
+		return datetime.date(1910+year, 4, 1)
 	elif season == 3:
-		last_income_statement.date = datetime.date(1910+year, 7, 1)
+		return datetime.date(1910+year, 7, 1)
 	elif season == 4:
-		last_income_statement.date = datetime.date(1910+year, 10, 1)
+		return datetime.date(1910+year, 10, 1)
 
 def last_season(day):
     year = day.year

@@ -495,7 +495,7 @@ def get_season_current_ratio_chart(request):
 			quick_ratios.append(float(ratio.quick_ratio))
 	names = [r'流動比', r'速動比']
 	datas = [current_ratios, quick_ratios]
-	yUnit = '%'
+	yUnit = '倍'
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
