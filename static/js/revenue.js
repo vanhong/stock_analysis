@@ -125,3 +125,19 @@
 	}
 	CurrentRatio.Tool = Tool;
 }(window.CurrentRatio = window.CurrentRatio || {}));
+
+(function(DebtRatio) {
+	function Tool () {
+		var drawTool = new DrawBasicLine.Tool();
+		this.Init = function(){
+			$(window).load(function(){
+				$('#data_type').html('負債比率');
+				$('#table_result').html('&nbsp;').load('/get_season_debt_ratio_table/', function(){
+					$('#symbol').html($('#stock_id').html());
+				})
+			});
+			drawTool.Init('/get_season_debt_ratio_chart/');
+		}
+	}
+	DebtRatio.Tool = Tool;
+}(window.DebtRatio = window.DebtRatio || {}));

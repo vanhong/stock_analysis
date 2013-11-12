@@ -12,7 +12,7 @@ from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from financial.models import SeasonFinancialRatio
+from financial.models import SeasonFinancialRatio, YearFinancialRatio
 
 def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))
@@ -284,6 +284,29 @@ def get_season_current_ratio_table(request):
 		'analysis/analysis_table.html', {'stock_id': get_symbol(request), 'heads':heads,
 		'bodys': bodys}, context_instance = RequestContext(request))
 
+def get_season_debt_ratio_table(request):
+	symbol = get_symbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	heads = []
+	heads.append(r'年/季')
+	heads.append(r'負債比率')
+	bodys = []
+	if StockId.objects.filter(symbol=symbol):
+		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-date')
+		if ratios:
+			for ratio in ratios:
+				item = []
+				item.append(str(ratio.year) + 'Q' + str(ratio.season))
+				item.append(ratio.debt_ratio)
+				bodys.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {'stock_id': name, 'heads':heads,
+				'bodys': bodys}, context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/analysis_table.html', {'stock_id': get_symbol(request), 'heads':heads,
+		'bodys': bodys}, context_instance = RequestContext(request))
+
 def get_season_revenue_chart(request):
 	symbol = get_symbol(request)
 	maxRevenue = 0
@@ -475,3 +498,20 @@ def get_season_current_ratio_chart(request):
 	yUnit = '%'
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
+
+def get_season_debt_ratio_chart(request):
+	date = {}
+	symbol = get_symbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('date')
+		xAxis_categories = []
+		debt_ratios = []
+		for ratio in ratios:
+			xAxis_categories.append(str(ratio.year) + 'Q' + str(ratio.season))
+			debt_ratios.append(float(ratio.debt_ratio))
+	names = [r'負債比率']
+	datas = [debt_ratios]
+	yUnit = '%'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
