@@ -41,20 +41,28 @@ def get_symbol(request):
 	return symbol
 
 #經營績效
-def get_season_performance_per_share_table(request):
+def get_performance_per_share_table(request, time_type):
 	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
-	heads.append(r'年/季')
+	if time_type == 'year':
+		heads.append(r'年度')
+		ratio_model = YearFinancialRatio
+	elif time_type == 'season':
+		heads.append(r'年/季')
+		ratio_model = SeasonFinancialRatio
 	heads.append(r'每股稅前盈餘')
 	heads.append(r'每股稅後盈餘')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if ratios:
 			for ratio in ratios:
 				item = []
-				item.append(str(ratio.year) + 'Q' + str(ratio.season))
+				if time_type == 'year':
+					item.append(ratio.year)
+				elif time_type == 'season':
+					item.append(str(ratio.year) + 'Q' + str(ratio.season))
 				item.append(ratio.net_before_tax_profit_per_share)
 				item.append(ratio.net_after_tax_profit_per_share)
 				bodys.append(item)
@@ -116,6 +124,36 @@ def get_season_profitability_table(request):
 			for profitability in season_profitabilitys:
 				item = []
 				item.append(str(profitability.year)+'Q'+str(profitability.season))
+				item.append(profitability.gross_profit_margin)
+				item.append(profitability.operating_profit_margin)
+				item.append(profitability.net_before_tax_profit_margin)
+				item.append(profitability.net_after_tax_profit_margin)
+				bodys.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {"stock_id": name,
+				"heads": heads, "bodys": bodys},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/analysis_table.html',{"stock_id": symbol},
+		context_instance = RequestContext(request))
+
+def get_year_profitability_table(request):
+	symbol = get_symbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	heads = []
+	heads.append(r'年')
+	heads.append(r'毛利率')
+	heads.append(r'營益率')
+	heads.append(r'稅前盈益率')
+	heads.append(r'稅後盈利率')
+	bodys = []
+	if StockId.objects.filter(symbol=symbol):
+		year_profitability = YearFinancialRatio.objects.filter(symbol=symbol).order_by('-year')
+		if year_profitability:
+			for profitability in year_profitability:
+				item = []
+				item.append(str(profitability.year))
 				item.append(profitability.gross_profit_margin)
 				item.append(profitability.operating_profit_margin)
 				item.append(profitability.net_before_tax_profit_margin)
@@ -233,20 +271,28 @@ def get_season_profit_table(request):
 				context_instance = RequestContext(request))
 	return HttpResponse('error')
 
-def get_season_roe_table(request):
+def get_roe_roa_table(request, time_type):
 	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
 	heads = []
-	heads.append(r'年/季')
+	if time_type == 'year':
+		heads.append(r'年')
+		ratio_model = YearFinancialRatio
+	elif time_type == 'season':
+		heads.append(r'年/季')
+		ratio_model = SeasonFinancialRatio
 	heads.append(r'股東權益報酬率')
 	heads.append(r'資產報酬率')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-surrogate_key')
 		if ratios:
 			for ratio in ratios:
 				item = []
-				item.append(str(ratio.year) + 'Q' + str(ratio.season))
+				if time_type == 'year':
+					item.append(ratio.year)
+				elif time_type == 'season':
+					item.append(str(ratio.year) + 'Q' + str(ratio.season))
 				item.append(ratio.return_on_equity)
 				item.append(ratio.return_on_assets)
 				bodys.append(item)
@@ -422,16 +468,23 @@ def get_dividend_chart(request):
 	data = {'categories': xAxis_categories[::-1], 'cash_dividends': cash_dividends[::-1], 'stock_dividends': stock_dividends[::-1]}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def get_season_performance_per_share_chart(request):
+def get_performance_per_share_chart(request, time_type):
 	data = {}
 	symbol = get_symbol(request)
+	if time_type == 'year':
+		ratio_model = YearFinancialRatio
+	elif time_type == 'season':
+		ratio_model = SeasonFinancialRatio
 	if StockId.objects.filter(symbol=symbol):
-		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('surrogate_key')
+		season_financial_ratios = ratio_model.objects.filter(symbol=symbol).order_by('surrogate_key')
 		xAxis_categories = []
 		net_before_tax_profit_per_shares = []
 		net_after_tax_profit_per_shares = []
 		for ratio in season_financial_ratios:
-			xAxis_categories.append(str(ratio.year) + "Q" + str(ratio.season))
+			if time_type == 'year':
+				xAxis_categories.append(ratio.year)
+			elif time_type == 'season':
+				xAxis_categories.append(str(ratio.year) + "Q" + str(ratio.season))
 			net_before_tax_profit_per_shares.append(float(ratio.net_before_tax_profit_per_share))
 			net_after_tax_profit_per_shares.append(float(ratio.net_after_tax_profit_per_share))
 	names = [r'稅前每股盈餘', r'稅後每股盈餘']
@@ -440,16 +493,23 @@ def get_season_performance_per_share_chart(request):
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def get_season_roe_chart(request):
+def get_roe_roa_chart(request, time_type):
 	data = {}
 	symbol = get_symbol(request)
+	if time_type == 'year':
+		ratio_model = YearFinancialRatio
+	elif time_type == 'season':
+		ratio_model = SeasonFinancialRatio
 	if StockId.objects.filter(symbol=symbol):
-		season_financial_ratios = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('surrogate_key')
+		season_financial_ratios = ratio_model.objects.filter(symbol=symbol).order_by('surrogate_key')
 		xAxis_categories = []
 		return_on_equity = []
 		return_on_assets = []
 		for ratio in season_financial_ratios:
-			xAxis_categories.append(str(ratio.year) + "Q" + str(ratio.season))
+			if time_type == 'year':
+				xAxis_categories.append(ratio.year)
+			elif time_type == 'season':
+				xAxis_categories.append(str(ratio.year) + "Q" + str(ratio.season))
 			return_on_equity.append(float(ratio.return_on_equity))
 			return_on_assets.append(float(ratio.return_on_assets))
 	names = [r'股東權益報酬率', r'資產報酬率']
@@ -481,6 +541,29 @@ def get_season_profitability_chart(request):
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
+def get_year_profitability_chart(request):
+	data = {}
+	symbol = get_symbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		profitabilitys = YearFinancialRatio.objects.filter(symbol=symbol).order_by('year')
+		xAxis_categories = []
+		gross_profit_margins = []
+		operating_profit_margins = []
+		net_before_tax_profit_margins = []
+		net_after_tax_profit_margins = []
+		for profitability in profitabilitys:
+			xAxis_categories.append(str(profitability.year))
+			gross_profit_margins.append(float(profitability.gross_profit_margin))
+			operating_profit_margins.append(float(profitability.operating_profit_margin))
+			net_before_tax_profit_margins.append(float(profitability.net_before_tax_profit_margin))
+			net_after_tax_profit_margins.append(float(profitability.net_after_tax_profit_margin))
+	names = [r'毛利率', r'營益率', r'稅前淨利率', r'稅後淨利率']
+	datas = [gross_profit_margins, operating_profit_margins, net_before_tax_profit_margins, 
+						  net_after_tax_profit_margins]
+	yUnit = '%'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
 def get_season_current_ratio_chart(request):
 	data = {}
 	symbol = get_symbol(request)
@@ -495,7 +578,7 @@ def get_season_current_ratio_chart(request):
 			quick_ratios.append(float(ratio.quick_ratio))
 	names = [r'流動比', r'速動比']
 	datas = [current_ratios, quick_ratios]
-	yUnit = '%'
+	yUnit = '倍'
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 

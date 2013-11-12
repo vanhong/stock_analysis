@@ -5,14 +5,14 @@
 		this.Init = function(){
 			$(window).load(function(){
 				drawTool.DrawMonth();
-				$('#revenue_type').html('月營收明細');
+				$('#data_type').html('月營收明細');
 				$('#table_result').html('&nbsp;').load('/get_month_revenue_table/', function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 				$( '#month_revenue' ).click( function() {
-					if ($('#revenue_type').html() != '月營收明細'){
+					if ($('#data_type').html() != '月營收明細'){
 						drawTool = new Draw.Tool();
-						$('#revenue_type').html('月營收明細');
+						$('#data_type').html('月營收明細');
 						$('#table_result').html('&nbsp;').load('/get_month_revenue_table/', function(){
 							$('#symbol').html($('#stock_id').html());
 						});
@@ -20,9 +20,9 @@
 					}
 				});
 				$( '#season_revenue' ).click( function() {
-					if ($('#revenue_type').html() != '季營收明細') {
+					if ($('#data_type').html() != '季營收明細') {
 						drawTool = new Draw.Tool();
-						$('#revenue_type').html('季營收明細');
+						$('#data_type').html('季營收明細');
 						$('#table_result').html('&nbsp;').load('/get_season_revenue_table/', function(){
 							$('#symbol').html($('#stock_id').html());
 						});
@@ -30,9 +30,9 @@
 					}
 				});
 				$( '#season_profit').click(function () {
-					if ($('#revenue_type').html() != '季盈餘明細') {
+					if ($('#data_type').html() != '季盈餘明細') {
 						drawTool = new Draw.Tool();
-						$('#revenue_type').html('季盈餘明細');
+						$('#data_type').html('季盈餘明細');
 						$('#table_result').html('&nbsp').load('/get_season_profit_table/', function(){
 							$('#symbol').html($('#stock_id').html());
 						});
@@ -51,13 +51,33 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#profitability_type').html('季獲利能力');
+				$('#data_type').html('季獲利能力');
 				$('#table_result').html('&nbsp;').load('/get_season_profitability_table/', function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 				drawTool.Init('/get_season_profitability_chart/');
+
+				$('#season_profitability').click(function () {
+					if ($('#data_type').html() != '季獲利能力') {
+						$('#data_type').html('季獲利能力');
+						$('#table_result').html('&nbsp').load('/get_season_profitability_table/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.Init('/get_season_profitability_chart');
+					}
+				});
+
+				$('#year_profitability').click(function () {
+					if ($('#data_type').html() != '年獲利能力') {
+						$('#data_type').html('年獲利能力');
+						$('#table_result').html('&nbsp').load('/get_year_profitability_table/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.Init('/get_year_profitability_chart');
+					}
+				});
 			});
-		}	
+		}
 	}
 	Profitability.Tool = Tool;
 }(window.Profitability = window.Profitability || {}));
@@ -67,12 +87,32 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#data_type').html('經營績效');
-				$('#table_result').html('&nbsp;').load('/get_season_performance_per_share_table/', function(){
+				$('#data_type').html('季經營績效');
+				$('#table_result').html('&nbsp;').load('/get_season_performance_per_share_table/', function () {
 					$('#symbol').html($('#stock_id').html());
-				})
+				});
+				drawTool.Init('/get_season_performance_per_share_chart/');
+
+				$('#season_performance_per_share').click(function () {
+					if ($('#data_type').html() != '季經營績效') {
+						$('#data_type').html('季經營績效');
+						$('#table_result').html('&nbsp').load('/get_season_performance_per_share_table/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.Init('/get_season_performance_per_share_chart');
+					}
+				});
+
+				$('#year_performance_per_share').click(function () {
+					if ($('#data_type').html() != '年經營績效') {
+						$('#data_type').html('年經營績效');
+						$('#table_result').html('&nbsp').load('/get_year_performance_per_share_table/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.Init('/get_year_performance_per_share_chart');
+					}
+				});
 			});
-			drawTool.Init('/get_season_performance_per_share_chart/');
 		}
 	}
 	PerformancePerShare.Tool = Tool;
@@ -83,13 +123,34 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#data_type').html('ROE/ROA');
-				$('#table_result').html('&nbsp;').load('/get_season_roe_table/', function(){
+				$('#data_type').html('季ROE/ROA');
+				$('#table_result').html('&nbsp;').load('/get_season_roe_roa_table/', function () {
 					$('#symbol').html($('#stock_id').html());
-				})
+				});
+				drawTool.Init('/get_season_roe_roa_chart/');
+
+				$('#season_roe_roa').click(function () {
+					if ($('#data_type').html() != '季ROE/ROA') {
+						$('#data_type').html('季ROE/ROA');
+						$('#table_result').html('&nbsp').load('/get_season_roe_roa_table/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.Init('/get_season_roe_roa_chart');
+					}
+				});
+
+				$('#year_roe_roa').click(function () {
+					if ($('#data_type').html() != '年ROE/ROA') {
+						$('#data_type').html('年ROE/ROA');
+						$('#table_result').html('&nbsp').load('/get_year_roe_roa_table/', function(){
+							$('#symbol').html($('#stock_id').html());
+						});
+						drawTool.Init('/get_year_roe_roa_chart');
+					}
+				});
 			});
-			drawTool.Init('/get_season_roe_chart/');
 		}
+
 	}
 	ROE.Tool = Tool;
 }(window.ROE = window.ROE || {}));
