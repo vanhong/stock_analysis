@@ -3,22 +3,20 @@
 {% block analysis_content %}
   <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
   <script type="text/javascript">
-    var obj = new Profitability.Tool();
+    var obj = {{ drawTool }}
     obj.Init();
   </script>
   <br>
   <div class="row-fluid">
-    <div class="span2">
+    <div class="span3">
       <h4><span id="symbol" ></span></h4>
     </div>
     <div class="span4">
       <h4><span id="data_type"></span></h4>
     </div>
-    <div class="row">
-      <div class="span4 offset8">
-      <button id="season_profitability" class="btn btn-primary">季報</button>
-      <button id="year_profitability" class="btn btn-primary">年報</button>
-      </div>
+      <div class="span4 offset1">
+      <button id="season_profitability" class="btn btn-primary">季度</button>
+      <button id="year_profitability" class="btn btn-primary">年度</button>
     </div>
     <div id="chart_result">
     </div>
