@@ -5,37 +5,36 @@
 		this.Init = function(){
 			$(window).load(function(){
 				drawTool.DrawMonth();
-				$('#data_type').html('月營收明細');
 				$('#table_result').html('&nbsp;').load('/get_month_revenue_table/', function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 				$( '#month_revenue' ).click( function() {
-					if ($('#data_type').html() != '月營收明細'){
+					if (!$('#month_revenue').hasClass('btn-success')){
+						$('#season_revenue').attr('class', 'btn btn-primary');
+						$('#season_profit').attr('class', 'btn btn-primary');
+						$('#month_revenue').attr('class', 'btn btn-success');
 						drawTool = new Draw.Tool();
-						$('#data_type').html('月營收明細');
-						$('#table_result').html('&nbsp;').load('/get_month_revenue_table/', function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+						$('#table_result').html('&nbsp;').load('/get_month_revenue_table/');
 						drawTool.DrawMonth();
 					}
 				});
 				$( '#season_revenue' ).click( function() {
-					if ($('#data_type').html() != '季營收明細') {
+					if (!$('#season_revenue').hasClass('btn-success')) {
+						$('#season_revenue').attr('class', 'btn btn-success');
+						$('#season_profit').attr('class', 'btn btn-primary');
+						$('#month_revenue').attr('class', 'btn btn-primary');
 						drawTool = new Draw.Tool();
-						$('#data_type').html('季營收明細');
-						$('#table_result').html('&nbsp;').load('/get_season_revenue_table/', function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+						$('#table_result').html('&nbsp;').load('/get_season_revenue_table/');
 						drawTool.DrawSeason();
 					}
 				});
 				$( '#season_profit').click(function () {
-					if ($('#data_type').html() != '季盈餘明細') {
+					if (!$('#season_profit').hasClass('btn-success')) {
+						$('#season_revenue').attr('class', 'btn btn-primary');
+						$('#season_profit').attr('class', 'btn btn-success');
+						$('#month_revenue').attr('class', 'btn btn-primary');
 						drawTool = new Draw.Tool();
-						$('#data_type').html('季盈餘明細');
-						$('#table_result').html('&nbsp').load('/get_season_profit_table/', function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+						$('#table_result').html('&nbsp').load('/get_season_profit_table/');
 						drawTool.DrawSeasonProfit();
 					}
 				});
@@ -51,28 +50,25 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#data_type').html('季獲利能力');
 				$('#table_result').html('&nbsp;').load('/get_profitability_table/', {'time_type':'season'}, function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 				drawTool.Init('/get_profitability_chart/', 'season');
 
 				$('#season_profitability').click(function () {
-					if ($('#data_type').html() != '季獲利能力') {
-						$('#data_type').html('季獲利能力');
-						$('#table_result').html('&nbsp').load('/get_profitability_table/', {'time_type': 'season'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#season_profitability').hasClass('btn-success')) {
+						$('#season_profitability').attr('class', 'btn btn-success');
+						$('#year_profitability').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load('/get_profitability_table/', {'time_type': 'season'});
 						drawTool.Init('/get_profitability_chart', 'season');
 					}
 				});
 
 				$('#year_profitability').click(function () {
-					if ($('#data_type').html() != '年獲利能力') {
-						$('#data_type').html('年獲利能力');
-						$('#table_result').html('&nbsp').load('/get_profitability_table/', {'time_type':'year'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#year_profitability').hasClass('btn-success')) {
+						$('#season_profitability').attr('class', 'btn btn-primary');
+						$('#year_profitability').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load('/get_profitability_table/', {'time_type':'year'});
 						drawTool.Init('/get_profitability_chart', 'year');
 					}
 				});
@@ -87,28 +83,25 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#data_type').html('季經營績效');
 				$('#table_result').html('&nbsp;').load('/get_performance_per_share_table/', {'time_type':'season'}, function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 				drawTool.Init('/get_performance_per_share_chart/', 'season');
 
 				$('#season_performance_per_share').click(function () {
-					if ($('#data_type').html() != '季經營績效') {
-						$('#data_type').html('季經營績效');
-						$('#table_result').html('&nbsp').load('/get_performance_per_share_table/',{'time_type': 'season'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#season_performance_per_share').hasClass('btn-success')) {
+						$('#season_performance_per_share').attr('class', 'btn btn-success');
+						$('#year_performance_per_share').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load('/get_performance_per_share_table/',{'time_type': 'season'});
 						drawTool.Init('/get_performance_per_share_chart', 'season');
 					}
 				});
 
 				$('#year_performance_per_share').click(function () {
-					if ($('#data_type').html() != '年經營績效') {
-						$('#data_type').html('年經營績效');
-						$('#table_result').html('&nbsp').load('/get_performance_per_share_table/', {'time_type': 'year'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#year_performance_per_share').hasClass('btn-success')) {
+						$('#season_performance_per_share').attr('class', 'btn btn-primary');
+						$('#year_performance_per_share').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load('/get_performance_per_share_table/', {'time_type': 'year'});
 						drawTool.Init('/get_performance_per_share_chart', 'year');
 					}
 				});
@@ -123,26 +116,23 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#data_type').html('季ROE/ROA');
 				$('#table_result').html('&nbsp;').load('/get_roe_roa_table/', {'time_type': 'season'}, function () {
 					$('#symbol').html($('#stock_id').html());
 				});
 				drawTool.Init('/get_roe_roa_chart/', 'season');
 				$('#season_roe_roa').click(function () {
-					if ($('#data_type').html() != '季ROE/ROA') {
-						$('#data_type').html('季ROE/ROA');
-						$('#table_result').html('&nbsp').load('/get_roe_roa_table/', {'time_type': 'season'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#season_roe_roa').hasClass('btn-success')) {
+						$('#season_roe_roa').attr('class', 'btn btn-success');
+						$('#year_roe_roa').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load('/get_roe_roa_table/', {'time_type': 'season'});
 						drawTool.Init('/get_roe_roa_chart', 'season');
 					}
 				});
 				$('#year_roe_roa').click(function () {
-					if ($('#data_type').html() != '年ROE/ROA') {
-						$('#data_type').html('年ROE/ROA');
-						$('#table_result').html('&nbsp').load('/get_roe_roa_table/', {'time_type': 'year'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#year_roe_roa').hasClass('btn-success')) {
+						$('#season_roe_roa').attr('class', 'btn btn-primary');
+						$('#year_roe_roa').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load('/get_roe_roa_table/', {'time_type': 'year'});
 						drawTool.Init('/get_roe_roa_chart', 'year');
 					}
 				});
@@ -157,26 +147,23 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#data_type').html('季經營週轉能力');
 				$('#table_result').html('&nbsp;').load('/get_turnover_ratio_table/', {'time_type': 'season'}, function(){
 					$('#symbol').html($('#stock_id').html());
 				});
 				drawTool.Init('/get_turnover_ratio_chart/', 'season');
 				$('#season_turnover_ratio').click(function () {
-					if ($('#data_type').html() != '季經營週轉能力') {
-						$('#data_type').html('季經營週轉能力');
-						$('#table_result').html('&nbsp').load('/get_turnover_ratio_table/', {'time_type': 'season'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#season_turnover_ratio').hasClass('btn-success')) {
+						$('#season_turnover_ratio').attr('class', 'btn btn-success');
+						$('#year_turnover_ratio').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load('/get_turnover_ratio_table/', {'time_type': 'season'});
 						drawTool.Init('/get_turnover_ratio_chart', 'season');
 					}
 				});
 				$('#year_turnover_ratio').click(function () {
-					if ($('#data_type').html() != '年經營週轉能力') {
-						$('#data_type').html('年經營週轉能力');
-						$('#table_result').html('&nbsp').load('/get_turnover_ratio_table/', {'time_type': 'year'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#year_turnover_ratio').hasClass('btn-success')) {
+						$('#season_turnover_ratio').attr('class', 'btn btn-primary');
+						$('#year_turnover_ratio').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load('/get_turnover_ratio_table/', {'time_type': 'year'});
 						drawTool.Init('/get_turnover_ratio_chart', 'year');
 					}
 				});
@@ -207,26 +194,23 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-			$('#data_type').html('流動比/速動比(季)');
 			$('#table_result').html('&nbsp;').load('/get_current_ratio_table/', {'time_type': 'season'}, function(){
 				$('#symbol').html($('#stock_id').html());
 				});
 				drawTool.Init('/get_current_ratio_chart/', 'season');
 				$('#season_current_ratio').click(function () {
-					if ($('#data_type').html() != '流動比/速動比(季)') {
-						$('#data_type').html('流動比/速動比(季)');
-						$('#table_result').html('&nbsp').load('/get_current_ratio_table/', {'time_type': 'season'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#season_current_ratio').hasClass('btn-success')) {
+						$('#season_current_ratio').attr('class', 'btn btn-success');
+						$('#year_current_ratio').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load('/get_current_ratio_table/', {'time_type': 'season'});
 						drawTool.Init('/get_current_ratio_chart', 'season');
 					}
 				});
 				$('#year_current_ratio').click(function () {
-					if ($('#data_type').html() != '流動比/速動比(年)') {
-						$('#data_type').html('流動比/速動比(年)');
-						$('#table_result').html('&nbsp').load('/get_current_ratio_table/', {'time_type': 'year'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#year_current_ratio').hasClass('btn-success')) {
+						$('#season_current_ratio').attr('class', 'btn btn-primary');
+						$('#year_current_ratio').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load('/get_current_ratio_table/', {'time_type': 'year'});
 						drawTool.Init('/get_current_ratio_chart', 'year');
 					}
 				});
@@ -241,26 +225,23 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(){
 			$(window).load(function(){
-				$('#data_type').html('負債比率(季)');
 				$('#table_result').html('&nbsp;').load('/get_debt_ratio_table/', {'time_type':'season'}, function(){
 					$('#symbol').html($('#stock_id').html());
 				});
 				drawTool.Init('/get_debt_ratio_chart/', 'season');
 				$('#season_debt_ratio').click(function () {
-					if ($('#data_type').html() != '負債比率(季)') {
-						$('#data_type').html('負債比率(季)');
-						$('#table_result').html('&nbsp').load('/get_debt_ratio_table/', {'time_type': 'season'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#season_debt_ratio').hasClass('btn-success')) {
+						$('#season_debt_ratio').attr('class', 'btn btn-success');
+						$('#year_debt_ratio').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load('/get_debt_ratio_table/', {'time_type': 'season'});
 						drawTool.Init('/get_debt_ratio_chart', 'season');
 					}
 				});
 				$('#year_debt_ratio').click(function () {
-					if ($('#data_type').html() != '負債比率(年)') {
-						$('#data_type').html('負債比率(年)');
-						$('#table_result').html('&nbsp').load('/get_debt_ratio_table/', {'time_type': 'year'}, function(){
-							$('#symbol').html($('#stock_id').html());
-						});
+					if (!$('#year_debt_ratio').hasClass('btn-success')) {
+						$('#season_debt_ratio').attr('class', 'btn btn-primary');
+						$('#year_debt_ratio').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load('/get_debt_ratio_table/', {'time_type': 'year'});
 						drawTool.Init('/get_debt_ratio_chart', 'year');
 					}
 				});
@@ -269,3 +250,34 @@
 	}
 	DebtRatio.Tool = Tool;
 }(window.DebtRatio = window.DebtRatio || {}));
+
+(function(InterestCover) {
+	function Tool () {
+		var drawTool = new DrawBasicLine.Tool();
+		this.Init = function(){
+			$(window).load(function(){
+				$('#table_result').html('&nbsp;').load('/get_interest_cover_table/', {'time_type':'season'}, function(){
+					$('#symbol').html($('#stock_id').html());
+				});
+				drawTool.Init('/get_interest_cover_chart/', 'season');
+				$('#season_interest_cover').click(function () {
+					if (!$('#season_interest_cover').hasClass('btn-success')) {
+						$('#season_interest_cover').attr('class', 'btn btn-success');
+						$('#year_interest_cover').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load('/get_interest_cover_table/', {'time_type': 'season'});
+						drawTool.Init('/get_interest_cover_chart', 'season');
+					}
+				});
+				$('#year_interest_cover').click(function () {
+					if (!$('#year_interest_cover').hasClass('btn-success')) {
+						$('#season_interest_cover').attr('class', 'btn btn-primary');
+						$('#year_interest_cover').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load('/get_interest_cover_table/', {'time_type': 'year'});
+						drawTool.Init('/get_interest_cover_chart', 'year');
+					}
+				});
+			});
+		}
+	}
+	InterestCover.Tool = Tool;
+}(window.InterestCover = window.InterestCover || {}));

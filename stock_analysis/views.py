@@ -95,7 +95,7 @@ def get_dividend_table(request):
 	heads.append(r'員工配股率%')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		dividends = Dividend.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		dividends = Dividend.objects.filter(symbol=symbol).order_by('-date')
 		if dividends:
 			for dividend in dividends:
 				if dividend.cash_dividends:
@@ -137,7 +137,7 @@ def get_profitability_table(request):
 	heads.append(r'稅後盈利率')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		season_profitabilitys = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		season_profitabilitys = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-date')
 		if season_profitabilitys:
 			for profitability in season_profitabilitys:
 				if profitability.gross_profit_margin is not None and profitability.operating_profit_margin  is not None and\
@@ -174,7 +174,7 @@ def get_month_revenue_table(request):
 	heads.append(r'年增率')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('-date')
 		if month_revenues:
 			for revenue in month_revenues:
 				if revenue.month:
@@ -210,7 +210,7 @@ def get_season_revenue_table(request):
 	heads.append(r'年增率')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('-date')
 		if season_revenues:
 			for revenue in season_revenues:
 				if revenue.revenue is not None:
@@ -245,7 +245,7 @@ def get_season_profit_table(request):
 	heads.append(r'年增率')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		season_revenues = SeasonProfit.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		season_revenues = SeasonProfit.objects.filter(symbol=symbol).order_by('-date')
 		if season_revenues:
 			for revenue in season_revenues:
 				if revenue.profit is not None:
@@ -283,7 +283,7 @@ def get_roe_roa_table(request):
 	heads.append(r'資產報酬率')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
-		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-surrogate_key')
+		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-date')
 		if ratios:
 			for ratio in ratios:
 				if ratio.return_on_equity is not None and ratio.return_on_assets is not None:
@@ -294,6 +294,42 @@ def get_roe_roa_table(request):
 						item.append(str(ratio.year) + 'Q' + str(ratio.season))
 					item.append(ratio.return_on_equity)
 					item.append(ratio.return_on_assets)
+					bodys.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
+				"bodys": bodys},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},
+		context_instance = RequestContext(request))
+
+@csrf_exempt
+def get_interest_cover_table(request):
+	if 'time_type' in request.POST:
+		time_type = request.POST['time_type']
+		heads = []
+	if time_type == 'season':
+		ratio_model = SeasonFinancialRatio
+		heads.append(r'季度')
+	elif time_type == 'year':
+		ratio_model = YearFinancialRatio
+		heads.append(r'年')
+	symbol = get_symbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	heads.append(r'利息保障倍數')
+	bodys = []
+	if StockId.objects.filter(symbol=symbol):
+		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-date')
+		if ratios:
+			for ratio in ratios:
+				if ratio.interest_cover is not None:
+					item = []
+					if time_type == 'year':
+						item.append(ratio.year)
+					elif time_type == 'season':
+						item.append(str(ratio.year) + 'Q' + str(ratio.season))
+					item.append(ratio.interest_cover)
 					bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
@@ -396,7 +432,6 @@ def get_debt_ratio_table(request):
 		heads.append(r'年')
 	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	heads = []
 	heads.append(r'負債比率')
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
@@ -426,7 +461,7 @@ def get_season_revenue_chart(request):
 	minGrowthRate = 10000
 	dataNum = 0
 	if StockId.objects.filter(symbol=symbol):
-		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('surrogate_key')
+		season_revenues = SeasonRevenue.objects.filter(symbol=symbol).order_by('date')
 		revenue_data = []
 		growth_rate_data = []
 		xAxis_categories = []
@@ -459,7 +494,7 @@ def get_season_profit_chart(request):
 	minGrowthRate = 10000
 	dataNum = 0
 	if StockId.objects.filter(symbol=symbol):
-		season_profits = SeasonProfit.objects.filter(symbol=symbol).order_by('surrogate_key')
+		season_profits = SeasonProfit.objects.filter(symbol=symbol).order_by('date')
 		profit_data = []
 		growth_rate_data = []
 		xAxis_categories = []
@@ -492,7 +527,7 @@ def get_month_revenue_chart(request):
 	minGrowthRate = 10000
 	dataNum = 0
 	if StockId.objects.filter(symbol=symbol):
-		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('surrogate_key')
+		month_revenues = MonthRevenue.objects.filter(symbol=symbol).order_by('date')
 		revenue_data = []
 		growth_rate_data = []
 		xAxis_categories = []
@@ -635,7 +670,7 @@ def get_profitability_chart(request):
 	data = {}
 	symbol = get_symbol(request)
 	if StockId.objects.filter(symbol=symbol):
-		profitabilitys = ratio_model.objects.filter(symbol=symbol).order_by('surrogate_key')
+		profitabilitys = ratio_model.objects.filter(symbol=symbol).order_by('date')
 		xAxis_categories = []
 		gross_profit_margins = []
 		operating_profit_margins = []
@@ -713,3 +748,28 @@ def get_debt_ratio_chart(request):
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
+def get_interest_cover_chart(request):
+	if 'time_type' in request.GET:
+		time_type = request.GET['time_type']
+	if time_type == 'season':
+		ratio_model = SeasonFinancialRatio
+	elif time_type == 'year':
+		ratio_model = YearFinancialRatio
+	date = {}
+	symbol = get_symbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		ratios = ratio_model.objects.filter(symbol=symbol).order_by('date')
+		xAxis_categories = []
+		debt_ratios = []
+		for ratio in ratios:
+			if ratio.interest_cover is not None:
+				if time_type == 'season':
+					xAxis_categories.append(str(ratio.year) + 'Q' + str(ratio.season))
+				elif time_type == 'year':
+					xAxis_categories.append(ratio.year)
+				debt_ratios.append(float(ratio.interest_cover))
+	names = [r'利息保障倍數']
+	datas = [debt_ratios]
+	yUnit = '倍'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
+	return HttpResponse(json.dumps(data), content_type="application/json")
