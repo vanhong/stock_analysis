@@ -51,7 +51,7 @@ def update_season_income_statement(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 1
+        season = 3
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1911, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1910, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
@@ -367,7 +367,7 @@ def update_season_balance_sheet(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         year = 102
-        season = 1
+        season = 3
         if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb03'
@@ -670,6 +670,7 @@ def update_year_financial_ratio(request):
                 year_ratio = YearFinancialRatio()
                 year_ratio.surrogate_key = stock_symbol + '_' + str(year)
                 year_ratio.year = year
+                year_ratio.date = datetime.date(year, 1, 1)
                 year_ratio.symbol = stock_symbol
                 arrRatioDatas.append(year_ratio)
             if stage_data.string.encode('utf-8') == r'期別':
@@ -839,7 +840,7 @@ def update_season_financial_ratio(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         (last_season_year, last_season_season) = last_season(today)
-        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season-1)
+        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
         if ratioInDb:
             # print stock_symbol + ' exists'
             continue
