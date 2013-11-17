@@ -15,15 +15,15 @@ from core.utils import st_to_decimal, season_to_date, last_season
 
 #income statement from TWSE 綜合損益表
 def show_season_income_statement(request):
-    stock_symbol = '1409'
+    stock_symbol = '2454'
     year = 102
-    season = 2
+    season = 1
     url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
     values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
               'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
-              'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
+              'queryName':'co_id', 'TYPEK':'all', 'isnew':'false', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
     values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'sii', 'step' : '2',
-              'year' : '102', 'season' : '2', 'co_id' : stock_symbol, 'firstin' : '1'}
+              'year' : year, 'season' : season, 'co_id' : stock_symbol, 'firstin' : '1'}
     url_data = urllib.urlencode(values)
     req = urllib2.Request(url, url_data)
     response = urllib2.urlopen(req)
@@ -47,11 +47,15 @@ def show_season_income_statement(request):
 
 #綜合損益表
 def update_season_income_statement(request):
+    if 'year' in request.GET and  'season' in request.GET:
+        year = int(request.GET['year'])
+        season = int(request.GET['season'])
+    else:
+        year = 102
+        season = 3
     stock_ids = StockId.objects.all()
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        year = 102
-        season = 3
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1911, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year+1910, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
@@ -672,6 +676,7 @@ def update_year_financial_ratio(request):
                 year_ratio.year = year
                 year_ratio.date = datetime.date(year, 1, 1)
                 year_ratio.symbol = stock_symbol
+                year_ratio.date = datetime.date(year, 1, 1)
                 arrRatioDatas.append(year_ratio)
             if stage_data.string.encode('utf-8') == r'期別':
                 isDataStart = True
@@ -830,7 +835,7 @@ def update_year_financial_ratio(request):
                     next = next.next_sibling.next_sibling
         for ratio in arrRatioDatas:
             ratio.save()
-        print ('update ' + stock_symbol + ' season financial ratio')
+        print ('update ' + stock_symbol + ' year financial ratio')
 
     return HttpResponse('update year financial ratio')
 

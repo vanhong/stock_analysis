@@ -189,7 +189,7 @@ def update_season_revenue(request):
     stock_ids = StockId.objects.all()
     for stockid in stock_ids:
         symbol = stockid.symbol
-        statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('surrogate_key')
+        statements = SeasonIncomeStatement.objects.filter(symbol=symbol).order_by('date')
         if statements:
             for statement in statements:
                 season_revenue = SeasonRevenue.objects.filter(symbol=symbol, year=statement.year, season=statement.season)
@@ -238,7 +238,7 @@ def update_season_revenue(request):
                         if last_acc_revenue > 0:
                             revenue.acc_year_growth_rate = Decimal(((revenue.acc_revenue / last_acc_revenue) - 1) * 100)
                     revenue.save()
-                    print symbol + ' season revenue updated'
+            print symbol + ' season revenue updated'
 
     return HttpResponse('update season revenue')
 
