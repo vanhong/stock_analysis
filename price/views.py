@@ -12,8 +12,7 @@ from stocks.models import StockId
 from price.models import *
 from bs4 import BeautifulSoup
 
-# Create your views here.
-def update_price(request):# Create your views here.
+def update_price(request):
 	begin = request.GET['begin']
 	end = request.GET['end']
 	startNo = 0

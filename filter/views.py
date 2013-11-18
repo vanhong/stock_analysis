@@ -51,7 +51,7 @@ def filter_start(request):
 				continue
 			update_lists = query_reveune_ann_growth_rate(cnt, value, 'month')
 			print 'reveune_ann_growth_rate'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'reveune_s_ann_growth_rate': #季營收連續幾季年增率>
 			cnt = int(value['cnt'])
@@ -60,7 +60,7 @@ def filter_start(request):
 				continue
 			update_lists = query_reveune_ann_growth_rate(cnt, value, 'season')
 			print 'reveune_s_ann_growth_rate'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'opm_s': #季OPM連續幾季>
 			# print 'start to check ' + stockid.symbol + ' OPM'
@@ -70,7 +70,7 @@ def filter_start(request):
 				continue
 			update_lists = query_financial_ratio(cnt, value, 'operating_profit_margin', 'season')
 			print 'opm_s'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'gpm_s':
 			# print 'start to check ' + stockid.symbol + ' GPM'
@@ -86,7 +86,7 @@ def filter_start(request):
 				continue
 			update_lists = query_gpm_s_gtn_pre_avg(cnt)
 			print 'gpm_s_gtn_pre_avg'
-			print update_lists
+			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'CorpOverBuy':
 			cnt = int(value['cnt'])
@@ -117,7 +117,7 @@ def filter_start(request):
 				"results": results_dic},
 				context_instance = RequestContext(request))
 
-
+#not used
 def check_season_data(cnt, overunder, condition, conditionValue):
 	filter_list = []
 	dates = SeasonFinancialRatio.objects.values('year', 'season').distinct().order_by('-year', '-season')
@@ -165,6 +165,16 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
+def query_corp_trade(cnt, value, over_under):
+	date_str = 'trade_date'
+	symbol_str = 'symbol'
+	update_lists = []
+	kwargs = {
+		'{0}__{1}'.format('field_avg', query_type):filter_value
+	}
+	dates = financial_model.objects.values(date_str).distinct().order_by('-'+date_str)[:cnt].values_list(date_str, flat=True)
+	update_lists = CorpTrade.objects.values(symbol_str).filter(date__gte=dates[len(dates)])
+	return update_lists
 
 def query_financial_ratio(cnt, value, field, time_type):
 	strDate = 'date'
@@ -194,6 +204,7 @@ def query_financial_ratio(cnt, value, field, time_type):
 	update_lists = financial_model.objects.values_list(strSymbol).filter(**update_kwargs).\
 				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
+
 	return update_lists
 
 def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):

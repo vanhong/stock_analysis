@@ -185,8 +185,8 @@
 
 (function(DrawBasicLine) {
     function Tool() {
-        var GetData = function(url) {
-            $.get(url, function(jData){
+        var GetData = function(url, time_type) {
+            $.get(url, {'time_type':time_type}, function(jData){
                 // alert(JSON.stringify(jData));
                 //$('#chart_result').html(jData);
                 var series = [];
@@ -230,8 +230,8 @@
                 });
             });
         }
-        this.Init = function(data_url) {
-            GetData(data_url);
+        this.Init = function(data_url, time_type) {
+            GetData(data_url, time_type);
         }
     }
     DrawBasicLine.Tool = Tool;

@@ -55,6 +55,7 @@ class Dividend(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     date = models.DateField(db_index=True)
     year = models.IntegerField(db_index=True)
+    date = models.DateField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
     cash_dividends = models.DecimalField(max_digits=20, decimal_places=10, null=True)
     stock_dividends_from_retained_earnings = models.DecimalField(max_digits=20, decimal_places=10, null=True)
