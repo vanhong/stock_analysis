@@ -6,13 +6,13 @@ def st_to_decimal(data):
 
 def season_to_date(year, season):
 	if season == 1:
-		return datetime.date(1910+year, 1, 1)
+		return datetime.date(year, 1, 1)
 	elif season == 2:
-		return datetime.date(1910+year, 4, 1)
+		return datetime.date(year, 4, 1)
 	elif season == 3:
-		return datetime.date(1910+year, 7, 1)
+		return datetime.date(year, 7, 1)
 	elif season == 4:
-		return datetime.date(1910+year, 10, 1)
+		return datetime.date(year, 10, 1)
 
 def last_season(day):
     year = day.year
