@@ -281,3 +281,38 @@
 	}
 	InterestCover.Tool = Tool;
 }(window.InterestCover = window.InterestCover || {}));
+
+
+(function(GrowthRate) {
+	function Tool () {
+		var drawTool = new DrawBasicLine.Tool();
+		this.Init = function(url){
+			$(window).load(function(){
+				var table_url = '/get_' + url + '_table/';
+				var chart_url = '/get_' + url + '_chart/';
+				$('#table_result').html('&nbsp;').load(table_url, {'time_type':'season'}, function(){
+					$('#symbol').html($('#stock_id').html());
+				});
+				drawTool.Init(chart_url, 'season');
+
+				$('#season_growth_rate').click(function () {
+					if (!$('#season_growth_rate').hasClass('btn-success')) {
+						$('#season_growth_rate').attr('class', 'btn btn-success');
+						$('#year_growth_rate').attr('class', 'btn btn-primary');
+						$('#table_result').html('&nbsp').load(table_url, {'time_type': 'season'});
+						drawTool.Init(chart_url, 'season');
+					}
+				});
+				$('#year_growth_rate').click(function () {
+					if (!$('#year_growth_rate').hasClass('btn-success')) {
+						$('#season_growth_rate').attr('class', 'btn btn-primary');
+						$('#year_growth_rate').attr('class', 'btn btn-success');
+						$('#table_result').html('&nbsp').load(table_url, {'time_type': 'year'});
+						drawTool.Init(chart_url, 'year');
+					}
+				});
+			});
+		}
+	}
+	GrowthRate.Tool = Tool;
+}(window.GrowthRate = window.GrowthRate || {}));

@@ -17,6 +17,7 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^debt_ratio/$', 'analysis', {'template_name': 'debt_ratio.html', 'drawTool': 'new DebtRatio.Tool();'}),
     (r'^turnover_ratio/$', 'analysis', {'template_name': 'turnover_ratio.html', 'drawTool': 'new TurnoverRatio.Tool();'}),
     (r'^interest_cover/$', 'analysis', {'template_name': 'interest_cover.html', 'drawTool': 'new InterestCover.Tool();'}),
+    (r'^revenue_growth_rate/$', 'analysis', {'template_name': 'growth_rate.html', 'drawTool': 'new GrowthRate.Tool();'}),
 
     (r'^get_performance_per_share_table/$', 'get_performance_per_share_table'),
     (r'^get_month_revenue_table/$', 'get_month_revenue_table'),
@@ -29,6 +30,7 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^get_debt_ratio_table/$', 'get_debt_ratio_table'),
     (r'^get_turnover_ratio_table/$', 'get_turnover_ratio_table'),
     (r'^get_interest_cover_table/$', 'get_interest_cover_table'),
+    (r'^get_revenue_growth_rate_table/$', 'get_revenue_growth_rate_table'),
     
     (r'^get_performance_per_share_chart/$', 'get_performance_per_share_chart'),
     (r'^get_month_revenue_chart/$', 'get_month_revenue_chart'),
@@ -41,6 +43,7 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^get_debt_ratio_chart/$', 'get_debt_ratio_chart'),
     (r'^get_turnover_ratio_chart/$', 'get_turnover_ratio_chart'),
     (r'^get_interest_cover_chart/$', 'get_interest_cover_chart'),
+    (r'^get_revenue_growth_rate_chart/$', 'get_revenue_growth_rate_chart'),
 )
 
 urlpatterns += patterns('stocks.views',

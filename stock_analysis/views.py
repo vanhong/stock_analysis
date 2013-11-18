@@ -18,7 +18,9 @@ def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))
 
 def analysis(request, template_name, drawTool):
-	return render_to_response('analysis/' + template_name, {'drawTool': drawTool},
+	url = request.path.replace('/','')
+	print url
+	return render_to_response('analysis/' + template_name, {'drawTool': drawTool, 'url':url},
 							  context_instance = RequestContext(request))
 
 def set_stockid(request):
@@ -330,6 +332,42 @@ def get_interest_cover_table(request):
 					elif time_type == 'season':
 						item.append(str(ratio.year) + 'Q' + str(ratio.season))
 					item.append(ratio.interest_cover)
+					bodys.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
+				"bodys": bodys},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},
+		context_instance = RequestContext(request))
+
+@csrf_exempt
+def get_revenue_growth_rate_table(request):
+	if 'time_type' in request.POST:
+		time_type = request.POST['time_type']
+		heads = []
+	if time_type == 'season':
+		ratio_model = SeasonFinancialRatio
+		heads.append(r'季度')
+	elif time_type == 'year':
+		ratio_model = YearFinancialRatio
+		heads.append(r'年')
+	symbol = get_symbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	heads.append(r'營收成長率')
+	bodys = []
+	if StockId.objects.filter(symbol=symbol):
+		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-date')
+		if ratios:
+			for ratio in ratios:
+				if ratio.revenue_growth_rate is not None:
+					item = []
+					if time_type == 'year':
+						item.append(ratio.revenue_growth_rate)
+					elif time_type == 'season':
+						item.append(str(ratio.year) + 'Q' + str(ratio.season))
+					item.append(ratio.revenue_growth_rate)
 					bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
@@ -743,6 +781,32 @@ def get_debt_ratio_chart(request):
 					xAxis_categories.append(ratio.year)
 				debt_ratios.append(float(ratio.debt_ratio))
 	names = [r'負債比率']
+	datas = [debt_ratios]
+	yUnit = '%'
+	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
+	return HttpResponse(json.dumps(data), content_type="application/json")
+
+def get_revenue_growth_rate_chart(request):
+	if 'time_type' in request.GET:
+		time_type = request.GET['time_type']
+	if time_type == 'season':
+		ratio_model = SeasonFinancialRatio
+	elif time_type == 'year':
+		ratio_model = YearFinancialRatio
+	date = {}
+	symbol = get_symbol(request)
+	if StockId.objects.filter(symbol=symbol):
+		ratios = ratio_model.objects.filter(symbol=symbol).order_by('date')
+		xAxis_categories = []
+		debt_ratios = []
+		for ratio in ratios:
+			if ratio.revenue_growth_rate is not None:
+				if time_type == 'season':
+					xAxis_categories.append(str(ratio.year) + 'Q' + str(ratio.season))
+				elif time_type == 'year':
+					xAxis_categories.append(ratio.year)
+				debt_ratios.append(float(ratio.revenue_growth_rate))
+	names = [r'營放成長率']
 	datas = [debt_ratios]
 	yUnit = '%'
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
