@@ -331,7 +331,7 @@ def update_season_income_statement(request):
                 print stock_symbol + ' data updated'
             else:
                 print stock_symbol + 'time sleep'
-                time.sleep(30)
+                time.sleep(5)
 
     return HttpResponse("update_season_income_statement")
 
@@ -649,7 +649,7 @@ def update_season_balance_sheet(request):
                 last_balance_sheet.save()
             else:
                 print stock_symbol + ' time sleep'
-                time.sleep(30)
+                time.sleep(5)
 
             print stock_symbol + ' data updated'
     
