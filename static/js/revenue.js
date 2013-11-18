@@ -288,27 +288,25 @@
 		var drawTool = new DrawBasicLine.Tool();
 		this.Init = function(url){
 			$(window).load(function(){
-				var table_url = '/get_' + url + '_table/';
-				var chart_url = '/get_' + url + '_chart/';
-				$('#table_result').html('&nbsp;').load(table_url, {'time_type':'season'}, function(){
+				$('#table_result').html('&nbsp;').load('/get_growth_rate_table/', {'time_type':'season', 'field':url}, function(){
 					$('#symbol').html($('#stock_id').html());
 				});
-				drawTool.Init(chart_url, 'season');
+				drawTool.Init('/get_growth_rate_chart/', 'season', url);
 
 				$('#season_growth_rate').click(function () {
 					if (!$('#season_growth_rate').hasClass('btn-success')) {
 						$('#season_growth_rate').attr('class', 'btn btn-success');
 						$('#year_growth_rate').attr('class', 'btn btn-primary');
-						$('#table_result').html('&nbsp').load(table_url, {'time_type': 'season'});
-						drawTool.Init(chart_url, 'season');
+						$('#table_result').html('&nbsp').load('/get_growth_rate_table/', {'time_type': 'season', 'field':url});
+						drawTool.Init('/get_growth_rate_chart/', 'season', url);
 					}
 				});
 				$('#year_growth_rate').click(function () {
 					if (!$('#year_growth_rate').hasClass('btn-success')) {
 						$('#season_growth_rate').attr('class', 'btn btn-primary');
 						$('#year_growth_rate').attr('class', 'btn btn-success');
-						$('#table_result').html('&nbsp').load(table_url, {'time_type': 'year'});
-						drawTool.Init(chart_url, 'year');
+						$('#table_result').html('&nbsp').load('/get_growth_rate_table/', {'time_type': 'year', 'field':url});
+						drawTool.Init('/get_growth_rate_chart/', 'year', url);
 					}
 				});
 			});

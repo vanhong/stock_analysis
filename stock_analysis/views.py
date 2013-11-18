@@ -19,7 +19,6 @@ def home(request):
 
 def analysis(request, template_name, drawTool):
 	url = request.path.replace('/','')
-	print url
 	return render_to_response('analysis/' + template_name, {'drawTool': drawTool, 'url':url},
 							  context_instance = RequestContext(request))
 
@@ -343,9 +342,10 @@ def get_interest_cover_table(request):
 		context_instance = RequestContext(request))
 
 @csrf_exempt
-def get_revenue_growth_rate_table(request):
-	if 'time_type' in request.POST:
+def get_growth_rate_table(request):
+	if 'time_type' in request.POST and 'field' in request.POST:
 		time_type = request.POST['time_type']
+		field = request.POST['field']
 		heads = []
 	if time_type == 'season':
 		ratio_model = SeasonFinancialRatio
@@ -361,13 +361,14 @@ def get_revenue_growth_rate_table(request):
 		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-date')
 		if ratios:
 			for ratio in ratios:
-				if ratio.revenue_growth_rate is not None:
+				if ratio.__dict__[field] is not None:
 					item = []
 					if time_type == 'year':
-						item.append(ratio.revenue_growth_rate)
+						item.append(ratio.__dict__[field])
 					elif time_type == 'season':
 						item.append(str(ratio.year) + 'Q' + str(ratio.season))
-					item.append(ratio.revenue_growth_rate)
+					# item.append(ratio.revenue_growth_rate)
+					item.append(ratio.__dict__[field])
 					bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
@@ -786,9 +787,10 @@ def get_debt_ratio_chart(request):
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
 	return HttpResponse(json.dumps(data), content_type="application/json")
 
-def get_revenue_growth_rate_chart(request):
-	if 'time_type' in request.GET:
+def get_growth_rate_chart(request):
+	if 'time_type' in request.GET and 'field' in request.GET:
 		time_type = request.GET['time_type']
+		field = request.GET['field']
 	if time_type == 'season':
 		ratio_model = SeasonFinancialRatio
 	elif time_type == 'year':
@@ -800,13 +802,13 @@ def get_revenue_growth_rate_chart(request):
 		xAxis_categories = []
 		debt_ratios = []
 		for ratio in ratios:
-			if ratio.revenue_growth_rate is not None:
+			if ratio.__dict__[field] is not None:
 				if time_type == 'season':
 					xAxis_categories.append(str(ratio.year) + 'Q' + str(ratio.season))
 				elif time_type == 'year':
 					xAxis_categories.append(ratio.year)
-				debt_ratios.append(float(ratio.revenue_growth_rate))
-	names = [r'營放成長率']
+				debt_ratios.append(float(ratio.__dict__[field]))
+	names = [r'營收成長率']
 	datas = [debt_ratios]
 	yUnit = '%'
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}
