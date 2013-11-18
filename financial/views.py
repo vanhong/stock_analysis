@@ -367,11 +367,15 @@ def show_season_balance_sheet(request):
     return HttpResponse(response.read())
 
 def update_season_balance_sheet(request):
+    if 'year' in request.GET and  'season' in request.GET:
+        year = int(request.GET['year'])
+        season = int(request.GET['season'])
+    else:
+        year = 102
+        season = 3
     stock_ids = StockId.objects.all()
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        year = 102
-        season = 3
         if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb03'

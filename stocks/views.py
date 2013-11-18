@@ -243,36 +243,45 @@ def update_season_revenue(request):
     return HttpResponse('update season revenue')
 
 def update_dividend(request):
+    if 'year' in request.GET:
+        input_year = int(request.GET['year'])
+    else:
+        input_year = 101
     stock_ids = StockId.objects.all()
     for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stock_symbol + ".djhtm"
-        web = urllib.urlopen(url)
-        soup = BeautifulSoup(web)
-        dividend_datas = soup.find_all("td", { "class": "t2" })
-        for dividend_data in dividend_datas:
-            try:
-                year = int(dividend_data.string) + 1911
-                dividend = Dividend()
-                dividend.year = year
-                dividend.date = datetime.date(year, 1, 1)
-
-                dividend.surrogate_key = stock_symbol + "_" + str(year)
-                dividend.symbol = stock_symbol
-                next = dividend_data.next_sibling.next_sibling
-                dividend.cash_dividends = Decimal(next.string)
-                next = next.next_sibling.next_sibling
-                dividend.stock_dividends_from_retained_earnings = Decimal(next.string)
-                next = next.next_sibling.next_sibling
-                dividend.stock_dividends_from_capital_reserve = Decimal(next.string)
-                next = next.next_sibling.next_sibling
-                dividend.stock_dividends = Decimal(next.string)
-                next = next.next_sibling.next_sibling
-                dividend.total_dividends = Decimal(next.string)
-                next = next.next_sibling.next_sibling
-                dividend.employee_stock_rate = Decimal(next.string)
-                dividend.save()
-            except:
-                pass
+        revenueInDb = Dividend.objects.filter(symbol=stock_id.symbol, year=int(input_year)+1911)
+        if revenueInDb:
+            continue
+        else:
+            stock_symbol = stock_id.symbol
+            url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stock_symbol + ".djhtm"
+            web = urllib.urlopen(url)
+            soup = BeautifulSoup(web)
+            dividend_datas = soup.find_all("td", { "class": "t2" })
+            for dividend_data in dividend_datas:
+                try:
+                    year = int(dividend_data.string) + 1911
+                    dividend = Dividend()
+                    dividend.year = year
+                    dividend.date = datetime.date(year, 1, 1)
+    
+                    dividend.surrogate_key = stock_symbol + "_" + str(year)
+                    dividend.symbol = stock_symbol
+                    next = dividend_data.next_sibling.next_sibling
+                    dividend.cash_dividends = Decimal(next.string)
+                    next = next.next_sibling.next_sibling
+                    dividend.stock_dividends_from_retained_earnings = Decimal(next.string)
+                    next = next.next_sibling.next_sibling
+                    dividend.stock_dividends_from_capital_reserve = Decimal(next.string)
+                    next = next.next_sibling.next_sibling
+                    dividend.stock_dividends = Decimal(next.string)
+                    next = next.next_sibling.next_sibling
+                    dividend.total_dividends = Decimal(next.string)
+                    next = next.next_sibling.next_sibling
+                    dividend.employee_stock_rate = Decimal(next.string)
+                    dividend.save()
+                except:
+                    pass
+            print 'update ' + stock_symbol + ' dividend'
 
     return HttpResponse("update dividend")
