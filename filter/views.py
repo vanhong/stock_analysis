@@ -117,7 +117,7 @@ def filter_start(request):
 				"results": results_dic},
 				context_instance = RequestContext(request))
 
-
+#not used
 def check_season_data(cnt, overunder, condition, conditionValue):
 	filter_list = []
 	dates = SeasonFinancialRatio.objects.values('year', 'season').distinct().order_by('-year', '-season')
@@ -165,6 +165,16 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
+def query_corp_trade(cnt, value, over_under):
+	date_str = 'trade_date'
+	symbol_str = 'symbol'
+	update_lists = []
+	kwargs = {
+		'{0}__{1}'.format('field_avg', query_type):filter_value
+	}
+	dates = financial_model.objects.values(date_str).distinct().order_by('-'+date_str)[:cnt].values_list(date_str, flat=True)
+	update_lists = CorpTrade.objects.values(symbol_str).filter(date__gte=dates[len(dates)])
+	return update_lists
 
 def query_financial_ratio(cnt, value, field, time_type):
 	strDate = 'date'
