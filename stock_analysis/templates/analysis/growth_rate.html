@@ -1,0 +1,28 @@
+{% extends "analysis/index.html" %}
+
+{% block analysis_content %}
+  <script type="text/javascript" src="{{ STATIC_URL }}js/revenue.js"></script>
+  <script type="text/javascript">
+    var obj = {{ drawTool }}
+    obj.Init("{{ url }}");
+  </script>
+  <br>
+  <div class="row-fluid">
+    <div class="col-md-3">
+      <h4><span id="symbol" ></span></h4>
+    </div>
+    <div class="col-md-4">
+      <h4><span id="data_type"></span></h4>
+    </div>
+    <div class="row">
+      <div class="col-md-4 col-md-offset-1">
+      <button id="season_growth_rate" class="btn btn-success">季度</button>
+      <button id="year_growth_rate" class="btn btn-primary">年度</button>
+      </div>
+    </div>
+  </div>
+  <div id="chart_result">
+  </div>
+  <div id="table_result">
+  </div>
+{% endblock %}
