@@ -252,9 +252,10 @@ def update_dividend(request):
         dividend_datas = soup.find_all("td", { "class": "t2" })
         for dividend_data in dividend_datas:
             try:
-                year = int(dividend_data.string)
+                year = int(dividend_data.string) + 1911
                 dividend = Dividend()
                 dividend.year = year
+                dividend.date = datetime.date(revenue.year, 1, 1)
                 dividend.surrogate_key = stock_symbol + "_" + str(year)
                 dividend.symbol = stock_symbol
                 next = dividend_data.next_sibling.next_sibling
