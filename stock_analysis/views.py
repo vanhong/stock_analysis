@@ -355,7 +355,8 @@ def get_growth_rate_table(request):
 		heads.append(r'年')
 	symbol = get_symbol(request)
 	stockname = StockId.objects.get(symbol=symbol)
-	heads.append(r'營收成長率')
+	model = ratio_model()
+	heads.append(model.chinese(field))
 	bodys = []
 	if StockId.objects.filter(symbol=symbol):
 		ratios = ratio_model.objects.filter(symbol=symbol).order_by('-date')
@@ -808,7 +809,8 @@ def get_growth_rate_chart(request):
 				elif time_type == 'year':
 					xAxis_categories.append(ratio.year)
 				debt_ratios.append(float(ratio.__dict__[field]))
-	names = [r'營收成長率']
+	model = ratio_model()
+	names = [model.chinese(field)]
 	datas = [debt_ratios]
 	yUnit = '%'
 	data = {'categories': xAxis_categories, 'names': names, 'datas': datas, 'yUnit': yUnit}

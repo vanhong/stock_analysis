@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/StockFilter.js"></script>
+<script type="text/javascript">
+	var filter = new StockFilter.Filter();
+	filter.Init();
+	
+</script>
+
+<style type="text/css">
+.condition{
+	margin:2em;
+}
+
+.conditionTable td{
+	border: solid 1px #33333;
+}
+
+.conditionTable input.dateCnt{
+	border: solid 1px #33333;
+	width: 3em;
+}
+
+input.dateCnt{
+	border: solid 1px #33333;
+	width: 3em;
+}
+
+</style>
+<br><br>
+<div class="container">
+<div class="row-fluid">
+  <div class="col-md-2">
+  </div>
+  <div class="col-md-4">
+	<button type="button" class="btn btn-success">基本資料</button>
+	<button type="button" class="btn btn-primary">財務比率</button>
+	<button type="button" class="btn btn-primary">成長力</button>
+	<button type="button" class="btn btn-primary">籌碼</button>
+  </div>
+</div>
+</div>
+<div class="container">
+	<br>
+      <div class="col-md-4">
+      	<tr>
+			<td>
+				<!--
+				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
+				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
+				-->
+				<input type="checkbox" id="con-reveune_ann_growth_rate" class="css-checkbox" />
+				<label for="con-reveune_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="search" id="reveune_ann_growth_rate-cnt" class="dateCnt"/> 月
+			<td>
+			<td>
+				年增率大於 <input type="search" id="reveune_ann_growth_rate-value"  placeholder=""/> (%)
+			<td>
+		</tr>
+      <div>
+</div>
+{% endblock %}

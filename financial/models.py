@@ -140,6 +140,20 @@ class YearFinancialRatio(models.Model):
     debt_equity_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     long_term_funds_to_fixed_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
+    chinese_map = {
+        'revenue_growth_rate' : r'營收成長率',
+        'operating_profit_growth_rate' : r'營業利益成長率',
+        'net_before_tax_profit_growth_rate' : r'稅前淨利成長率',
+        'net_after_tax_profit_growth_rate' : r'稅後淨利成長率',
+        'assets_growth_rate' : r'總資產成長率',
+        'net_value_growth_rate' : r'淨值成長率',
+        'assets_growth_rate' : r'固定資產成長率'
+    }
+
+    def chinese(self, source):
+        chinese_name = self.chinese_map[source]
+        return chinese_name
+
 class SeasonFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
@@ -176,6 +190,20 @@ class SeasonFinancialRatio(models.Model):
     equity_turnover_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     debt_equity_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     long_term_funds_to_fixed_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+
+    chinese_map = {
+        'revenue_growth_rate' : r'營收成長率',
+        'operating_profit_growth_rate' : r'營業利益成長率',
+        'net_before_tax_profit_growth_rate' : r'稅前淨利成長率',
+        'net_after_tax_profit_growth_rate' : r'稅後淨利成長率',
+        'assets_growth_rate' : r'總資產成長率',
+        'net_value_growth_rate' : r'淨值成長率',
+        'assets_growth_rate' : r'固定資產成長率'
+    }
+
+    def chinese(self, source):
+        chinese_name = self.chinese_map[source]
+        return chinese_name
 
 # 資產負債表
 class SeasonBalanceSheet(models.Model):
