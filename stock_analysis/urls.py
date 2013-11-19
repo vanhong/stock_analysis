@@ -88,7 +88,7 @@ urlpatterns += patterns('',
 urlpatterns += patterns('filter.views',
     url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
-    url( r'^filter/test/$', 'query_financial_ratio_avg'),
+    url( r'^filter/test/$', 'filter_test'),
 
 )
 

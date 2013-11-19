@@ -43,9 +43,8 @@ input.dateCnt{
 </div>
 <div class="container">
 	<br>
-      <div class="col-md-4">
-      	<tr>
-			<td>
+      	<ul class="dropdown-menu col-md-3" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
+              <li><td>
 				<!--
 				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
 				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
@@ -57,9 +56,8 @@ input.dateCnt{
 				連續 <input type="search" id="reveune_ann_growth_rate-cnt" class="dateCnt"/> 月
 			<td>
 			<td>
-				年增率大於 <input type="search" id="reveune_ann_growth_rate-value"  placeholder=""/> (%)
-			<td>
-		</tr>
-      <div>
+				年增率大於 <input type="search" id="reveune_ann_growth_rate-value" class="dateCnt" placeholder=""/> (%)
+			<td></li>
+         </ul>
 </div>
 {% endblock %}

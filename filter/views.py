@@ -18,6 +18,9 @@ from financial.models import SeasonFinancialRatio
 from django.db.models import Avg
 
 
+def filter_test(request):
+	return render_to_response('filter/filter_test.html', context_instance = RequestContext(request))
+
 def filter_index(request):
 	return render_to_response(
 		'filter/filter_index.html', {},
