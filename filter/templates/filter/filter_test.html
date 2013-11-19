@@ -63,33 +63,38 @@ input.dateCnt{
 </div>
 </div>
 <br>
-<div class="container">
-	<div class="col-md-4">
-		<table class="table table-hover">
-			<tr>
-			<td>月營收連續 <select>
-				<option value="1">1</option>
-				<option value="2">2</option>
-				<option value="3">3</option>
-				<option value="4">4</option>
-				<option value="5">5</option>
-				<option value="6">6</option>
-				<option value="7">7</option>
-				<option value="8">8</option>
-				<option value="9">9</option>
-				<option value="10">10</option>
-				<option value="11">11</option>
-				<option value="12">12</option>
-			</select>
-			月 年增率大於<input type="search" pattern="[0-9]*" step="any" class="form-test" maxlength="5">%<button class="btn-primary">Add</button></td>
-			
-			</tr>
-			<tr><td class="active">營收年增率</td>
-			</tr>
-		</table>
-		
-	</div>
-	<div class="col-md-4">Hello</div>
-	<div class="col-md-4">Hello</div>
+<div class="container" style="width:100%">
+	<dir class="col-md-4">
+		<table class="table" rules="none" >
+    <tbody>
+      <tr>
+        <td width="12%">連續</td>
+        <td width="20%">
+          <input type="" style="width: 45px; padding: 1px"> 月</input>
+        </td>
+        <td width="30%">營收年增率大於</td>
+        <td width="20%">
+          <input type="" style="width: 45px; padding: 1px"> %</input> 
+        </td>
+        <td width="10%">
+        	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
+        </td>
+      </tr>
+      <tr>
+        <td width="12%">連續</td>
+        <td width="20%">
+          <input type="" style="width: 45px; padding: 1px"> 季</input>
+        </td>
+        <td width="30%">營收年增率大於</td>
+        <td width="20%">
+          <input type="" style="width: 45px; padding: 1px"> %</input> 
+        </td>
+        <td width="10%">
+        	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+	</dir>
 </div>
 {% endblock %}
