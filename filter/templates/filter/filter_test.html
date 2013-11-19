@@ -27,6 +27,27 @@ input.dateCnt{
 	width: 3em;
 }
 
+.oddsTextBox-fraction{width:27px}
+
+.form-test {
+  /*display: block;*/
+  width: 50px;
+  height: 26px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.428571429;
+  color: #555555;
+  /*vertical-align: middle;*/
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+          transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+}
+
 </style>
 <br><br>
 <div class="container">
@@ -41,23 +62,34 @@ input.dateCnt{
   </div>
 </div>
 </div>
+<br>
 <div class="container">
-	<br>
-      	<ul class="dropdown-menu col-md-3" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
-              <li><td>
-				<!--
-				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
-				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
-				-->
-				<input type="checkbox" id="con-reveune_ann_growth_rate" class="css-checkbox" />
-				<label for="con-reveune_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
-			</td>
-			<td>
-				連續 <input type="search" id="reveune_ann_growth_rate-cnt" class="dateCnt"/> 月
-			<td>
-			<td>
-				年增率大於 <input type="search" id="reveune_ann_growth_rate-value" class="dateCnt" placeholder=""/> (%)
-			<td></li>
-         </ul>
+	<div class="col-md-4">
+		<table class="table table-hover">
+			<tr>
+			<td>月營收連續 <select>
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>
+				<option value="9">9</option>
+				<option value="10">10</option>
+				<option value="11">11</option>
+				<option value="12">12</option>
+			</select>
+			月 年增率大於<input type="search" pattern="[0-9]*" step="any" class="form-test" maxlength="5">%<button class="btn-primary">Add</button></td>
+			
+			</tr>
+			<tr><td class="active">營收年增率</td>
+			</tr>
+		</table>
+		
+	</div>
+	<div class="col-md-4">Hello</div>
+	<div class="col-md-4">Hello</div>
 </div>
 {% endblock %}
