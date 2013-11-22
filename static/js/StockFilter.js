@@ -1,3 +1,8 @@
+function show_filter_menu(kind) {
+    alert(kind);
+    $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':kind});
+}
+
 (function(StockFilter) {
 
     function Filter() {

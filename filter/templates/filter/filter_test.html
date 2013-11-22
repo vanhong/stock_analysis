@@ -9,92 +9,66 @@
 </script>
 
 <style type="text/css">
-.condition{
-	margin:2em;
+
+#filter_menu td {
+  white-space: nowrap;
 }
 
-.conditionTable td{
-	border: solid 1px #33333;
-}
+td.filter1{ width:46px;}
+td.filter_input{ width:80px;}
+td.filter2{width:120px;}
+td.filter_button{width:50px;}
 
-.conditionTable input.dateCnt{
-	border: solid 1px #33333;
-	width: 3em;
-}
-
-input.dateCnt{
-	border: solid 1px #33333;
-	width: 3em;
-}
-
-.oddsTextBox-fraction{width:27px}
-
-.form-test {
-  /*display: block;*/
-  width: 50px;
-  height: 26px;
-  padding: 6px 12px;
-  font-size: 14px;
-  line-height: 1.428571429;
-  color: #555555;
-  /*vertical-align: middle;*/
-  background-color: #ffffff;
-  background-image: none;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
-  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-  -webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
-          transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
-}
 
 </style>
 <br><br>
 <div class="container">
-<div class="row-fluid">
-  <div class="col-md-2">
+  <div class="row-fluid">
+    <div class="col-md-2">
+    </div>
+    <div class="col-md-4">
+      <button type="button" onclick="show_filter_menu('base')" class="btn btn-success">營收盈餘</button>
+	    <button type="button" onclick="show_filter_menu('financial_ratio')" class="btn btn-primary">股利股息</button>
+	    <button type="button" onclick="show_filter_menu('growth_rate')" class="btn btn-primary">獲利能力</button>
+	    <button type="button" class="btn btn-primary">經營績效</button>
+    </div>
   </div>
-  <div class="col-md-4">
-	<button type="button" class="btn btn-success">基本資料</button>
-	<button type="button" class="btn btn-primary">財務比率</button>
-	<button type="button" class="btn btn-primary">成長力</button>
-	<button type="button" class="btn btn-primary">籌碼</button>
-  </div>
-</div>
 </div>
 <br>
 <div class="container" style="width:100%">
 	<dir class="col-md-4">
-		<table class="table" rules="none" >
-    <tbody>
-      <tr>
-        <td width="12%">連續</td>
-        <td width="20%">
-          <input type="" style="width: 45px; padding: 1px"> 月</input>
-        </td>
-        <td width="30%">營收年增率大於</td>
-        <td width="20%">
-          <input type="" style="width: 45px; padding: 1px"> %</input> 
-        </td>
-        <td width="10%">
-        	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-        </td>
-      </tr>
-      <tr>
-        <td width="12%">連續</td>
-        <td width="20%">
-          <input type="" style="width: 45px; padding: 1px"> 季</input>
-        </td>
-        <td width="30%">營收年增率大於</td>
-        <td width="20%">
-          <input type="" style="width: 45px; padding: 1px"> %</input> 
-        </td>
-        <td width="10%">
-        	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-	</dir>
+    <div id="filter_menu">
+  		<table class="table" rules="none" >
+        <tbody>
+          <tr>
+            <td class="filter1">連續</td>
+            <td class="filter_input">
+              <input type="" style="width: 45px; padding: 1px"> 月</input>
+            </td>
+            <td class="filter2">營收年增率大於</td>
+            <td class="filter_input">
+              <input type="" style="width: 45px; padding: 1px"> %</input> 
+            </td>
+            <td class="filter_button">
+          	  <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
+            </td>
+          </tr>
+          <tr>
+            <td width="">連續</td>
+            <td width="">
+              <input type="" style="width: 45px; padding: 1px"> 季</input>
+            </td>
+            <td width="">營收年增率大於</td>
+            <td width="">
+              <input type="" style="width: 45px; padding: 1px"> %</input> 
+            </td>
+            <td width="">
+            	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </dir>
 </div>
 {% endblock %}

@@ -27,6 +27,17 @@ def filter_index(request):
 		context_instance = RequestContext(request))
 
 @csrf_exempt
+def filter_menu(request):
+	print 'start'
+	if 'kind' in request.POST:
+		kind = request.POST['kind']
+		print kind
+	else:
+		print 'nothing'
+	return render_to_response('filter/' + 'filter_menu_' + kind + '.html',
+							  context_instance = RequestContext(request))
+
+@csrf_exempt
 def filter_start(request):
 	print 'Start to Filter'
 	conditions = {}

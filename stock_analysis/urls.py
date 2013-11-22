@@ -86,9 +86,10 @@ urlpatterns += patterns('',
 )
 
 urlpatterns += patterns('filter.views',
-    url( r'^filter/index/$', 'filter_index', name= 'filter_index'),
-    url( r'^filter/start/$', 'filter_start', name= 'filter_start'),
-    url( r'^filter/test/$', 'filter_test'),
+    url(r'^filter/index/$', 'filter_index', name= 'filter_index'),
+    url(r'^filter/start/$', 'filter_start', name= 'filter_start'),
+    url(r'^filter/test/$', 'filter_test'),
+    url(r'^filter_menu/$', 'filter_menu'),
 
 )
 
