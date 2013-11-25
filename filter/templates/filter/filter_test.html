@@ -3,9 +3,8 @@
 {% block content %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/StockFilter.js"></script>
 <script type="text/javascript">
-	var filter = new StockFilter.Filter();
-	filter.Init();
-	
+	var filter_menu = new filter_menu.menu();
+	filter_menu.Init();
 </script>
 
 <style type="text/css">
@@ -24,13 +23,17 @@ td.filter_button{width:50px;}
 <br><br>
 <div class="container">
   <div class="row-fluid">
-    <div class="col-md-2">
+    <div class="col-md-4">
+      <button type="button" onclick="show_filter_menu('revenue')" class="btn btn-primary">營收盈餘</button>
+	  <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
+	  <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
+	  <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
     </div>
     <div class="col-md-4">
-      <button type="button" onclick="show_filter_menu('base')" class="btn btn-success">營收盈餘</button>
-	    <button type="button" onclick="show_filter_menu('financial_ratio')" class="btn btn-primary">股利股息</button>
-	    <button type="button" onclick="show_filter_menu('growth_rate')" class="btn btn-primary">獲利能力</button>
-	    <button type="button" class="btn btn-primary">經營績效</button>
+      <button type="button" onclick="show_filter_menu('revenue')" class="btn btn-primary">營收盈餘</button>
+	  <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
+	  <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
+	  <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
     </div>
   </div>
 </div>
@@ -38,36 +41,6 @@ td.filter_button{width:50px;}
 <div class="container" style="width:100%">
 	<dir class="col-md-4">
     <div id="filter_menu">
-  		<table class="table" rules="none" >
-        <tbody>
-          <tr>
-            <td class="filter1">連續</td>
-            <td class="filter_input">
-              <input type="" style="width: 45px; padding: 1px"> 月</input>
-            </td>
-            <td class="filter2">營收年增率大於</td>
-            <td class="filter_input">
-              <input type="" style="width: 45px; padding: 1px"> %</input> 
-            </td>
-            <td class="filter_button">
-          	  <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-            </td>
-          </tr>
-          <tr>
-            <td width="">連續</td>
-            <td width="">
-              <input type="" style="width: 45px; padding: 1px"> 季</input>
-            </td>
-            <td width="">營收年增率大於</td>
-            <td width="">
-              <input type="" style="width: 45px; padding: 1px"> %</input> 
-            </td>
-            <td width="">
-            	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
     </div>
   </dir>
 </div>

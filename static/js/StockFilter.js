@@ -1,6 +1,29 @@
+(function(filter_menu){
+    function menu() {
+        this.Init = function () {
+            $(window).load(function(){
+                $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'});
+
+                $('#filter_menu_revenue').click(function(){
+                    alert('hello');
+                    $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'});
+                    $('button[id^="filter_menu"]').attr('class', 'btn btn-primary');
+                    
+                });
+            });
+        }
+    }
+    filter_menu.menu = menu;
+}(window.filter_menu = window.filter_menu ||{}));
+
 function show_filter_menu(kind) {
-    alert(kind);
-    $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':kind});
+    $(document).ready(function() {
+        $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':kind});
+    });
+    // var myObj = document.getElementsByClassName('btn btn-success');
+    // if (myObj.length >= 0) {
+    //     myObj[0].className = 'btn btn-primary';
+    // }
 }
 
 (function(StockFilter) {
