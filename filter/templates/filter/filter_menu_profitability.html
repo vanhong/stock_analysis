@@ -1,9 +1,10 @@
-<table class="table" rules="none" >
+
+<table id="filter_menu_profitability" class="table" rules="none" >
   <tbody>
-    <tr>
-      <td>毛利率</td>
+    <tr data-tt-id="1">
+      <td><span style="float:left" class="ui-icon ui-icon-info"></span> 毛利率</td>
     </tr>
-    <tr>
+    <tr data-tt-id="2" data-tt-parent-id="1">
       <td class="filter1">連續</td>
       <td class="filter_input">
         <input type="" style="width: 45px; padding: 1px"> 季</input>
@@ -16,7 +17,7 @@
     	  <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
       </td>
     </tr>
-    <tr>
+    <tr data-tt-id="3" data-tt-parent-id="1">
       <td>連續</td>
       <td>
         <input type="" style="width: 45px; padding: 1px"> 年</input>
@@ -29,7 +30,7 @@
       	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
       </td>
     </tr>
-    <tr>
+    <tr data-tt-id="4" data-tt-parent-id="1">
       <td>最近</td>
       <td>
         <input type="" style="width: 45px; padding: 1px"> 季</input>
@@ -42,7 +43,7 @@
         <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
       </td>
     </tr>
-    <tr>
+    <tr data-tt-id="5" data-tt-parent-id="1">
       <td>最近</td>
       <td>
         <input type="" style="width: 45px; padding: 1px"> 年</input>
@@ -56,7 +57,7 @@
       </td>
     </tr>
     <tr>
-      <td>毛利率</td>
+      <td data-tt-id="2">毛利率</td>
     </tr>
     <tr>
       <td class="filter1">連續</td>
@@ -112,3 +113,6 @@
     </tr>
   </tbody>
 </table>
+<script type="text/javascript">
+  $('#filter_menu_profitability').treetable({ expandable: true });
+</script>

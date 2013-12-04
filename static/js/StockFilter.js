@@ -19,6 +19,7 @@
 function show_filter_menu(kind) {
     $(document).ready(function() {
         $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':kind});
+        
     });
     // var myObj = document.getElementsByClassName('btn btn-success');
     // if (myObj.length >= 0) {

@@ -1,32 +1,25 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>jQuery UI Icons</title>
+<link rel="stylesheet" type="text/css" media="all" href="{{ STATIC_URL }}css/jquery-ui.css">
+  <!-- <link rel="stylesheet" type="text/css" media="all" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/ui-darkness/jquery-ui.css"/> -->
 
-{% block extra_js %}
-<script type="text/javascript">
-$( document ).ready( function() {
-	$( '#searchSubmit' ).click( function() {
-		q = $( '#q' ).val();
-		$( '#results' ).html( '&nbsp;' ).load( '{% url "demo_user_search" %}?q=' + q );
-	});
-});
+  <!--script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js">
+  </script -->
+  <script src="{{ STATIC_URL }}js/jquery.js"></script>
+    <script src="{{ STATIC_URL }}js/jquery-ui.js"></script>
+  <!--script type="text/javascript" 
+    src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js">
+  </script-->
 
-$( document ).ajaxStart( function() {
-	$( '#spinner' ).show();
-}).ajaxStop( function() {
-	$( '#spinner' ).hide();
-});
-</script>
-{% endblock %}
+  
 
-{% block main %}
+</head>
 
-<div>
-	<input id="q" type="text"/>
-	<input id="searchSubmit" type="submit" value="Search"/>
-	<br/>
-	<span class="hint">Type in a query string to search for users</span>
-	<div class="margin">
-		<span id="spinner"><img src="{{ MEDIA_URL }}spinner.gif"/></span>
-		<div id="results"></div>
-	</div>
-</div>
-{% endblock %}
+<body>
+<div style="float:left" class="ui-icon ui-icon-info"></div>
+  
+  </div>
+</body>
+</html>

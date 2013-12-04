@@ -17,6 +17,14 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
 from django.db.models import Avg
 
+def test(request):
+	return render_to_response('test.html', context_instance = RequestContext(request))
+
+def test3(request):
+	return render_to_response('filter/test3.html', context_instance = RequestContext(request))
+
+def tree_table(request):
+	return render_to_response('filter/test3.html', context_instance = RequestContext(request))
 
 def filter_test(request):
 	return render_to_response('filter/filter_test.html', context_instance = RequestContext(request))

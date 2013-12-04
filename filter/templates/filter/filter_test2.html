@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 
 {% block extra_js %}
+<script type="text/css" href="{{ STATIC_URL }}css/jquery.treetable.css" rel="stylesheet"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.treetable.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/StockFilter.js"></script>
 <script type="text/javascript">
   var filter_menu = new filter_menu.menu();
   filter_menu.Init();
+  // $(window).load(function(){
+  //   $("#tree_table").treetable();
+  // });
+  
 </script>
 
 <style type="text/css">

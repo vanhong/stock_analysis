@@ -91,6 +91,9 @@ urlpatterns += patterns('filter.views',
     url(r'^filter/test/$', 'filter_test'),
     url(r'^filter/test2/$', 'filter_test2'),
     url(r'^filter_menu/$', 'filter_menu'),
+    url(r'^tree_table/$', 'tree_table'),
+    url(r'^test3/$', 'test3'),
+    url(r'^test/$', 'test'),
 
 )
 
