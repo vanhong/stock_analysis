@@ -12,6 +12,8 @@ class CorpTrade(models.Model):
     security_buy = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     security_sell = models.DecimalField(max_digits=20, decimal_places=0, null=True)
 
+
+
 class CorpTradeData():
     def __init__(self, key, txdate, symbol, dealer_buy,dealer_sell, foreign_buy, foreign_sell, security_buy, security_sell):
     	self.surrogate_key = key
