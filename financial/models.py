@@ -147,7 +147,7 @@ class YearFinancialRatio(models.Model):
         'net_after_tax_profit_growth_rate' : r'稅後淨利成長率',
         'assets_growth_rate' : r'總資產成長率',
         'net_value_growth_rate' : r'淨值成長率',
-        'assets_growth_rate' : r'固定資產成長率'
+        'fixed_assets_growth_rate' : r'固定資產成長率',
     }
 
     def chinese(self, source):
@@ -198,7 +198,7 @@ class SeasonFinancialRatio(models.Model):
         'net_after_tax_profit_growth_rate' : r'稅後淨利成長率',
         'assets_growth_rate' : r'總資產成長率',
         'net_value_growth_rate' : r'淨值成長率',
-        'assets_growth_rate' : r'固定資產成長率'
+        'fixed_assets_growth_rate' : r'固定資產成長率'
     }
 
     def chinese(self, source):
