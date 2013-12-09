@@ -1,4 +1,6 @@
-# Create your views here.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import urllib
 import urllib2
 from django.http import HttpResponse
@@ -47,9 +49,11 @@ def update_corp_trade(request):
         dataDic = {}
         for security in securityIdList:
             securityStr = security.strip()
+            if securityStr == '':
+                continue
             buyCnt = security.next.string.replace(',','')
             sellCnt = security.next.next_sibling.string.replace(',','')
-            dataObj = CorpTradeData(dateFrom.replace('-','') + '_' + security, dateFrom.replace('-',''), security, buyCnt, sellCnt,'0','0','0','0' )
+            dataObj = CorpTradeData(dateFrom.replace('-','') + '_' + securityStr, dateFrom.replace('-',''), security, buyCnt, sellCnt,'0','0','0','0' )
             dataDic[securityStr] = dataObj
             #print('%s, %s, %s' % (security, dataDic[securityStr].dealer_buy, dataDic[securityStr].dealer_sell))
 
@@ -72,6 +76,8 @@ def update_corp_trade(request):
                 continue
 
             securityStr = security.strip()
+            if securityStr == '':
+                continue
             buyCnt = security.next.next.string.replace(',','')
             sellCnt = security.next.next.next_sibling.string.replace(',','')
             if dataDic.has_key(securityStr) is False:
@@ -98,10 +104,12 @@ def update_corp_trade(request):
         securityIdList = [td.string for td in soup.findAll('td', {'align' : 'center'})]
         for security in securityIdList:
             securityStr = security.strip()
+            if securityStr == '':
+                continue
             buyCnt = security.next.string.replace(',','')
             sellCnt = security.next.next_sibling.string.replace(',','')
             if dataDic.has_key(securityStr) is False:
-                dataObj = CorpTradeData(dateFrom.replace('-','') + '_' + security, dateFrom.replace('-',''), security, '0', '0','0','0',buyCnt,sellCnt )
+                dataObj = CorpTradeData(dateFrom.replace('-','') + '_' + securityStr, dateFrom.replace('-',''), security, '0', '0','0','0',buyCnt,sellCnt )
                 dataDic[securityStr] = dataObj
             else:
                 dataDic[securityStr].foreign_buy = buyCnt
@@ -115,7 +123,7 @@ def update_corp_trade(request):
                 continue
             corpTrade = CorpTrade()
             corpTrade.surrogate_key = value.surrogate_key
-            corpTrade.trade_date = value.trade_date
+            corpTrade.date = datetime.strptime(value.trade_date, '%Y%m%d')
             corpTrade.symbol = value.symbol
             corpTrade.dealer_buy = value.dealer_buy
             corpTrade.dealer_sell    = value.dealer_sell
@@ -124,9 +132,23 @@ def update_corp_trade(request):
             corpTrade.foreign_buy = value.foreign_buy
             corpTrade.foreign_sell = value.foreign_sell
             corpTrade.save()
-            print ('update ' + value.trade_date + ', ' + key + ' corp trade')
+            #print ('update ' + value.trade_date + ', ' + key + ' corp trade')
         
     return HttpResponse('%s, %s, %s' % (securityIdList[0], securityIdList[0].next, securityIdList[0].next.next_sibling))
+
+def test_chip(request):
+    url = 'http://www.tdcc.com.tw/smWeb/QryStock.jsp'
+    sub = "%ACd%B8%DF"
+    print sub
+    values = {
+        'SCA_DATE':'20131202', 'SqlMethod':'StockNo', 'StockNo':'2330', 
+        'StockName': '', 'sub': urllib.unquote(sub)
+    }
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    # print response.read()
+    return HttpResponse(response.read())
 
 def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):

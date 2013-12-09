@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 class CorpTrade(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
-    trade_date = models.IntegerField(db_index=True)
+    date = models.DateField(db_index=True)
     symbol = models.CharField(max_length=10, db_index=True)
     dealer_buy = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     dealer_sell = models.DecimalField(max_digits=20, decimal_places=0, null=True)
