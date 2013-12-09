@@ -14,6 +14,18 @@ from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonR
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio, YearFinancialRatio
 
+def venue(request):
+	return render_to_response('analysis/test_auto.html', context_instance = RequestContext(request))
+
+def venue_lookup(request):
+	print request.GET['term']
+	venues = StockId.objects.filter(symbol__startswith=request.GET['term'])
+	results = []
+	for venue in venues:
+		venue_dict = {'id':venue.symbol, 'label':venue.name, 'value':venue.name}
+		results.append(venue_dict)
+	return HttpResponse(json.dumps(results), content_type='application/json')
+
 def home(request):
 	return render_to_response('home/index.html', context_instance = RequestContext(request))
 
