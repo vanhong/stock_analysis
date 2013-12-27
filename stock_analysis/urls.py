@@ -51,8 +51,8 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^get_interest_cover_chart/$', 'get_interest_cover_chart'),
     (r'^get_growth_rate_chart/$', 'get_growth_rate_chart'),
 
-    (r'venue_lookup/$','venue_lookup'),
-    (r'venue/$','venue'),
+    (r'^venue_lookup/$','venue_lookup'),
+    (r'^venue/$','venue'),
 )
 
 urlpatterns += patterns('stocks.views',
