@@ -31,7 +31,7 @@
 </div>
 <div class="condition">
 <fieldset>
-<legend>月營收</legend>
+<legend>營收</legend>
 	<table class="conditionTable">
 		<tr>
 			<td>
@@ -55,6 +55,18 @@
 				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
 				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
 				-->
+				<input type="checkbox" id="con-reveune_avg_ann_growth_rate" class="css-checkbox" />
+				<label for="con-reveune_avg_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				<input type="search" id="reveune_avg_ann_growth_rate-cnt" class="dateCnt"/> 個月的
+			<td>
+			<td>
+				平均年增率大於 <input type="search" id="reveune_avg_ann_growth_rate-value"  placeholder=""/> (%)
+			<td>
+		</tr>
+		<tr>
+			<td>
 				<input type="checkbox" id="con-reveune_s_ann_growth_rate" class="css-checkbox" />
 				<label for="con-reveune_s_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
@@ -63,6 +75,18 @@
 			<td>
 			<td>
 				年增率大於 <input type="text" id="reveune_s_ann_growth_rate-value"  placeholder=""/> (%)
+			<td>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="con-reveune_s_avg_ann_growth_rate" class="css-checkbox" />
+				<label for="con-reveune_s_avg_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				<input type="search" id="reveune_s_avg_ann_growth_rate-cnt" class="dateCnt"/> 季的
+			<td>
+			<td>
+				平均年增率大於 <input type="search" id="reveune_s_avg_ann_growth_rate-value"  placeholder=""/> (%)
 			<td>
 		</tr>
 	</table>

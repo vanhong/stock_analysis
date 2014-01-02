@@ -10,6 +10,7 @@ from django.template import Context
 from django.db.models import Count
 from django.db.models import Avg
 from django.db.models import Q, F
+from django.db import connection
 from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
@@ -79,6 +80,15 @@ def filter_start(request):
 			print 'reveune_ann_growth_rate'
 			#print update_lists
 			filter_list.append(update_lists)
+		elif key == 'reveune_avg_ann_growth_rate': #季營收連續幾季年增率>
+			cnt = int(value['cnt'])
+			value = int(value['value'])
+			if cnt == '' or value == '':
+				continue
+			update_lists = query_reveune_avg_ann_growth_rate(cnt, value, 'month')
+			print 'reveune_s_ann_growth_rate'
+			#print update_lists
+			filter_list.append(update_lists)
 		elif key == 'reveune_s_ann_growth_rate': #季營收連續幾季年增率>
 			cnt = int(value['cnt'])
 			value = int(value['value'])
@@ -86,6 +96,15 @@ def filter_start(request):
 				continue
 			update_lists = query_reveune_ann_growth_rate(cnt, value, 'season')
 			print 'reveune_s_ann_growth_rate'
+			#print update_lists
+			filter_list.append(update_lists)
+		elif key == 'reveune_s_avg_ann_growth_rate': #季營收連續幾季年增率>
+			cnt = int(value['cnt'])
+			value = int(value['value'])
+			if cnt == '' or value == '':
+				continue
+			update_lists = query_reveune_avg_ann_growth_rate(cnt, value, 'season')
+			print 'reveune_s_avg_ann_growth_rate'
 			#print update_lists
 			filter_list.append(update_lists)
 		elif key == 'opm_s': #季OPM連續幾季>
@@ -254,6 +273,38 @@ def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
+def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	strYoy = 'year_growth_rate'
+	if revenue_type == 'month':
+		filter_model = MonthRevenue
+	elif revenue_type == 'season':
+		filter_model = SeasonRevenue
+	else:
+		return Nonetio
+	dates = filter_model.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
+	cursor = connection.cursor()
+	#get the symbols which haven't updated the latest data
+	pre_date_str = get_condition_str(dates, 2, cnt+2)
+	#print pre_date_str
+	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from stocks.stocks_monthrevenue A'
+				' WHERE date in ' + pre_date_str + ' group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
+	cursor.execute(query_str)
+	not_update_lists = cursor.fetchall()
+
+	pre_date_str = get_condition_str(dates, 1, cnt+1)
+	#print pre_date_str
+	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from stocks.stocks_monthrevenue A'
+				' WHERE date in ' + pre_date_str + ' group by symbol) AS B WHERE avg_yoy >= ' + str(growth_rate))
+	cursor.execute(query_str)
+	update_lists = cursor.fetchall()
+	
+	print '------Before Union-------'
+	results = list(set(update_lists).union(set(not_update_lists)))
+	result_symbols = map(lambda item: item[0], results)
+	return result_symbols
+
 def query_gpm_s_gtn_pre_avg(cnt):
 	strDate = 'date'
 	strSymbol = 'symbol'
@@ -289,27 +340,6 @@ def query_gpm_s_gtn_pre_avg(cnt):
 	result_symbols = map(lambda item: item.symbol, results)
 	# pre_avg_query = filter_model.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
 	return result_symbols
-	# strDate = 'date'
-	# strSymbol = 'symbol'
-	# con_cnt = 4
-	# dates = SeasonFinancialRatio.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
-	# symbol_list = []
-	# if dates:
-	# 	avg_gross_profit_margins = SeasonFinancialRatio.objects.filter(date__gte=dates[len(dates)-1][strDate], date__lte=dates[0][strDate]).\
-	# 		    				   values('symbol').annotate(gross_profit_margin_avg=Avg('gross_profit_margin'))
-	# 	# print SeasonFinancialRatio.objects.filter(date=dates[0][strDate]).prefetch_related('avg_gross_profit_margins__symbol')
-	# 	update_lists = SeasonFinancialRatio.objects.filter(date=dates[0][strDate])
-	# 	not_update_lists = SeasonFinancialRatio.objects.filter(date=dates[1][strDate]).\
-	# 					   exclude(symbol__in=SeasonFinancialRatio.objects.filter(date=dates[0][strDate]))
-	# 	# for margin in avg_gross_profit_margins:
-	# 	# 	try:
-	# 	# 		if update_lists.filter(symbol=margin[strSymbol], gross_profit_margin__gte=margin['gross_profit_margin_avg']):
-	# 	# 			symbol_list.append(margin[strSymbol])
-	# 	# 		elif not_update_lists.filter(symbol=margin[strSymbol], gross_profit_margin__gte=margin['gross_profit_margin_avg']):
-	# 	# 			symbol_list.append(margin[strSymbol])
-	# 	# 	except:
-	# 	# 		pass
-	# return HttpResponse('todo')
 
 
 def query_season_revenue_ann_growth_rate(request):
@@ -349,6 +379,7 @@ def query_month_revenue_ann_growth_rate(request):
 	return HttpResponse('test')
 
 def get_condition_str(dataList, indexFrom, indexTo):
+	print dataList
 	condition_str = '('
 	for i in range(indexFrom, indexTo):
 		condition_str += '\'' + str(dataList[i]) + '\','
