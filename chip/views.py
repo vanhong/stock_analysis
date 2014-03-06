@@ -136,6 +136,33 @@ def update_corp_trade(request):
         
     return HttpResponse('%s, %s, %s' % (securityIdList[0], securityIdList[0].next, securityIdList[0].next.next_sibling))
 
+def update_shareholder_structure(request):
+
+    if 'date' in request.GET:
+        query_date = request.GET['date']
+    else:
+        now = datetime.now()
+        query_date = str(now.year) + str(now.month) + '02'
+
+    url = 'http://www.tdcc.com.tw/smWeb/QryStock.jsp'
+    sub = "%ACd%B8%DF"
+    stock_ids = StockId.objects.all()
+    print stock_ids
+    for stock_id in stock_ids:
+        stock_symbol = stock_id.symbol
+        values = {
+            'SCA_DATE':query_date, 'SqlMethod':'StockNo', 'StockNo':stock_symbol, 
+            'StockName': '', 'sub': urllib.unquote(sub)
+        }
+        print values
+        url_data = urllib.urlencode(values)
+        req = urllib2.Request(url, url_data)
+        response = urllib2.urlopen(req)
+        #print response.read()
+        the_page = response.read()
+
+    return HttpResponse(the_page)
+
 def test_chip(request):
     url = 'http://www.tdcc.com.tw/smWeb/QryStock.jsp'
     sub = "%ACd%B8%DF"

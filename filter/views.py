@@ -14,8 +14,9 @@ from django.db import connection
 from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio
+from price.models import Price
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
 
 def test(request):
@@ -139,8 +140,12 @@ def filter_start(request):
 			if cnt == '' or value == '':
 				continue
 			dates = CorpTrade.objects.values('trade_date').distinct().order_by('-trade_date')[:cnt]
-			
-			print 'hello'
+		elif key == 'yield_rate':
+			cnt = int(value['cnt'])
+			value = value['value']
+			if cnt == '' or value == '':
+				continue
+			update_lists = query_yield_rate(cnt, value)
 
 
 	filterIntersection = []
@@ -189,7 +194,6 @@ def check_season_data(cnt, overunder, condition, conditionValue):
 def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
-	con_cnt = cnt
 	filter_value = values
 	filter_field = field
 	if time_type == 'season':
@@ -199,7 +203,7 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	kwargs = {
 		'{0}__{1}'.format('field_avg', query_type):filter_value
 	}
-	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt+1]
+	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
 	print dates
 	not_update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
 					   date__lte=dates[1][strDate]).annotate(field_avg=Avg(filter_field)).\
@@ -209,6 +213,15 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 				   filter(**kwargs).values_list(strSymbol, flat=True)
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
+
+def query_yield_rate(cnt, value):
+	strDate = 'year'
+	strSymbol = 'symbol'
+	#dates = Dividend.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
+	price_list = Price.objects.values('closep').filter(trade_date="20130301")
+	print price_list
+	#filter_list = Dividend.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate]).\
+	#				filter()
 
 def query_corp_trade(cnt, value, over_under):
 	date_str = 'trade_date'
@@ -279,8 +292,10 @@ def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	strYoy = 'year_growth_rate'
 	if revenue_type == 'month':
 		filter_model = MonthRevenue
+		table = 'stocks.stocks_monthrevenue'
 	elif revenue_type == 'season':
 		filter_model = SeasonRevenue
+		table = 'stocks.stocks_seasonrevenue'
 	else:
 		return Nonetio
 	dates = filter_model.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
@@ -288,14 +303,14 @@ def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	#get the symbols which haven't updated the latest data
 	pre_date_str = get_condition_str(dates, 2, cnt+2)
 	#print pre_date_str
-	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from stocks.stocks_monthrevenue A'
+	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
 				' WHERE date in ' + pre_date_str + ' group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
 	not_update_lists = cursor.fetchall()
 
 	pre_date_str = get_condition_str(dates, 1, cnt+1)
 	#print pre_date_str
-	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from stocks.stocks_monthrevenue A'
+	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
 				' WHERE date in ' + pre_date_str + ' group by symbol) AS B WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
 	update_lists = cursor.fetchall()
@@ -380,6 +395,7 @@ def query_month_revenue_ann_growth_rate(request):
 
 def get_condition_str(dataList, indexFrom, indexTo):
 	print dataList
+
 	condition_str = '('
 	for i in range(indexFrom, indexTo):
 		condition_str += '\'' + str(dataList[i]) + '\','
