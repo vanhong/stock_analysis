@@ -136,19 +136,127 @@ def update_corp_trade(request):
         
     return HttpResponse('%s, %s, %s' % (securityIdList[0], securityIdList[0].next, securityIdList[0].next.next_sibling))
 
-def test_chip(request):
+def update_shareholder_structure(request):
+    monthcount = 1
+    if 'monthcount' in request.GET:
+        monthcount = request.GET['monthcount']
+
+    print 'monthcount = %s' % (monthcount)
     url = 'http://www.tdcc.com.tw/smWeb/QryStock.jsp'
     sub = "%ACd%B8%DF"
-    print sub
-    values = {
-        'SCA_DATE':'20131202', 'SqlMethod':'StockNo', 'StockNo':'2330', 
-        'StockName': '', 'sub': urllib.unquote(sub)
-    }
+    values = {}
     url_data = urllib.urlencode(values)
     req = urllib2.Request(url, url_data)
     response = urllib2.urlopen(req)
+    soup = BeautifulSoup(response,from_encoding="utf-8")
+    options = [option.string for option in soup.findAll('option')]
+    print options
+
+    stock_ids = StockId.objects.all()
+    cnt = 1
+    for dateStr in options:
+        for stock_id in stock_ids:
+            stock_symbol = stock_id.symbol
+            print 'process %s %s' % (dateStr, stock_symbol)
+            dateForKey = dateStr[:6]
+            key = '%s_%s_%s' % (dateForKey,stock_symbol,'person')
+            obj = ShareholderStructure.objects.values('surrogate_key').filter(surrogate_key=key)
+            print 'query length = %d' % (len(obj))
+            if len(obj) < 1:
+                values = {
+                    'SCA_DATE':dateStr, 'SqlMethod':'StockNo', 'StockNo':stock_symbol, 
+                    'StockName': '', 'sub': urllib.unquote(sub)
+                }
+                url_data = urllib.urlencode(values)
+                req = urllib2.Request(url, url_data)
+                response = urllib2.urlopen(req)
+                soup = BeautifulSoup(response,from_encoding="utf-8")
+                dataList = [td.string for td in soup.findAll('td', {'align' : 'right'})]
+                person = []
+                share = []
+                ratio = []
+                if len(dataList) < 10:
+                    continue
+                for i in range(0, 16):
+                    person.append(dataList[i*3].replace(',',''))
+                    share.append(dataList[1 + i*3].replace(',',''))
+                    ratio.append(dataList[2 + i*3].replace(',',''))
+
+                shareholderStructure = ShareholderStructure()
+                shareholderStructure.surrogate_key = '%s_%s_%s' % (dateForKey,stock_symbol,'person')
+                shareholderStructure.date = dateForKey
+                shareholderStructure.symbol = stock_symbol
+                shareholderStructure.data_kind = 'person'
+                shareholderStructure.value0_1 = person[0]
+                shareholderStructure.value1_5 = person[1]
+                shareholderStructure.value5_10 = person[2]
+                shareholderStructure.value10_15 = person[3]
+                shareholderStructure.value15_20 = person[4]
+                shareholderStructure.value20_30 = person[5]
+                shareholderStructure.value30_40 = person[6]
+                shareholderStructure.value40_50 = person[7]
+                shareholderStructure.value50_100 = person[8]
+                shareholderStructure.value100_200 = person[9]
+                shareholderStructure.value200_400 = person[10]
+                shareholderStructure.value400_600 = person[11]
+                shareholderStructure.value600_800 = person[12]
+                shareholderStructure.value800_1000 = person[13]
+                shareholderStructure.value1000 = person[14]
+                shareholderStructure.value_sum = person[15]
+                shareholderStructure.save()
+
+                shareholderStructure = ShareholderStructure()
+                shareholderStructure.surrogate_key = '%s_%s_%s' % (dateForKey,stock_symbol,'share')
+                shareholderStructure.date = dateForKey
+                shareholderStructure.symbol = stock_symbol
+                shareholderStructure.data_kind = 'share'
+                shareholderStructure.value0_1 = share[0]
+                shareholderStructure.value1_5 = share[1]
+                shareholderStructure.value5_10 = share[2]
+                shareholderStructure.value10_15 = share[3]
+                shareholderStructure.value15_20 = share[4]
+                shareholderStructure.value20_30 = share[5]
+                shareholderStructure.value30_40 = share[6]
+                shareholderStructure.value40_50 = share[7]
+                shareholderStructure.value50_100 = share[8]
+                shareholderStructure.value100_200 = share[9]
+                shareholderStructure.value200_400 = share[10]
+                shareholderStructure.value400_600 = share[11]
+                shareholderStructure.value600_800 = share[12]
+                shareholderStructure.value800_1000 = share[13]
+                shareholderStructure.value1000 = share[14]
+                shareholderStructure.value_sum = share[15]
+                shareholderStructure.save()
+
+                shareholderStructure = ShareholderStructure()
+                shareholderStructure.surrogate_key = '%s_%s_%s' % (dateForKey,stock_symbol,'ratio')
+                shareholderStructure.date = dateForKey
+                shareholderStructure.symbol = stock_symbol
+                shareholderStructure.data_kind = 'ratio'
+                shareholderStructure.value0_1 = ratio[0]
+                shareholderStructure.value1_5 = ratio[1]
+                shareholderStructure.value5_10 = ratio[2]
+                shareholderStructure.value10_15 = ratio[3]
+                shareholderStructure.value15_20 = ratio[4]
+                shareholderStructure.value20_30 = ratio[5]
+                shareholderStructure.value30_40 = ratio[6]
+                shareholderStructure.value40_50 = ratio[7]
+                shareholderStructure.value50_100 = ratio[8]
+                shareholderStructure.value100_200 = ratio[9]
+                shareholderStructure.value200_400 = ratio[10]
+                shareholderStructure.value400_600 = ratio[11]
+                shareholderStructure.value600_800 = ratio[12]
+                shareholderStructure.value800_1000 = ratio[13]
+                shareholderStructure.value1000 = ratio[14]
+                shareholderStructure.value_sum = ratio[15]
+                shareholderStructure.save()
+                print 'save %s %s' % (dateStr, stock_symbol)
+        cnt += 1
+        if cnt > monthcount:
+            break
     # print response.read()
-    return HttpResponse(response.read())
+    return HttpResponse(dataList[0])
+
 
 def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):
