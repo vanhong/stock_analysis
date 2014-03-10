@@ -155,7 +155,7 @@ def filter_start(request):
 	print filterIntersection
 	results_dic = {}
 	for item in filterIntersection:
-		results_dic[item] = ''
+		results_dic[item] = StockId.objects.get(symbol=item).name
 
 	return render_to_response(
 				'filter/filter_result.html', {
@@ -175,9 +175,9 @@ def check_season_data(cnt, overunder, condition, conditionValue):
 		year_str = year_str[:-1]
 		season_str = season_str[:-1]
 		if overunder == 'over':
-			whereStr = 'financial_seasonfinancialratio.year in (' + year_str + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' > ' + conditionValue
+			whereStr = 'financial_seasonfinancialratio.year in (' + str(year_str) + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' > ' + str(conditionValue)
 		else:
-			whereStr = 'financial_seasonfinancialratio.year in (' + year_str + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' < ' + conditionValue
+			whereStr = 'financial_seasonfinancialratio.year in (' + str(year_str) + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' < ' + str(conditionValue)
 		queryset = SeasonFinancialRatio.objects.extra(where=[whereStr]).values('symbol').annotate(mycount = Count('symbol'))
 		# print 'after query len=' + str(len(queryset))
 		for item in queryset:

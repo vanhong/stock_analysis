@@ -147,7 +147,7 @@ def update_month_revenue(request):
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
         if today.month == 1:
-            revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year-1, month=11)
+            revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year-1, month=12)
         else:
             revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month-1)
         if revenueInDb:
