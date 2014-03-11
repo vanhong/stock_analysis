@@ -19,6 +19,8 @@ from price.models import Price
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
 
+import pdb
+
 def test(request):
 	return render_to_response('test.html', context_instance = RequestContext(request))
 
@@ -204,7 +206,6 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 		'{0}__{1}'.format('field_avg', query_type):filter_value
 	}
 	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
-	print dates
 	not_update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
 					   date__lte=dates[1][strDate]).annotate(field_avg=Avg(filter_field)).\
 					   filter(**kwargs).values_list(strSymbol, flat=True)
