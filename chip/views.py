@@ -250,7 +250,7 @@ def update_shareholder_structure(request):
                 shareholderStructure.value1000 = ratio[14]
                 shareholderStructure.value_sum = ratio[15]
                 shareholderStructure.save()
-                print 'save %s %s' % (dateStr, stock_symbol)
+                print 'save %s %s !!!' % (dateStr, stock_symbol)
         cnt += 1
         if cnt > monthcount:
             break
