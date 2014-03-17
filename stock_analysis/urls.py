@@ -103,7 +103,7 @@ urlpatterns += patterns('filter.views',
 urlpatterns += patterns('chip.views',
     url(r'^update_corp_trade/$', 'update_corp_trade'),
     url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
-    url(r'^test_chip/$', 'test_chip'),
+
     )
 
 urlpatterns += patterns('us_stocks.views',

@@ -19,6 +19,8 @@ from price.models import Price
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
 
+import pdb
+
 def test(request):
 	return render_to_response('test.html', context_instance = RequestContext(request))
 
@@ -203,8 +205,8 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	kwargs = {
 		'{0}__{1}'.format('field_avg', query_type):filter_value
 	}
+	#get recent cnt+1 date
 	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
-	print dates
 	not_update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
 					   date__lte=dates[1][strDate]).annotate(field_avg=Avg(filter_field)).\
 					   filter(**kwargs).values_list(strSymbol, flat=True)
@@ -298,17 +300,18 @@ def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 		table = 'stocks.stocks_seasonrevenue'
 	else:
 		return Nonetio
+
 	dates = filter_model.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
 	cursor = connection.cursor()
 	#get the symbols which haven't updated the latest data
-	pre_date_str = get_condition_str(dates, 2, cnt+2)
+	pre_date_str = get_condition_str(dates, 1, cnt+2)
 	#print pre_date_str
 	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
 				' WHERE date in ' + pre_date_str + ' group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
 	not_update_lists = cursor.fetchall()
 
-	pre_date_str = get_condition_str(dates, 1, cnt+1)
+	pre_date_str = get_condition_str(dates, 0, cnt+1)
 	#print pre_date_str
 	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
 				' WHERE date in ' + pre_date_str + ' group by symbol) AS B WHERE avg_yoy >= ' + str(growth_rate))
