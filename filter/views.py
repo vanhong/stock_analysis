@@ -16,6 +16,7 @@ from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from financial.models import SeasonFinancialRatio
 from price.models import Price
+from chip.models import *
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
 
@@ -134,6 +135,10 @@ def filter_start(request):
 			print 'gpm_s_gtn_pre_avg'
 			#print update_lists
 			filter_list.append(update_lists)
+		elif key == 'chip_flow':
+			cnt = int(value['cnt'])
+			value = int(value['value'])
+			update_lists = query_chip_flow(cnt, 'ratio', value)
 		elif key == 'CorpOverBuy':
 			cnt = int(value['cnt'])
 			value = value['value']
@@ -167,29 +172,35 @@ def filter_start(request):
 				"results": results_dic},
 				context_instance = RequestContext(request))
 
-#not used
-def check_season_data(cnt, overunder, condition, conditionValue):
-	filter_list = []
-	dates = SeasonFinancialRatio.objects.values('year', 'season').distinct().order_by('-year', '-season')
-	if len(dates) >= cnt:
-		year_str = ''
-		season_str = ''
-		for i in range(0, cnt):
-			year_str += str(dates[i]['year']) +','
-			season_str += str(dates[i]['season']) + ','
-		year_str = year_str[:-1]
-		season_str = season_str[:-1]
-		if overunder == 'over':
-			whereStr = 'financial_seasonfinancialratio.year in (' + str(year_str) + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' > ' + str(conditionValue)
-		else:
-			whereStr = 'financial_seasonfinancialratio.year in (' + str(year_str) + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' < ' + str(conditionValue)
-		queryset = SeasonFinancialRatio.objects.extra(where=[whereStr]).values('symbol').annotate(mycount = Count('symbol'))
-		# print 'after query len=' + str(len(queryset))
-		for item in queryset:
-			if item['mycount'] >= cnt:
-				filter_list.append(item['symbol'])
 
-		return filter_list
+def query_chip_flow(cnt, data_kind, diff):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	table = 'stocks.chip_shareholderstructure'
+	dates = ShareholderStructure.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
+	cursor = connection.cursor()
+	#get the symbols which haven't updated the latest data
+	second_date_str = str(dates[1])
+	latest_date_str = str(dates[0])
+
+	print data_kind
+	#print pre_date_str
+	query_str = (' SELECT A.symbol, A.data_kind, ThisSum-PreSum AS diff FROM (\n '
+				' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 AS ThisSum FROM\n '
+				' chip_shareholderstructure where  date=' + latest_date_str  + ') A \n'
+				' inner join\n '
+				' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 as PreSum FROM\n '
+				' chip_shareholderstructure where  date=' + second_date_str  + ') B\n '
+				' on A.symbol = B.symbol and A.data_kind = B.data_kind )')
+	#print query_str
+	cursor.execute(query_str)
+	result = cursor.fetchall()
+
+	for item in result:
+		if item[2] > diff and item[1] == 'ratio':
+			print item[0]
+
+	return ''
 
 def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	strDate = 'date'
@@ -356,7 +367,6 @@ def query_gpm_s_gtn_pre_avg(cnt):
 	# pre_avg_query = filter_model.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
 	return result_symbols
 
-
 def query_season_revenue_ann_growth_rate(request):
 	strDate = 'date'
 	strSymbol = 'symbol'
@@ -392,6 +402,7 @@ def query_month_revenue_ann_growth_rate(request):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	print update_lists
 	return HttpResponse('test')
+
 
 def get_condition_str(dataList, indexFrom, indexTo):
 	print dataList
