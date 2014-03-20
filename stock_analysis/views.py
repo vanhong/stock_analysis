@@ -33,7 +33,7 @@ def analysis(request, template_name, drawTool):
 	url = request.path.replace('/','')
 	return render_to_response('analysis/' + template_name, {'drawTool': drawTool, 'url':url},
 							  context_instance = RequestContext(request))
-
+@csrf_exempt
 def set_stockid(request):
 	if 'q' in request.GET:
 		stockid = request.GET['q']

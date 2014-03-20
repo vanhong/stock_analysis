@@ -103,7 +103,11 @@ urlpatterns += patterns('filter.views',
 urlpatterns += patterns('chip.views',
     url(r'^update_corp_trade/$', 'update_corp_trade'),
     url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
+<<<<<<< HEAD
     url(r'^test_chip/$', 'test_chip'),
+=======
+
+>>>>>>> f46521cf7fa3eec6e7ad991e3ae3eb6f4d9bec25
     )
 
 urlpatterns += patterns('reaserch.views',

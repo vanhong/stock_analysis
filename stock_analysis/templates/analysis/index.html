@@ -5,8 +5,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}js/drawChart.js"></script>
 <script type="text/javascript">
 $( document ).ready( function() {
-
-  $( '#analysis').attr('class', 'active');
+  //$( '#analysis').attr('class', 'active');
 
   $( '#searchSubmit' ).click( function() {
     // alert(window.location.pathname);
@@ -14,19 +13,16 @@ $( document ).ready( function() {
     //stockid
     //action , revenue_month
     //load.(/action/stockid)
-    $( '#q' ).html( '&nbsp;' ).load( '{% url "set_stockid" %}?q=' + q , 
-      function(){ 
-        window.location.replace(window.location.pathname);
+    //alert(window.location.pathname);
+    // $( '#q' ).load( '{% url "set_stockid" %}?q=' + q ,{}, function(){ 
+    //     window.location.replace(window.location.pathname);
+    // });
+    $.post('{% url "set_stockid" %}?q=' + q ,{}, function(){
+      window.location.replace(window.location.pathname);
     });
-    
   });
 });
 
-$( document ).ajaxStart( function() {
-  $( '#spinner' ).show();
-}).ajaxStop( function() {
-    $( '#spinner' ).hide();
-});
 </script>
 {% endblock %}
 
