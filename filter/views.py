@@ -216,15 +216,6 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
-def query_yield_rate(cnt, value):
-	strDate = 'year'
-	strSymbol = 'symbol'
-	#dates = Dividend.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
-	price_list = Price.objects.values('closep').filter(trade_date="20130301")
-	print price_list
-	#filter_list = Dividend.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate]).\
-	#				filter()
-
 def query_corp_trade(cnt, value, over_under):
 	date_str = 'trade_date'
 	symbol_str = 'symbol'
@@ -288,7 +279,18 @@ def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
-def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+def query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	if revenue_type == 'month':
+		revenue_model = MonthRevenue
+	elif revenue_type == 'season':
+		revenue_model = SeasonRevenue
+	else:
+		return None
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+
+def old_query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	strYoy = 'year_growth_rate'
@@ -358,43 +360,6 @@ def query_gpm_s_gtn_pre_avg(cnt):
 	result_symbols = map(lambda item: item.symbol, results)
 	# pre_avg_query = filter_model.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
 	return result_symbols
-
-
-def query_season_revenue_ann_growth_rate(request):
-	strDate = 'date'
-	strSymbol = 'symbol'
-	con_cnt = 10
-	growth_rate = 10
-	dates = SeasonRevenue.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
-	not_update_lists = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
-					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
-					   exclude(symbol__in=SeasonRevenue.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
-					   values_list(strSymbol, flat=True)
-	update_lists = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-				   date__gte=seasons[len(seasons)-2][strDate], date__lte=seasons[0][strDate]).\
-				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
-	update_lists = list(set(update_lists).union(set(not_update_lists)))
-	return HttpResponse('test')
-
-def query_month_revenue_ann_growth_rate(request):
-	strDate = 'date'
-	strSymbol = 'symbol'
-	con_cnt = 10
-	growth_rate = 10
-	revenue_model = MonthRevenue
-	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
-	not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
-					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
-					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
-					   values_list(strSymbol, flat=True)
-	update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gt=growth_rate, 
-				   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
-				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
-	update_lists = list(set(update_lists).union(set(not_update_lists)))
-	print update_lists
-	return HttpResponse('test')
 
 def get_condition_str(dataList, indexFrom, indexTo):
 	print dataList
