@@ -90,9 +90,7 @@ def filter_start(request):
 			if cnt == '' or value == '':
 				continue
 			update_lists = query_reveune_avg_ann_growth_rate(cnt, value, 'month')
-			update_list2 = new_query_revenue_avg_ann_growth_rate(cnt, value, 'month')
-			diff = set(update_lists) | set(update_list2)
-			pdb.set_trace()
+			diff = set(update_lists) ^ set(update_list2)
 			print 'reveune_s_ann_growth_rate'
 			#print update_lists
 			filter_list.append(update_lists)
@@ -225,6 +223,7 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
 	not_update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
 					   date__lte=dates[1][strDate]).annotate(field_avg=Avg(filter_field)).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
 					   filter(**kwargs).values_list(strSymbol, flat=True)
 	update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
 				   date__lte=dates[0][strDate]).annotate(field_avg=Avg(filter_field)).\
@@ -304,7 +303,7 @@ def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
-def new_query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+def query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	if revenue_type == 'month':
@@ -317,6 +316,7 @@ def new_query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
 	not_update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
 					   date__lte=dates[1][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
 					   filter(**kwargs).values_list(strSymbol, flat=True)
 	update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
 				   date__lte=dates[0][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
@@ -325,7 +325,7 @@ def new_query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	return update_lists
 
 
-def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+def old_query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	strYoy = 'year_growth_rate'
@@ -345,7 +345,7 @@ def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	print latest_date_str
 	pre_date_str = get_condition_str(dates, 1, cnt+1)
 	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
-				' WHERE date in ' + pre_date_str + ' AND symbol NOT IN (SELECT DISTINCT symbol FROM stocks.stocks_monthrevenue WHERE date = ' + latest_date_str + ' ) group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
+				' WHERE date in ' + pre_date_str + ' AND symbol NOT IN (SELECT DISTINCT symbol FROM stock_analysis.stocks_monthrevenue WHERE date = ' + latest_date_str + ' ) group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
 	not_update_lists = cursor.fetchall()
 
