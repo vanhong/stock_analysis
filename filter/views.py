@@ -141,6 +141,7 @@ def filter_start(request):
 			cnt = int(value['cnt'])
 			value = int(value['value'])
 			update_lists = query_chip_flow(cnt, 'ratio', value)
+			filter_list.append(update_lists)
 		elif key == 'CorpOverBuy':
 			cnt = int(value['cnt'])
 			value = value['value']
@@ -185,22 +186,22 @@ def query_chip_flow(cnt, data_kind, diff):
 	second_date_str = str(dates[1])
 	latest_date_str = str(dates[0])
 
-	print data_kind
-	#print pre_date_str
-	query_str = (' SELECT A.symbol, A.data_kind, ThisSum-PreSum AS diff FROM (\n '
-				' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 AS ThisSum FROM\n '
-				' chip_shareholderstructure where  date=' + latest_date_str  + ') A \n'
-				' inner join\n '
-				' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 as PreSum FROM\n '
-				' chip_shareholderstructure where  date=' + second_date_str  + ') B\n '
-				' on A.symbol = B.symbol and A.data_kind = B.data_kind )')
-	#print query_str
-	cursor.execute(query_str)
-	result = cursor.fetchall()
+	for i in range(0,cnt-1):
+		#print pre_date_str
+		query_str = (' SELECT A.symbol, A.data_kind, ThisSum-PreSum AS diff FROM (\n '
+					' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 AS ThisSum FROM\n '
+					' chip_shareholderstructure where  date=' + latest_date_str  + ') A \n'
+					' inner join\n '
+					' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 as PreSum FROM\n '
+					' chip_shareholderstructure where  date=' + second_date_str  + ') B\n '
+					' on A.symbol = B.symbol and A.data_kind = B.data_kind )')
+		#print query_str
+		cursor.execute(query_str)
+		result = cursor.fetchall()
 
-	for item in result:
-		if item[2] > diff and item[1] == 'ratio':
-			print item[0]
+		for item in result:
+			if item[2] > diff and item[1] == 'ratio':
+				print item[0]
 
 	return ''
 
@@ -315,15 +316,16 @@ def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	dates = filter_model.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
 	cursor = connection.cursor()
 	#get the symbols which haven't updated the latest data
-	pre_date_str = get_condition_str(dates, 1, cnt+2)
-	#print pre_date_str
+	latest_date_str = '\'' + str(dates[0]) + '\''
+	print latest_date_str
+	pre_date_str = get_condition_str(dates, 1, cnt+1)
 	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
-				' WHERE date in ' + pre_date_str + ' group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
+				' WHERE date in ' + pre_date_str + ' AND symbol NOT IN (SELECT DISTINCT symbol FROM stocks.stocks_monthrevenue WHERE date = ' + latest_date_str + ' ) group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
 	not_update_lists = cursor.fetchall()
 
-	pre_date_str = get_condition_str(dates, 0, cnt+1)
-	#print pre_date_str
+	pre_date_str = get_condition_str(dates, 0, cnt)
+
 	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
 				' WHERE date in ' + pre_date_str + ' group by symbol) AS B WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
@@ -408,7 +410,7 @@ def query_month_revenue_ann_growth_rate(request):
 
 
 def get_condition_str(dataList, indexFrom, indexTo):
-	print dataList
+	#print dataList
 
 	condition_str = '('
 	for i in range(indexFrom, indexTo):
