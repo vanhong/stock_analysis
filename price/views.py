@@ -55,15 +55,3 @@ def update_price(request):
 				continue
 
 		#print the_page
-		'''soup = BeautifulSoup(the_page)
-
-		dataDic = {}
-		for security in securityIdList:
-			securityStr = security.strip()
-			buyCnt = security.next.string.replace(',','')
-			sellCnt = security.next.next_sibling.string.replace(',','')
-			dataObj = CorpTradeData(dateFrom.replace('-','') + '_' + security, dateFrom.replace('-',''), security, buyCnt, sellCnt,'0','0','0','0' )
-			dataDic[securityStr] = dataObj
-			#print('%s, %s, %s' % (security, dataDic[securityStr].dealer_buy, dataDic[securityStr].dealer_sell))
-
-		print('After parsing Dealer, stock count=' + str(len(dataDic)))'''

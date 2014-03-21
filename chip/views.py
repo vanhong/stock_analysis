@@ -11,6 +11,7 @@ from decimal import Decimal
 from stocks.models import StockId
 from chip.models import *
 from bs4 import BeautifulSoup
+import pdb
 
 # Create your views here.
 def update_corp_trade(request):
@@ -152,6 +153,7 @@ def update_shareholder_structure(request):
     options = [option.string for option in soup.findAll('option')]
     print options
 
+    pdb.set_trace() #中斷點
     stock_ids = StockId.objects.all()
     cnt = 1
     for dateStr in options:
@@ -250,7 +252,7 @@ def update_shareholder_structure(request):
                 shareholderStructure.value1000 = ratio[14]
                 shareholderStructure.value_sum = ratio[15]
                 shareholderStructure.save()
-                print 'save %s %s' % (dateStr, stock_symbol)
+                print 'save %s %s !!!' % (dateStr, stock_symbol)
         cnt += 1
         if cnt > monthcount:
             break

@@ -16,6 +16,7 @@ from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from financial.models import SeasonFinancialRatio
 from price.models import Price
+from chip.models import *
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
 
@@ -83,12 +84,13 @@ def filter_start(request):
 			print 'reveune_ann_growth_rate'
 			#print update_lists
 			filter_list.append(update_lists)
-		elif key == 'reveune_avg_ann_growth_rate': #季營收連續幾季年增率>
+		elif key == 'reveune_avg_ann_growth_rate': #月營收連續幾季年增率>
 			cnt = int(value['cnt'])
 			value = int(value['value'])
 			if cnt == '' or value == '':
 				continue
 			update_lists = query_reveune_avg_ann_growth_rate(cnt, value, 'month')
+			diff = set(update_lists) ^ set(update_list2)
 			print 'reveune_s_ann_growth_rate'
 			#print update_lists
 			filter_list.append(update_lists)
@@ -136,6 +138,11 @@ def filter_start(request):
 			print 'gpm_s_gtn_pre_avg'
 			#print update_lists
 			filter_list.append(update_lists)
+		elif key == 'chip_flow':
+			cnt = int(value['cnt'])
+			value = int(value['value'])
+			update_lists = query_chip_flow(cnt, 'ratio', value)
+			filter_list.append(update_lists)
 		elif key == 'CorpOverBuy':
 			cnt = int(value['cnt'])
 			value = value['value']
@@ -169,29 +176,35 @@ def filter_start(request):
 				"results": results_dic},
 				context_instance = RequestContext(request))
 
-#not used
-def check_season_data(cnt, overunder, condition, conditionValue):
-	filter_list = []
-	dates = SeasonFinancialRatio.objects.values('year', 'season').distinct().order_by('-year', '-season')
-	if len(dates) >= cnt:
-		year_str = ''
-		season_str = ''
-		for i in range(0, cnt):
-			year_str += str(dates[i]['year']) +','
-			season_str += str(dates[i]['season']) + ','
-		year_str = year_str[:-1]
-		season_str = season_str[:-1]
-		if overunder == 'over':
-			whereStr = 'financial_seasonfinancialratio.year in (' + str(year_str) + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' > ' + str(conditionValue)
-		else:
-			whereStr = 'financial_seasonfinancialratio.year in (' + str(year_str) + ') and financial_seasonfinancialratio.season in (' + season_str + ') and financial_seasonfinancialratio.' + condition  + ' < ' + str(conditionValue)
-		queryset = SeasonFinancialRatio.objects.extra(where=[whereStr]).values('symbol').annotate(mycount = Count('symbol'))
-		# print 'after query len=' + str(len(queryset))
-		for item in queryset:
-			if item['mycount'] >= cnt:
-				filter_list.append(item['symbol'])
 
-		return filter_list
+def query_chip_flow(cnt, data_kind, diff):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	table = 'stocks.chip_shareholderstructure'
+	dates = ShareholderStructure.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
+	cursor = connection.cursor()
+	#get the symbols which haven't updated the latest data
+	second_date_str = str(dates[1])
+	latest_date_str = str(dates[0])
+
+	for i in range(0,cnt-1):
+		#print pre_date_str
+		query_str = (' SELECT A.symbol, A.data_kind, ThisSum-PreSum AS diff FROM (\n '
+					' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 AS ThisSum FROM\n '
+					' chip_shareholderstructure where  date=' + latest_date_str  + ') A \n'
+					' inner join\n '
+					' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 as PreSum FROM\n '
+					' chip_shareholderstructure where  date=' + second_date_str  + ') B\n '
+					' on A.symbol = B.symbol and A.data_kind = B.data_kind )')
+		#print query_str
+		cursor.execute(query_str)
+		result = cursor.fetchall()
+
+		for item in result:
+			if item[2] > diff and item[1] == 'ratio':
+				print item[0]
+
+	return ''
 
 def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	strDate = 'date'
@@ -202,6 +215,7 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 		financial_model = SeasonFinancialRatio
 	elif time_type == 'year':
 		financial_model = YearFinancialRatio
+	#get field condition like ratio bigger than
 	kwargs = {
 		'{0}__{1}'.format('field_avg', query_type):filter_value
 	}
@@ -209,6 +223,7 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
 	not_update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
 					   date__lte=dates[1][strDate]).annotate(field_avg=Avg(filter_field)).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
 					   filter(**kwargs).values_list(strSymbol, flat=True)
 	update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
 				   date__lte=dates[0][strDate]).annotate(field_avg=Avg(filter_field)).\
@@ -286,9 +301,26 @@ def query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 		revenue_model = MonthRevenue
 	elif revenue_type == 'season':
 		revenue_model = SeasonRevenue
+<<<<<<< HEAD
 	else:
 		return None
 	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+=======
+	kwargs = {
+		'{0}__{1}'.format('field_avg', 'gte'):growth_rate
+	}
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
+	not_update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
+					   date__lte=dates[1][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
+				   date__lte=dates[0][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+				   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	return update_lists
+
+>>>>>>> 50baf38b4d2f7ddc16617687e39705c6030f995f
 
 def old_query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	strDate = 'date'
@@ -296,25 +328,26 @@ def old_query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	strYoy = 'year_growth_rate'
 	if revenue_type == 'month':
 		filter_model = MonthRevenue
-		table = 'stocks.stocks_monthrevenue'
+		table = 'stock_analysis.stocks_monthrevenue'
 	elif revenue_type == 'season':
 		filter_model = SeasonRevenue
-		table = 'stocks.stocks_seasonrevenue'
+		table = 'stock_analysis.stocks_seasonrevenue'
 	else:
 		return Nonetio
 
 	dates = filter_model.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
 	cursor = connection.cursor()
 	#get the symbols which haven't updated the latest data
-	pre_date_str = get_condition_str(dates, 1, cnt+2)
-	#print pre_date_str
+	latest_date_str = '\'' + str(dates[0]) + '\''
+	print latest_date_str
+	pre_date_str = get_condition_str(dates, 1, cnt+1)
 	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
-				' WHERE date in ' + pre_date_str + ' group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
+				' WHERE date in ' + pre_date_str + ' AND symbol NOT IN (SELECT DISTINCT symbol FROM stock_analysis.stocks_monthrevenue WHERE date = ' + latest_date_str + ' ) group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
 	not_update_lists = cursor.fetchall()
 
-	pre_date_str = get_condition_str(dates, 0, cnt+1)
-	#print pre_date_str
+	pre_date_str = get_condition_str(dates, 0, cnt)
+
 	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
 				' WHERE date in ' + pre_date_str + ' group by symbol) AS B WHERE avg_yoy >= ' + str(growth_rate))
 	cursor.execute(query_str)
@@ -361,8 +394,48 @@ def query_gpm_s_gtn_pre_avg(cnt):
 	# pre_avg_query = filter_model.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
 	return result_symbols
 
+<<<<<<< HEAD
+=======
+def query_season_revenue_ann_growth_rate(request):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	con_cnt = 10
+	growth_rate = 10
+	dates = SeasonRevenue.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+	not_update_lists = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+					   exclude(symbol__in=SeasonRevenue.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   values_list(strSymbol, flat=True)
+	update_lists = SeasonRevenue.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+				   date__gte=seasons[len(seasons)-2][strDate], date__lte=seasons[0][strDate]).\
+				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	return HttpResponse('test')
+
+def query_month_revenue_ann_growth_rate(request):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	con_cnt = 10
+	growth_rate = 10
+	revenue_model = MonthRevenue
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+	not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+					   date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+					   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   values_list(strSymbol, flat=True)
+	update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gt=growth_rate, 
+				   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
+				   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	print update_lists
+	return HttpResponse('test')
+
+
+>>>>>>> 50baf38b4d2f7ddc16617687e39705c6030f995f
 def get_condition_str(dataList, indexFrom, indexTo):
-	print dataList
+	#print dataList
 
 	condition_str = '('
 	for i in range(indexFrom, indexTo):

@@ -52,7 +52,7 @@ def update_season_income_statement(request):
         season = int(request.GET['season'])
     else:
         year = 102
-        season = 3
+        season = 4
     stock_ids = StockId.objects.all()
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
