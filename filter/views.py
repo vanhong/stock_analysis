@@ -84,12 +84,15 @@ def filter_start(request):
 			print 'reveune_ann_growth_rate'
 			#print update_lists
 			filter_list.append(update_lists)
-		elif key == 'reveune_avg_ann_growth_rate': #季營收連續幾季年增率>
+		elif key == 'reveune_avg_ann_growth_rate': #月營收連續幾季年增率>
 			cnt = int(value['cnt'])
 			value = int(value['value'])
 			if cnt == '' or value == '':
 				continue
 			update_lists = query_reveune_avg_ann_growth_rate(cnt, value, 'month')
+			update_list2 = new_query_revenue_avg_ann_growth_rate(cnt, value, 'month')
+			diff = set(update_lists) | set(update_list2)
+			pdb.set_trace()
 			print 'reveune_s_ann_growth_rate'
 			#print update_lists
 			filter_list.append(update_lists)
@@ -213,6 +216,7 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
 		financial_model = SeasonFinancialRatio
 	elif time_type == 'year':
 		financial_model = YearFinancialRatio
+	#get field condition like ratio bigger than
 	kwargs = {
 		'{0}__{1}'.format('field_avg', query_type):filter_value
 	}
@@ -299,16 +303,37 @@ def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
 	update_lists = list(set(update_lists).union(set(not_update_lists)))
 	return update_lists
 
+def new_query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	if revenue_type == 'month':
+		revenue_model = MonthRevenue
+	elif revenue_type == 'season':
+		revenue_model = SeasonRevenue
+	kwargs = {
+		'{0}__{1}'.format('field_avg', 'gte'):growth_rate
+	}
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
+	not_update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
+					   date__lte=dates[1][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+					   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
+				   date__lte=dates[0][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+				   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	return update_lists
+
+
 def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
 	strDate = 'date'
 	strSymbol = 'symbol'
 	strYoy = 'year_growth_rate'
 	if revenue_type == 'month':
 		filter_model = MonthRevenue
-		table = 'stocks.stocks_monthrevenue'
+		table = 'stock_analysis.stocks_monthrevenue'
 	elif revenue_type == 'season':
 		filter_model = SeasonRevenue
-		table = 'stocks.stocks_seasonrevenue'
+		table = 'stock_analysis.stocks_seasonrevenue'
 	else:
 		return Nonetio
 
