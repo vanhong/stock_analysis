@@ -10,6 +10,9 @@ from decimal import Decimal
 from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
+import pdb
+import urllib
+import urllib2
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -140,6 +143,51 @@ def update_season_profit(request):
                     profit.acc_year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
                 profit.save()
     return HttpResponse("update revenue")
+
+def new_update_month_revenue(request):
+    stock_ids = StockId.objects.all()
+    today = datetime.date.today()
+    year = 2014
+    month = 2
+    symbol = '2474'
+    if 'year' in request.GET:
+        year = request.GET['year']
+    if 'month' in request.GET:
+        month = request.GET['month']
+    url = "http://mops.twse.com.tw/mops/web/t05st10_ifrs"
+    values = {'encodeURIComponent' : '1', 'run' : 'Y', 'step' : '0', 'yearmonth' : '10302', 
+               'colorchg' : '', 'TYPEK' : 'sii', 'co_id' : symbol, 'off' : '1', 'year' : year-1911,
+                'month' : str(month).zfill(2),  'firstin' : 'true'}
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    soup = BeautifulSoup(response,from_encoding="utf-8")
+    data1 = [td.string for td in soup.findAll('td', {'class' : 'odd'})]
+    data2 = [td.string for td in soup.findAll('td', {'class' : 'even'})]
+    year = year
+    month = month
+    revenue = MonthRevenue()
+    revenue.surrogate_key = symbol + "_" + str(year) + str(month).zfill(2)
+    revenue.year = year
+    revenue.month = month
+    revenue.date = datetime.date(year, month, 1)
+    revenue.symbol = symbol
+    if data1:
+        revenue.revenue = data1[0].strip().replace(',', '')
+        revenue.acc_revenue = data1[2].strip().replace(',', '')
+        last_year_revenue = data2[0].strip().replace(',', '')
+        
+    print data1[0]
+    for data in data1:
+        data.strip().replace(',','')
+        revenue
+        print data
+    # for data in datas:
+    #     next = data.next_sibling.next_sibling
+    #     if next.string:
+    #         print next.string
+    # print datas
+    return HttpResponse(response.read())
 
 def update_month_revenue(request):
     stock_ids = StockId.objects.all()

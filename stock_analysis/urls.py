@@ -61,6 +61,7 @@ urlpatterns += patterns('stocks.views',
     (r'^update_month_revenue/$', 'update_month_revenue'),
     (r'^update_season_profit/$', 'update_season_profit'),
     (r'^update_season_revenue/$', 'update_season_revenue'),
+    (r'^new_update_month_revenue/$', 'new_update_month_revenue'),
 )
 
 urlpatterns += patterns('financial.views',
@@ -102,17 +103,12 @@ urlpatterns += patterns('filter.views',
 
 urlpatterns += patterns('chip.views',
     url(r'^update_corp_trade/$', 'update_corp_trade'),
-<<<<<<< HEAD
-    #url(r'^test_chip/$', 'test_chip'),
-)
-=======
     url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
-    )
+)
 
 urlpatterns += patterns('reaserch.views',
     url(r'^chip_price_relation/$', 'chip_price_relation'),
-    )
->>>>>>> 50baf38b4d2f7ddc16617687e39705c6030f995f
+)
 
 urlpatterns += patterns('us_stocks.views',
     url( r'^us/update_finance/$', 'update_finance', name= 'us_update_finance'),
