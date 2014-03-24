@@ -14,6 +14,8 @@ def chip_price_relation(cnt, score, chip_type):
 		table = 'stocks.stocks_seasonrevenue'
 	else:
 		return Nonetio
+
+	#select date, symbol, data_kind, (value0_1 + value1_5 + value5_10) as sum1, (value600_800 + value800_1000 + value1000) as sum2 from stocks.chip_shareholderstructure
 	dates = filter_model.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
 	cursor = connection.cursor()
 	#get the symbols which haven't updated the latest data
