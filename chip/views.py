@@ -11,6 +11,7 @@ from decimal import Decimal
 from stocks.models import StockId
 from chip.models import *
 from bs4 import BeautifulSoup
+import pdb
 
 # Create your views here.
 def update_corp_trade(request):
@@ -152,6 +153,7 @@ def update_shareholder_structure(request):
     options = [option.string for option in soup.findAll('option')]
     print options
 
+    pdb.set_trace() #中斷點
     stock_ids = StockId.objects.all()
     cnt = 1
     for dateStr in options:

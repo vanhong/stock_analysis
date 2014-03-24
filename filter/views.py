@@ -16,6 +16,7 @@ from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from financial.models import SeasonFinancialRatio
 from price.models import Price
+from chip.models import *
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
 from exceptions import NotImplementedError
@@ -55,6 +56,7 @@ class FilterClasses:
 
 @csrf_exempt
 def filter_start(request):
+
     print 'Start to Filter'
     conditions = {}
     for key, value in request.POST.iteritems():
@@ -222,14 +224,60 @@ def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
     update_lists = list(set(update_lists).union(set(not_update_lists)))
     return update_lists
 
-def query_yield_rate(cnt, value):
-    strDate = 'year'
-    strSymbol = 'symbol'
-    #dates = Dividend.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
-    price_list = Price.objects.values('closep').filter(trade_date="20130301")
-    print price_list
-    #filter_list = Dividend.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate]).\
-    #                filter()
+
+def query_chip_flow(cnt, data_kind, diff):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	table = 'stocks.chip_shareholderstructure'
+	dates = ShareholderStructure.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
+	cursor = connection.cursor()
+	#get the symbols which haven't updated the latest data
+	second_date_str = str(dates[1])
+	latest_date_str = str(dates[0])
+
+	for i in range(0,cnt-1):
+		#print pre_date_str
+		query_str = (' SELECT A.symbol, A.data_kind, ThisSum-PreSum AS diff FROM (\n '
+					' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 AS ThisSum FROM\n '
+					' chip_shareholderstructure where  date=' + latest_date_str  + ') A \n'
+					' inner join\n '
+					' (SELECT symbol,data_kind, value400_600+value600_800+value800_1000+value1000 as PreSum FROM\n '
+					' chip_shareholderstructure where  date=' + second_date_str  + ') B\n '
+					' on A.symbol = B.symbol and A.data_kind = B.data_kind )')
+		#print query_str
+		cursor.execute(query_str)
+		result = cursor.fetchall()
+
+		for item in result:
+			if item[2] > diff and item[1] == 'ratio':
+				print item[0]
+
+	return ''
+
+def query_financial_ratio_avg(cnt, value, field, time_type, query_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	filter_value = values
+	filter_field = field
+	if time_type == 'season':
+		financial_model = SeasonFinancialRatio
+	elif time_type == 'year':
+		financial_model = YearFinancialRatio
+	#get field condition like ratio bigger than
+	kwargs = {
+		'{0}__{1}'.format('field_avg', query_type):filter_value
+	}
+	#get recent cnt+1 date
+	dates = financial_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
+	not_update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
+					   date__lte=dates[1][strDate]).annotate(field_avg=Avg(filter_field)).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = financial_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
+				   date__lte=dates[0][strDate]).annotate(field_avg=Avg(filter_field)).\
+				   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	return update_lists
 
 def query_corp_trade(cnt, value, over_under):
     date_str = 'trade_date'
@@ -329,6 +377,68 @@ def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
     result_symbols = map(lambda item: item[0], results)
     return result_symbols
 
+def query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	if revenue_type == 'month':
+		revenue_model = MonthRevenue
+	elif revenue_type == 'season':
+		revenue_model = SeasonRevenue
+	else:
+		return None
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+	kwargs = {
+		'{0}__{1}'.format('field_avg', 'gte'):growth_rate
+	}
+	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
+	not_update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
+					   date__lte=dates[1][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+					   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
+				   date__lte=dates[0][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+				   filter(**kwargs).values_list(strSymbol, flat=True)
+	update_lists = list(set(update_lists).union(set(not_update_lists)))
+	return update_lists
+
+
+def old_query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+	strDate = 'date'
+	strSymbol = 'symbol'
+	strYoy = 'year_growth_rate'
+	if revenue_type == 'month':
+		filter_model = MonthRevenue
+		table = 'stock_analysis.stocks_monthrevenue'
+	elif revenue_type == 'season':
+		filter_model = SeasonRevenue
+		table = 'stock_analysis.stocks_seasonrevenue'
+	else:
+		return Nonetio
+
+	dates = filter_model.objects.values(strDate).distinct().order_by('-' + strDate).values_list(strDate, flat=True)
+	cursor = connection.cursor()
+	#get the symbols which haven't updated the latest data
+	latest_date_str = '\'' + str(dates[0]) + '\''
+	print latest_date_str
+	pre_date_str = get_condition_str(dates, 1, cnt+1)
+	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
+				' WHERE date in ' + pre_date_str + ' AND symbol NOT IN (SELECT DISTINCT symbol FROM stock_analysis.stocks_monthrevenue WHERE date = ' + latest_date_str + ' ) group by symbol) AS A  WHERE avg_yoy >= ' + str(growth_rate))
+	cursor.execute(query_str)
+	not_update_lists = cursor.fetchall()
+
+	pre_date_str = get_condition_str(dates, 0, cnt)
+
+	query_str = ('SELECT * FROM ( SELECT symbol, AVG(year_growth_rate) avg_yoy from ' + table + ' A'
+				' WHERE date in ' + pre_date_str + ' group by symbol) AS B WHERE avg_yoy >= ' + str(growth_rate))
+	cursor.execute(query_str)
+	update_lists = cursor.fetchall()
+	
+	print '------Before Union-------'
+	results = list(set(update_lists).union(set(not_update_lists)))
+	result_symbols = map(lambda item: item[0], results)
+	return result_symbols
+
+
 def query_gpm_s_gtn_pre_avg(cnt):
     strDate = 'date'
     strSymbol = 'symbol'
@@ -364,7 +474,6 @@ def query_gpm_s_gtn_pre_avg(cnt):
     result_symbols = map(lambda item: item.symbol, results)
     # pre_avg_query = filter_model.objects.filter(date__gte=dates[avg_cnt], date__lte=dates[1]).values('symbol').annotate(preAvg = Avg('gross_profit_margin'))
     return result_symbols
-
 
 def query_season_revenue_ann_growth_rate(request):
     strDate = 'date'
@@ -402,9 +511,10 @@ def query_month_revenue_ann_growth_rate(request):
     print update_lists
     return HttpResponse('test')
 
-def get_condition_str(dataList, indexFrom, indexTo):
-    print dataList
 
+def get_condition_str(dataList, indexFrom, indexTo):
+
+	#print dataList
     condition_str = '('
     for i in range(indexFrom, indexTo):
         condition_str += '\'' + str(dataList[i]) + '\','

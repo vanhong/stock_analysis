@@ -133,6 +133,34 @@
 	</table>	
 </fieldset>
 
+<legend>籌碼</legend>
+	<table class="conditionTable">
+		<tr>
+			<td>
+				<input type="checkbox" id="con-chip_flow" class="css-checkbox" />
+				<label for="con-chip_flow" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="text" id="chip_flow-cnt" class="dateCnt"/>月
+			<td>
+			<td>
+				大戶比例增加 <input type="text" id="chip_flow-value"  placeholder=""/> %
+			<td>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="con-corp_over_buy" class="css-checkbox" />
+				<label for="con-corp_over_buy" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="text" id="corp_over_buy-cnt" class="dateCnt"/>天
+			<td>
+			<td>
+				買超大於 <input type="text" id="corp_over_buy-value"  placeholder=""/> (張)
+			<td>
+		</tr>
+	</table>	
+</fieldset>
 <fieldset>
 	<legend>殖利率</legend>
 		<table class="conditionTable">
@@ -152,26 +180,6 @@
 </fieldset>
 
 <fieldset>
-<legend>法人買賣超</legend>
-	<table class="conditionTable">
-		<tr>
-			<td>
-				<!--
-				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
-				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
-				-->
-				<input type="checkbox" id="con-corp_over_buy" class="css-checkbox" />
-				<label for="con-corp_over_buy" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
-			</td>
-			<td>
-				連續 <input type="text" id="corp_over_buy-cnt" class="dateCnt"/>天
-			<td>
-			<td>
-				買超大於 <input type="text" id="corp_over_buy-value"  placeholder=""/> (張)
-			<td>
-		</tr>
-	</table>	
-</fieldset>
 </div>
 
 <div id="FilterResult" class="condition"></div>
