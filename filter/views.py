@@ -33,10 +33,15 @@ class AbstractFilter():
     def filter(self, input1, input2):
         pass
 
-
+#定義各filter class
 class FilterClasses:
     class RevenueYoY(AbstractFilter):
-        #月營收連續幾個月年增率>
+        #月營收 近X個月有Y個月年增率 > N%
+        value = 0
+        cnt = 0
+        matchcnt = 0  #cnt個月中有matchcnt個月符合 (非必要)
+        time_type = '' # month, season, year
+
         def __init__(self):
             print 'Initialize RevenueYoY'
 
@@ -44,9 +49,14 @@ class FilterClasses:
             print params
             cnt = int(params['cnt'])
             value = int(params['value'])
-            if cnt == '' or value == '':
-                return
-            results = query_reveune_ann_growth_rate(cnt, value, 'month')
+            time_type = params['time_type']
+            if 'matchcnt' in params:
+                matchcnt = int(params['matchcnt'])
+            else:
+                matchcnt = cnt
+            # if cnt == '' or value == '':
+            #     return
+            results = query_reveune_ann_growth_rate(cnt, matchcnt, value, time_type)
             #print 'After Query RevenueYoY'
             #print results
             return results
@@ -59,6 +69,9 @@ def filter_start(request):
 
     print 'Start to Filter'
     conditions = {}
+
+    #處理前端post的條件參數
+    #參數名需與前端template對應
     for key, value in request.POST.iteritems():
         keySplit = key.split('-')
         condition = keySplit[0];
@@ -72,11 +85,9 @@ def filter_start(request):
         #print len(conditions[condition])
     print 'params are as follow:'
     print conditions
-    passed = True
     filter_list = []
     for key, value in conditions.iteritems(): #逐一條件做篩選
         if key == 'RevenueYoY': #月營收連續幾個月年增率>
-            #參數名需與前端對應
             targetClass = getattr(FilterClasses, key)
             instance = targetClass()
             results = instance.filter(filter_list, value)
@@ -90,7 +101,7 @@ def filter_start(request):
             # print 'reveune_ann_growth_rate'
             # #print update_lists
             # filter_list.append(update_lists)
-        elif key == 'reveune_avg_ann_growth_rate': #季營收連續幾季年增率>
+        elif key == 'reveune_avg_ann_growth_rate': #月營收平均N個月的營收年增率>
             cnt = int(value['cnt'])
             value = int(value['value'])
             if cnt == '' or value == '':
@@ -104,7 +115,7 @@ def filter_start(request):
             value = int(value['value'])
             if cnt == '' or value == '':
                 continue
-            update_lists = query_reveune_ann_growth_rate(cnt, value, 'season')
+            update_lists = query_reveune_ann_growth_rate(cnt, cnt, value, 'season')
             print 'reveune_s_ann_growth_rate'
             #print update_lists
             filter_list.append(update_lists)
@@ -321,7 +332,7 @@ def query_financial_ratio(cnt, value, field, time_type):
 
     return update_lists
 
-def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
+def query_reveune_ann_growth_rate(cnt, matchcnt, growth_rate, revenue_type):
     strDate = 'date'
     strSymbol = 'symbol'
     if revenue_type == 'month':
@@ -330,15 +341,15 @@ def query_reveune_ann_growth_rate(con_cnt, growth_rate, revenue_type):
         revenue_model = SeasonRevenue
     else:
         return None
-    dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+    dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt + 1]
     not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
                        date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
-                       annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).\
+                       annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).\
                        exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
                        values_list(strSymbol, flat=True)
     update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
                    date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
-                   annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
+                   annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).values_list(strSymbol, flat=True)
     update_lists = list(set(update_lists).union(set(not_update_lists)))
     return update_lists
 
