@@ -11,11 +11,6 @@ from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonR
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
 import pdb
-<<<<<<< HEAD
-import urllib
-import urllib2
-=======
->>>>>>> 8d75cda5778684a2b2b118e156a5e67ce6e08d33
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -148,6 +143,49 @@ def update_season_profit(request):
     return HttpResponse("update revenue")
 
 def new_update_month_revenue(request):
+    year = 2014
+    month = 2
+    market = ['otc', 'sii']
+    for i in range(len(market)):
+        url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        soup = BeautifulSoup(response, from_encoding="utf-8")
+        datas = soup.find_all('td', {'align':'center'})
+        for data in datas:
+            if data.string:
+                if data.string != '-':
+                    revenue = MonthRevenue()
+                    revenue.surrogate_key = data.string + "_" + str(year) + str(month).zfill(2)
+                    revenue.year = year
+                    revenue.month = month
+                    revenue.date = datetime.date(year, month, 1)
+                    revenue.symbol = data.string
+                    revenue_data = data.next_sibling.next_sibling
+                    revenue.revenue = revenue_data.string.strip().replace(',', '')
+                    last_year_revenue_data = revenue_data.next_sibling.next_sibling
+                    revenue.last_year_revenue = last_year_revenue_data.string.strip().replace(',', '')
+                    month_growth_rate_data = last_year_revenue_data.next_sibling
+                    revenue.month_growth_rate = month_growth_rate_data.string.strip().replace(',', '')
+                    year_growth_rate_data = month_growth_rate_data.next_sibling
+                    revenue.year_growth_rate = year_growth_rate_data.string.strip().replace(',', '')
+                    acc_revenue_data = year_growth_rate_data.next_sibling
+                    revenue.acc_revenue = acc_revenue_data.string.strip().replace(',', '')
+                    last_acc_revenue_data = acc_revenue_data.next_sibling
+                    revenue.last_acc_revenue = last_acc_revenue_data.string.strip().replace(',', '')
+                    acc_year_growth_rate_data = last_acc_revenue_data.next_sibling
+                    revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
+                    print(revenue.symbol)
+                    revenue.save()
+                    # revenue.revenue = datas1[0].strip().replace(',', '')
+                    # revenue.last_year_revenue = datas2[0].strip().replace(',', '')
+                    # revenue.year_growth_rate = datas2[1].strip().replace(',', '')
+                    # revenue.acc_revenue = datas1[2].strip().replace(',', '')
+                    # revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
+                    # revenue.save()
+    return HttpResponse('update month revenue')
+
+def old_update_month_revenue(request):
     begin_date = datetime.date.today()
     end_date = datetime.date.today()
     stock_ids = StockId.objects.all()
