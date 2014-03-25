@@ -33,7 +33,7 @@ class AbstractFilter():
     def filter(self, input1, input2):
         pass
 
-
+#定義各filter class
 class FilterClasses:
     class RevenueYoY(AbstractFilter):
         #月營收連續幾個月年增率>
