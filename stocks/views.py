@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import urllib, datetime
+import urllib, urllib2, datetime
 from django.http import HttpResponse
 from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
@@ -11,8 +11,11 @@ from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonR
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
 import pdb
+<<<<<<< HEAD
 import urllib
 import urllib2
+=======
+>>>>>>> 8d75cda5778684a2b2b118e156a5e67ce6e08d33
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -145,49 +148,68 @@ def update_season_profit(request):
     return HttpResponse("update revenue")
 
 def new_update_month_revenue(request):
+    begin_date = datetime.date.today()
+    end_date = datetime.date.today()
     stock_ids = StockId.objects.all()
-    today = datetime.date.today()
-    year = 2014
-    month = 2
-    symbol = '2474'
+    # year = datetime.date.year
+    # month = datetime.date.month
+    today = datetime.date.today() 
+    year = today.year
+    month = today.month
+    if month == 1:
+        year = year - 1
+        month = 12
+    else:
+        month = month - 1
     if 'year' in request.GET:
-        year = request.GET['year']
+        year = int(request.GET['year'])
     if 'month' in request.GET:
-        month = request.GET['month']
-    url = "http://mops.twse.com.tw/mops/web/t05st10_ifrs"
-    values = {'encodeURIComponent' : '1', 'run' : 'Y', 'step' : '0', 'yearmonth' : '10302', 
-               'colorchg' : '', 'TYPEK' : 'sii', 'co_id' : symbol, 'off' : '1', 'year' : year-1911,
-                'month' : str(month).zfill(2),  'firstin' : 'true'}
-    url_data = urllib.urlencode(values)
-    req = urllib2.Request(url, url_data)
-    response = urllib2.urlopen(req)
-    soup = BeautifulSoup(response,from_encoding="utf-8")
-    data1 = [td.string for td in soup.findAll('td', {'class' : 'odd'})]
-    data2 = [td.string for td in soup.findAll('td', {'class' : 'even'})]
-    year = year
-    month = month
-    revenue = MonthRevenue()
-    revenue.surrogate_key = symbol + "_" + str(year) + str(month).zfill(2)
-    revenue.year = year
-    revenue.month = month
-    revenue.date = datetime.date(year, month, 1)
-    revenue.symbol = symbol
-    if data1:
-        revenue.revenue = data1[0].strip().replace(',', '')
-        revenue.acc_revenue = data1[2].strip().replace(',', '')
-        last_year_revenue = data2[0].strip().replace(',', '')
-        
-    print data1[0]
-    for data in data1:
-        data.strip().replace(',','')
-        revenue
-        print data
-    # for data in datas:
-    #     next = data.next_sibling.next_sibling
-    #     if next.string:
-    #         print next.string
-    # print datas
-    return HttpResponse(response.read())
+        month = int(request.GET['month'])
+    # pdb.set_trace()
+    for stock_id in stock_ids:
+        symbol = stock_id.symbol
+        revenueInDb = MonthRevenue.objects.filter(symbol=symbol, year=year, month=month)
+        if revenueInDb:
+            continue
+        if stock_id.market_type == u'上市':
+            market = 'sii'
+        else:
+            market = 'otc'
+        url = "http://mops.twse.com.tw/mops/web/t05st10_ifrs"
+        values = {'encodeURIComponent' : '1', 'run' : 'Y', 'step' : '0', 'yearmonth' : str(year-1911) + str(month).zfill(2),
+                  'colorchg' : '', 'TYPEK' : market, 'co_id' : symbol, 'off' : '1', 'year' : str(year-1911),
+                  'month' : str(month).zfill(2), 'firstin' : 'true'}
+        url_data = urllib.urlencode(values)
+        req = urllib2.Request(url, url_data)
+        response = urllib2.urlopen(req)
+        soup = BeautifulSoup(response, from_encoding="utf-8")
+        datas1 = [td.string for td in soup.findAll('td', {'class' : 'odd'})]
+        datas2 = [td.string for td in soup.findAll('td', {'class' : 'even'})]
+        if not datas1:
+            print 'update ' + symbol + ' failed'
+            time.sleep(10)
+            req = urllib2.Request(url, url_data)
+            response = urllib2.urlopen(req)
+            datas1 = [td.string for td in soup.findAll('td', {'class' : 'odd'})]
+            datas2 = [td.string for td in soup.findAll('td', {'class' : 'even'})]
+        if datas1:
+            revenue = MonthRevenue()
+            revenue.surrogate_key = symbol + "_" + str(year) + str(month).zfill(2)
+            revenue.year = year
+            revenue.month = month
+            revenue.date = datetime.date(year, month, 1)
+            revenue.symbol = symbol
+            revenue.revenue = datas1[0].strip().replace(',', '')
+            revenue.last_year_revenue = datas2[0].strip().replace(',', '')
+            revenue.year_growth_rate = datas2[1].strip().replace(',', '')
+            revenue.acc_revenue = datas1[2].strip().replace(',', '')
+            revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
+            revenue.save()
+            print 'update ' + symbol + ' month revenue'
+
+    # for data in datas2:
+    #     print data.strip()
+    return HttpResponse('ok')
 
 def update_month_revenue(request):
     stock_ids = StockId.objects.all()
