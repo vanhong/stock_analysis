@@ -142,9 +142,26 @@ def update_season_profit(request):
                 profit.save()
     return HttpResponse("update revenue")
 
-def new_update_month_revenue(request):
-    year = 2014
-    month = 2
+def is_decimal(s):
+    try:
+        Decimal(s)
+    except:
+        return False
+    return True
+
+def update_month_revenue(request):
+    today = datetime.date.today() 
+    year = today.year
+    month = today.month
+    if month == 1:
+        year = year - 1
+        month = 12
+    else:
+        month = month - 1
+    if 'year' in request.GET:
+        year = int(request.GET['year'])
+    if 'month' in request.GET:
+        month = int(request.GET['month'])
     market = ['otc', 'sii']
     for i in range(len(market)):
         url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
@@ -162,20 +179,27 @@ def new_update_month_revenue(request):
                     revenue.date = datetime.date(year, month, 1)
                     revenue.symbol = data.string
                     revenue_data = data.next_sibling.next_sibling
-                    revenue.revenue = revenue_data.string.strip().replace(',', '')
+                    if is_decimal(revenue_data.string.strip().replace(',', '')):
+                        revenue.revenue = revenue_data.string.strip().replace(',', '')
                     last_year_revenue_data = revenue_data.next_sibling.next_sibling
-                    revenue.last_year_revenue = last_year_revenue_data.string.strip().replace(',', '')
+                    if is_decimal(last_year_revenue_data.string.strip().replace(',', '')):
+                        revenue.last_year_revenue = last_year_revenue_data.string.strip().replace(',', '')
                     month_growth_rate_data = last_year_revenue_data.next_sibling
-                    revenue.month_growth_rate = month_growth_rate_data.string.strip().replace(',', '')
+                    if is_decimal(month_growth_rate_data.string.strip().replace(',', '')):
+                        revenue.month_growth_rate = month_growth_rate_data.string.strip().replace(',', '')
                     year_growth_rate_data = month_growth_rate_data.next_sibling
-                    revenue.year_growth_rate = year_growth_rate_data.string.strip().replace(',', '')
+                    if is_decimal(year_growth_rate_data.string.strip().replace(',', '')):
+                        revenue.year_growth_rate = year_growth_rate_data.string.strip().replace(',', '')
                     acc_revenue_data = year_growth_rate_data.next_sibling
-                    revenue.acc_revenue = acc_revenue_data.string.strip().replace(',', '')
+                    if is_decimal(acc_revenue_data.string.strip().replace(',', '')):
+                        revenue.acc_revenue = acc_revenue_data.string.strip().replace(',', '')
                     last_acc_revenue_data = acc_revenue_data.next_sibling
-                    revenue.last_acc_revenue = last_acc_revenue_data.string.strip().replace(',', '')
+                    if is_decimal(last_acc_revenue_data.string.strip().replace(',', '')):
+                        revenue.last_acc_revenue = last_acc_revenue_data.string.strip().replace(',', '')
                     acc_year_growth_rate_data = last_acc_revenue_data.next_sibling
-                    revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
-                    print(revenue.symbol)
+                    if is_decimal(acc_year_growth_rate_data.string.strip().replace(',', '')):
+                        revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
+                    print (revenue.symbol)
                     revenue.save()
                     # revenue.revenue = datas1[0].strip().replace(',', '')
                     # revenue.last_year_revenue = datas2[0].strip().replace(',', '')
@@ -183,73 +207,9 @@ def new_update_month_revenue(request):
                     # revenue.acc_revenue = datas1[2].strip().replace(',', '')
                     # revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
                     # revenue.save()
-    return HttpResponse('update month revenue')
+    return HttpResponse('update month revenue year:' + str(year) + " month:" + str(month))
 
 def old_update_month_revenue(request):
-    begin_date = datetime.date.today()
-    end_date = datetime.date.today()
-    stock_ids = StockId.objects.all()
-    # year = datetime.date.year
-    # month = datetime.date.month
-    today = datetime.date.today() 
-    year = today.year
-    month = today.month
-    if month == 1:
-        year = year - 1
-        month = 12
-    else:
-        month = month - 1
-    if 'year' in request.GET:
-        year = int(request.GET['year'])
-    if 'month' in request.GET:
-        month = int(request.GET['month'])
-    # pdb.set_trace()
-    for stock_id in stock_ids:
-        symbol = stock_id.symbol
-        revenueInDb = MonthRevenue.objects.filter(symbol=symbol, year=year, month=month)
-        if revenueInDb:
-            continue
-        if stock_id.market_type == u'上市':
-            market = 'sii'
-        else:
-            market = 'otc'
-        url = "http://mops.twse.com.tw/mops/web/t05st10_ifrs"
-        values = {'encodeURIComponent' : '1', 'run' : 'Y', 'step' : '0', 'yearmonth' : str(year-1911) + str(month).zfill(2),
-                  'colorchg' : '', 'TYPEK' : market, 'co_id' : symbol, 'off' : '1', 'year' : str(year-1911),
-                  'month' : str(month).zfill(2), 'firstin' : 'true'}
-        url_data = urllib.urlencode(values)
-        req = urllib2.Request(url, url_data)
-        response = urllib2.urlopen(req)
-        soup = BeautifulSoup(response, from_encoding="utf-8")
-        datas1 = [td.string for td in soup.findAll('td', {'class' : 'odd'})]
-        datas2 = [td.string for td in soup.findAll('td', {'class' : 'even'})]
-        if not datas1:
-            print 'update ' + symbol + ' failed'
-            time.sleep(10)
-            req = urllib2.Request(url, url_data)
-            response = urllib2.urlopen(req)
-            datas1 = [td.string for td in soup.findAll('td', {'class' : 'odd'})]
-            datas2 = [td.string for td in soup.findAll('td', {'class' : 'even'})]
-        if datas1:
-            revenue = MonthRevenue()
-            revenue.surrogate_key = symbol + "_" + str(year) + str(month).zfill(2)
-            revenue.year = year
-            revenue.month = month
-            revenue.date = datetime.date(year, month, 1)
-            revenue.symbol = symbol
-            revenue.revenue = datas1[0].strip().replace(',', '')
-            revenue.last_year_revenue = datas2[0].strip().replace(',', '')
-            revenue.year_growth_rate = datas2[1].strip().replace(',', '')
-            revenue.acc_revenue = datas1[2].strip().replace(',', '')
-            revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
-            revenue.save()
-            print 'update ' + symbol + ' month revenue'
-
-    # for data in datas2:
-    #     print data.strip()
-    return HttpResponse('ok')
-
-def update_month_revenue(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()
     for stock_id in stock_ids:
