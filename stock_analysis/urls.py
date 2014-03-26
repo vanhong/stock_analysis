@@ -106,6 +106,9 @@ urlpatterns += patterns('chip.views',
     url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
 )
 
+urlpatterns += patterns('reaserch.views',
+    url(r'^chip_price_relation/$', 'chip_price_relation'),
+)
 
 urlpatterns += patterns('us_stocks.views',
     url( r'^us/update_finance/$', 'update_finance', name= 'us_update_finance'),
