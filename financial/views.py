@@ -28,7 +28,7 @@ def show_season_income_statement(request):
     req = urllib2.Request(url, url_data)
     response = urllib2.urlopen(req)
     income_statement = SeasonIncomeStatement()
-    soup = BeautifulSoup(response,from_encoding="utf-8")
+    soup = BeautifulSoup(response, from_encoding="utf-8")
     # print soup 詳細資料
 
     balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
