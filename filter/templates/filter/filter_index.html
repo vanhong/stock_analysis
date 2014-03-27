@@ -43,13 +43,19 @@
 				<label for="con-RevenueYoY" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
 			<td>
-				<input type="search" id="RevenueYoY-cnt" class="dateCnt"/> 個月內
-				<input type="search" id="RevenueYoY-matchcnt" class="dateCnt"/> 個月
+				<input type="search" id="RevenueYoY-cnt" class="dateCnt"/> 
+				個
+				<select id="RevenueYoY-timetype">
+				  <option value="month">月</option>
+				  <option value="season">季</option>
+				</select>
+				內
+				<input type="search" id="RevenueYoY-matchcnt" class="dateCnt"/> 個月(季)
 				<input type="search" id="RevenueYoY-timetype" style="display:none;" value="month"/> 
 			<td>
 			<td>
 				年增率
-				<select name="overunder">
+				<select id="RevenueYoY-overunder">
 				  <option value="gte">大於</option>
 				  <option value="lte">小於</option>
 				</select>
@@ -58,10 +64,6 @@
 		</tr>
 		<tr>
 			<td>
-				<!--
-				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
-				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
-				-->
 				<input type="checkbox" id="con-reveune_avg_ann_growth_rate" class="css-checkbox" />
 				<label for="con-reveune_avg_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>

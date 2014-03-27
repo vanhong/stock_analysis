@@ -1,85 +1,39 @@
 <script type="text/javascript">
-  $('#fitler_menu_revenue').treetable({ expandable: true });
+  //$('#fitler_menu_revenue').treetable({ expandable: true });
 </script>
 <table id="fitler_menu_revenue" class="table" rules="none" >
   <tbody>
     <tr data-tt-id="1">
-      <td class="filter1">連續</td>
       <td class="filter_input">
-        <input type="" style="width: 45px; padding: 1px"> 月</input>
-      </td>
-      <td class="filter2">營收年增率大於</td>
-      <td class="filter_input">
-        <input type="" style="width: 45px; padding: 1px"> %</input> 
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; padding: 1px"></input>
+        <select id="RevenueYoY-timetype">
+          <option value="month">月</option>
+          <option value="season">季</option>
+        </select>
+        內有
+        <input id="RevenueYoY-matchcnt" type="text" style="width: 45px; padding: 1px"> 月(季)</input>
+        營收年增率
+        <select id="RevenueYoY-overunder">
+          <option value="gte">大於</option>
+          <option value="lte">小於</option>
+        </select>
+        <input id="RevenueYoY-value" type="text" style="width: 45px; padding: 1px"> %</input> 
       </td>
       <td class="filter_button">
-    	  <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
+    	  <button id="add-RevenueYoY" title="營收年增率" class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
       </td>
     </tr>
     <tr data-tt-id="2" data-tt-parent-id="1">
-      <td>連續</td>
-      <td>
+      <td>連續
         <input type="" style="width: 45px; padding: 1px"> 季</input>
-      </td>
-      <td>營收年增率大於</td>
-      <td>
+        營收年增率大於
+      
         <input type="" style="width: 45px; padding: 1px"> %</input> 
-      </td>
+      
       <td>
       	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
       </td>
     </tr>
-    <tr>
-      <td>連續</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> 年</input>
-      </td>
-      <td>營收年增率大於</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> %</input> 
-      </td>
-      <td>
-        <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-      </td>
-    </tr>
-    <tr>
-      <td>最近</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> 月</input>
-      </td>
-      <td>營收平均年增率大於</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> %</input> 
-      </td>
-      <td>
-        <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-      </td>
-    </tr>
-    <tr>
-      <td>最近</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> 季</input>
-      </td>
-      <td>營收平均年增率大於</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> %</input> 
-      </td>
-      <td>
-        <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-      </td>
-    </tr>
-    <tr>
-      <td>最近</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> 年</input>
-      </td>
-      <td>營收平均年增率大於</td>
-      <td>
-        <input type="" style="width: 45px; padding: 1px"> %</input> 
-      </td>
-      <td>
-        <button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
-      </td>
-    </tr>
+    
   </tbody>
 </table>

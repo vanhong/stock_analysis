@@ -8,40 +8,48 @@
 </script>
 
 <style type="text/css">
+  #filter_menu td {
+    white-space: nowrap;
+  }
 
-#filter_menu td {
-  white-space: nowrap;
-}
-
-td.filter1{ width:46px;}
-td.filter_input{ width:80px;}
-td.filter2{width:120px;}
-td.filter_button{width:50px;}
-
+  .filter_div{
+    float:left;
+    margin: 0 3em 3em 3em;
+    /*border: solid 1px #333333;*/
+  }
+  td.filter1{ width:46px;}
+  td.filter_input{ width:80px;}
+  td.filter2{width:120px;}
+  td.filter_button{width:50px;}
 
 </style>
-<br><br>
+
+<br /><br />
 <div class="container">
   <div class="row-fluid">
     <div class="col-md-4">
       <button type="button" onclick="show_filter_menu('revenue')" class="btn btn-primary">營收盈餘</button>
-	  <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
-	  <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
-	  <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
+	    <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
+	    <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
+	    <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
     </div>
     <div class="col-md-4">
       <button type="button" onclick="show_filter_menu('revenue')" class="btn btn-primary">營收盈餘</button>
-	  <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
-	  <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
-	  <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
+	    <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
+	    <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
+	    <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
     </div>
   </div>
 </div>
-<br>
+<br />
 <div class="container" style="width:100%">
-	<dir class="col-md-4">
-    <div id="filter_menu">
+	
+    <div id="filter_menu" class="filter_div" ></div>
+    
+    <div id="filter_content" class="filter_div" >
+     <button id="StartFilter" class="btn btn-link" style="font-size:1.2em;">選股GO</button>
+     <hr/>
     </div>
-  </dir>
+  
 </div>
 {% endblock %}

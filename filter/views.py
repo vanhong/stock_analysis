@@ -30,7 +30,7 @@ class AbstractFilter():
         #raise NotImplementedError('This is abstract class')
 
     @abstractmethod
-    def filter(self, input1, input2):
+    def filter(self, input1):
         pass
 
 #定義各filter class
@@ -40,12 +40,12 @@ class FilterClasses:
         value = 0
         cnt = 0
         matchcnt = 0  #cnt個月中有matchcnt個月符合 (非必要)
-        time_type = '' # month, season, year
+        time_type = '' #month, season, year
 
         def __init__(self):
             print 'Initialize RevenueYoY'
 
-        def filter(self, filter_list, params):
+        def filter(self, params):
             print params
             cnt = int(params['cnt'])
             value = int(params['value'])
@@ -55,7 +55,7 @@ class FilterClasses:
                 matchcnt = int(params['matchcnt'])
             else:
                 matchcnt = cnt
-            results = query_reveune_ann_growth_rate(cnt, matchcnt, value, time_type)
+            results = query_reveune_ann_growth_rate(cnt, matchcnt, overunder, value, time_type)
 
             return results
 
@@ -88,17 +88,8 @@ def filter_start(request):
         if key == 'RevenueYoY': #月營收連續幾個月年增率>
             targetClass = getattr(FilterClasses, key)
             instance = targetClass()
-            results = instance.filter(filter_list, value)
+            results = instance.filter(value)
             filter_list.append(results)
-            # cnt = int(value['cnt'])
-            # value = int(value['value'])
-            # print str(cnt) + ';' + str(value)
-            # if cnt == '' or value == '':
-            #     continue
-            # update_lists = query_reveune_ann_growth_rate(cnt, value, 'month')
-            # print 'reveune_ann_growth_rate'
-            # #print update_lists
-            # filter_list.append(update_lists)
         elif key == 'reveune_avg_ann_growth_rate': #月營收平均N個月的營收年增率>
             cnt = int(value['cnt'])
             value = int(value['value'])
@@ -343,12 +334,12 @@ def query_reveune_ann_growth_rate(cnt, matchcnt, overunder, growth_rate, revenue
     print 'overunder = ' + overunder
     dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt + 1]
     not_update_kwargs = {
-        '{0}__{1}'.format(filter_field, overunder):'year_growth_rate',
+        '{0}__{1}'.format('year_growth_rate', overunder):growth_rate,
         '{0}__{1}'.format('date', 'gte'):dates[len(dates)-1][strDate],
         '{0}__{1}'.format('date', 'lte'):dates[1][strDate]
     }
     update_kwargs = {
-        '{0}__{1}'.format(filter_field, overunder):'year_growth_rate',
+        '{0}__{1}'.format('year_growth_rate', overunder):growth_rate,
         '{0}__{1}'.format('date', 'gte'):dates[len(dates)-2][strDate],
         '{0}__{1}'.format('date', 'lte'):dates[0][strDate]
     }
