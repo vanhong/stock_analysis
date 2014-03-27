@@ -49,16 +49,14 @@ class FilterClasses:
             print params
             cnt = int(params['cnt'])
             value = int(params['value'])
-            time_type = params['time_type']
-            if 'matchcnt' in params:
+            time_type = params['timetype']
+            overunder = params['overunder']
+            if params['matchcnt'] != '':
                 matchcnt = int(params['matchcnt'])
             else:
                 matchcnt = cnt
-            # if cnt == '' or value == '':
-            #     return
             results = query_reveune_ann_growth_rate(cnt, matchcnt, value, time_type)
-            #print 'After Query RevenueYoY'
-            #print results
+
             return results
 
     #class SeasonRevenueYoy(AbstractFilter):
@@ -106,7 +104,7 @@ def filter_start(request):
             value = int(value['value'])
             if cnt == '' or value == '':
                 continue
-            update_lists = query_reveune_avg_ann_growth_rate(cnt, value, 'month')
+            update_lists = query_revenue_avg_ann_growth_rate(cnt, value, 'month')
             print 'reveune_s_ann_growth_rate'
             #print update_lists
             filter_list.append(update_lists)
@@ -332,7 +330,7 @@ def query_financial_ratio(cnt, value, field, time_type):
 
     return update_lists
 
-def query_reveune_ann_growth_rate(cnt, matchcnt, growth_rate, revenue_type):
+def query_reveune_ann_growth_rate(cnt, matchcnt, overunder, growth_rate, revenue_type):
     strDate = 'date'
     strSymbol = 'symbol'
     if revenue_type == 'month':
@@ -341,19 +339,38 @@ def query_reveune_ann_growth_rate(cnt, matchcnt, growth_rate, revenue_type):
         revenue_model = SeasonRevenue
     else:
         return None
+
+    print 'overunder = ' + overunder
     dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt + 1]
-    not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-                       date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+    not_update_kwargs = {
+        '{0}__{1}'.format(filter_field, overunder):'year_growth_rate',
+        '{0}__{1}'.format('date', 'gte'):dates[len(dates)-1][strDate],
+        '{0}__{1}'.format('date', 'lte'):dates[1][strDate]
+    }
+    update_kwargs = {
+        '{0}__{1}'.format(filter_field, overunder):'year_growth_rate',
+        '{0}__{1}'.format('date', 'gte'):dates[len(dates)-2][strDate],
+        '{0}__{1}'.format('date', 'lte'):dates[0][strDate]
+    }
+
+    not_update_lists = revenue_model.objects.values(strSymbol).filter(**not_update_kwargs).\
                        annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).\
                        exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
                        values_list(strSymbol, flat=True)
-    update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-                   date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
+    update_lists = revenue_model.objects.values(strSymbol).filter(**update_kwargs).\
                    annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).values_list(strSymbol, flat=True)
+    # not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+    #                    date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
+    #                    annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).\
+    #                    exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+    #                    values_list(strSymbol, flat=True)
+    # update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
+    #                date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
+    #                annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).values_list(strSymbol, flat=True)
     update_lists = list(set(update_lists).union(set(not_update_lists)))
     return update_lists
 
-def query_reveune_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
+def query_revenue_avg_ann_growth_rate2(cnt, growth_rate, revenue_type):
     strDate = 'date'
     strSymbol = 'symbol'
     strYoy = 'year_growth_rate'

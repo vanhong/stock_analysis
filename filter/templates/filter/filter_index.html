@@ -43,11 +43,17 @@
 				<label for="con-RevenueYoY" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
 			<td>
-				連續 <input type="search" id="RevenueYoY-cnt" class="dateCnt"/> 月
-				<input type="search" id="RevenueYoY-time_type" style="display:none;" value="month"/>
+				<input type="search" id="RevenueYoY-cnt" class="dateCnt"/> 個月內
+				<input type="search" id="RevenueYoY-matchcnt" class="dateCnt"/> 個月
+				<input type="search" id="RevenueYoY-timetype" style="display:none;" value="month"/> 
 			<td>
 			<td>
-				年增率大於 <input type="search" id="RevenueYoY-value"  placeholder=""/> (%)
+				年增率
+				<select name="overunder">
+				  <option value="gte">大於</option>
+				  <option value="lte">小於</option>
+				</select>
+				<input type="search" id="RevenueYoY-value"  placeholder=""/> (%)
 			<td>
 		</tr>
 		<tr>
