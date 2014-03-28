@@ -33,23 +33,26 @@
 	    <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
 	    <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
     </div>
+    <!--
     <div class="col-md-4">
       <button type="button" onclick="show_filter_menu('revenue')" class="btn btn-primary">營收盈餘</button>
 	    <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
 	    <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
 	    <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
     </div>
+    -->
   </div>
 </div>
 <br />
 <div class="container" style="width:100%">
 	
-    <div id="filter_menu" class="filter_div" ></div>
+    <div id="filter_menu" class="filter_div" width="40%" ></div>
     
-    <div id="filter_content" class="filter_div" >
-     <button id="StartFilter" class="btn btn-link" style="font-size:1.2em;">選股GO</button>
+    <div id="filter_content" class="filter_div" width="30em" >
+     <button id="start_filter" class="btn btn-link" style="font-size:1.2em;">GO!</button>
      <hr/>
     </div>
+    <div id="filter_result" class="filter_div" ></div>
   
 </div>
 {% endblock %}

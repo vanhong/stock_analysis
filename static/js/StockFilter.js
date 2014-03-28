@@ -28,11 +28,12 @@
             });
 
         });
-        // var myObj = document.getElementsByClassName('btn btn-success');
-        // if (myObj.length >= 0) {
-        //     myObj[0].className = 'btn btn-primary';
-        // }
+         var myObj = document.getElementsByClassName('btn btn-success');
+         if (myObj.length >= 0) {
+             myObj[0].className = 'btn btn-primary';
+         }
     }
+
     ConditionArray = [];
     function bind_button_event(){
 

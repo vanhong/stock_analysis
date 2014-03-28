@@ -1,58 +1,81 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block extra_js %}
+<script type="text/css" href="{{ STATIC_URL }}css/jquery.treetable.css" rel="stylesheet"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/jquery.treetable.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/StockFilter.js"></script>
 <script type="text/javascript">
-	var filter_menu = new filter_menu.menu();
-	filter_menu.Init();
+  var filter_menu = new filter_menu.menu();
+  filter_menu.Init();
+  // $(window).load(function(){
+  //   $("#tree_table").treetable();
+  // });
+  
 </script>
 
 <style type="text/css">
-  #filter_menu td {
-    white-space: nowrap;
-  }
 
-  .filter_div{
-    float:left;
-    margin: 0 3em 3em 3em;
-    /*border: solid 1px #333333;*/
-  }
-  td.filter1{ width:46px;}
-  td.filter_input{ width:80px;}
-  td.filter2{width:120px;}
-  td.filter_button{width:50px;}
+#filter_menu td {
+  white-space: nowrap;
+}
+
+td.filter1{ width:46px;}
+td.filter_input{ width:80px;}
+td.filter2{width:120px;}
+td.filter_button{width:50px;}
+
 
 </style>
+<br><br>
+{% endblock %}
 
-<br /><br />
-<div class="container">
-  <div class="row-fluid">
-    <div class="col-md-4">
-      <button type="button" onclick="show_filter_menu('revenue')" class="btn btn-primary">營收盈餘</button>
-	    <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
-	    <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
-	    <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
-    </div>
-    <!--
-    <div class="col-md-4">
-      <button type="button" onclick="show_filter_menu('revenue')" class="btn btn-primary">營收盈餘</button>
-	    <button type="button" onclick="show_filter_menu('dividend')" class="btn btn-primary">股利政策</button>
-	    <button type="button" onclick="show_filter_menu('profitability')" class="btn btn-primary">獲利能力</button>
-	    <button type="button" onclick="show_filter_menu('performance_per_share')" class="btn btn-primary">經營績效</button>
-    </div>
-    -->
+{% block content %}
+  <div class="container">    
+      <div class="col-md-2">
+        <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
+          <li class="dropdown-submenu">
+            <a class="" href="#">  基本分析</a>
+            <ul class="dropdown-menu">
+              <li><a href="#" onclick="show_filter_menu('revenue')">營收盈餘</a></li>
+              <li><a href="#" onclick="show_filter_menu('dividend')">股利政策</a></li>
+              <li><a href="#" onclick="show_filter_menu('profitability')">獲利能力</a></li>
+              <li><a href="#" onclick="show_filter_menu('performance_per_share')">經營績效</a></li>
+            </ul>
+          </li>
+          <li class="dropdown-submenu">
+            <a href="#">  財務分析</a>
+            <ul class="dropdown-menu">
+              <li><a href="#">ROE/ROA</a></li>
+              <li><a href="#">流動比/速動比</a></li>
+              <li><a href="#">負債比率</a></li>
+              <li><a href="#">經營週轉率</a></li>
+              <li><a href="#">利息保障倍數</a></li>
+            </ul>
+          </li>
+          <li class="dropdown-submenu">
+            <a href="#">  成長力分析</a>
+            <ul class="dropdown-menu">
+              <li><a href="#">營收成長率</a></li>
+              <li><a href="#">營業利益成長率</a></li>
+              <li><a href="#">稅前淨利成長率</a></li>
+              <li><a href="#">稅後淨利成長率</a></li>
+              <li><a href="#">總資產成長率</a></li>
+              <li><a href="#">淨值成長率</a></li>
+              <li><a href="#">固定資產成長率</a></li>
+            </ul>
+          </li>
+          <li><a href="#">  籌碼分析</a></li>
+        </ul>
+      </div>
+      <div class="container" style="width:100%">
+        <dir class="col-md-4">
+          <div id="filter_menu">
+          </div>
+        </dir>
+      </div>
+      <div id="filter_content" class="filter_div" width="30em" >
+       <button id="start_filter" class="btn btn-link" style="font-size:1.2em;">GO!</button>
+      </div>
+      <div id="filter_result" class="filter_div" ></div>
   </div>
-</div>
-<br />
-<div class="container" style="width:100%">
-	
-    <div id="filter_menu" class="filter_div" width="40%" ></div>
-    
-    <div id="filter_content" class="filter_div" width="30em" >
-     <button id="start_filter" class="btn btn-link" style="font-size:1.2em;">GO!</button>
-     <hr/>
-    </div>
-    <div id="filter_result" class="filter_div" ></div>
-  
-</div>
 {% endblock %}

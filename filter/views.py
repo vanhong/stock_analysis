@@ -28,11 +28,7 @@ import inspect
 import pdb
 
 class BaseFilter():
-    # cnt = 0
-    # matchcnt = 0
-    # value = 0
-    # time_type =''
-    # overunder =''
+
     def __init__(self, params):
         self.cnt = int(params['cnt'])
         self.value = int(params['value'])
@@ -48,7 +44,6 @@ class BaseFilter():
     def filter(self, input1):
         pass
 
-    #def get_parameters(self, params):
 
 #定義各filter class
 class FilterClasses():
@@ -72,19 +67,10 @@ class FilterClasses():
         #check financial ratio
         def __init__(self):
             print 'Initialize FinancialRatio'
+            BaseFilter.__init__(self, params)
 
         def filter(self, params):
             print params
-            cnt = int(params['cnt'])
-            value = int(params['value'])
-            time_type = params['timetype']
-            overunder = params['overunder']
-            if params['matchcnt'] != '':
-                matchcnt = int(params['matchcnt'])
-            else:
-                matchcnt = cnt 
-            results = query_reveune_ann_growth_rate(cnt, matchcnt, overunder, value, time_type)
-            return results
 
 @csrf_exempt
 def filter_start(request):
@@ -608,7 +594,7 @@ def tree_table(request):
 def filter(request):
     return render_to_response('filter/filter.html', context_instance = RequestContext(request))
 
-def filter_test2(request):
+def filter_test(request):
     return render_to_response('filter/filter_test2.html', context_instance = RequestContext(request))
 
 
