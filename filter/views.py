@@ -11,39 +11,67 @@ from django.db.models import Count
 from django.db.models import Avg
 from django.db.models import Q, F
 from django.db import connection
-from stock_analysis.settings import STATIC_URL
+from django.utils import simplejson
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.db.models import Avg
 
+from exceptions import NotImplementedError
+from abc import ABCMeta, abstractmethod
+
+from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from financial.models import SeasonFinancialRatio
 from price.models import Price
 from chip.models import *
-from django.views.decorators.csrf import csrf_exempt, csrf_protect
-from django.db.models import Avg
-from exceptions import NotImplementedError
-from abc import ABCMeta, abstractmethod
 
+import inspect
 import pdb
 
-class AbstractFilter():
-    def __init__(self):
-        raise NotImplementedError('This is abstract class')
+class BaseFilter():
+    # cnt = 0
+    # matchcnt = 0
+    # value = 0
+    # time_type =''
+    # overunder =''
+    def __init__(self, params):
+        self.cnt = int(params['cnt'])
+        self.value = int(params['value'])
+        self.time_type = params['timetype']
+        self.overunder = params['overunder']
+        if params['matchcnt'] != '':
+            self.matchcnt = int(params['matchcnt'])
+        else:
+            self.matchcnt = cnt
         #raise NotImplementedError('This is abstract class')
 
     @abstractmethod
     def filter(self, input1):
         pass
 
-#定義各filter class
-class FilterClasses:
-    class RevenueYoY(AbstractFilter):
-        #月營收 近X個月有Y個月年增率 > N%
-        value = 0
-        cnt = 0
-        matchcnt = 0  #cnt個月中有matchcnt個月符合 (非必要)
-        time_type = '' #month, season, year
+    #def get_parameters(self, params):
 
-        def __init__(self):
+#定義各filter class
+class FilterClasses():
+    #必須有的參數: cnt, value, matchcnt, overunder, timetype
+
+    class RevenueYoY(BaseFilter):
+        #月營收 近X個月有Y個月年增率 > N%
+        def __init__(self, params):
             print 'Initialize RevenueYoY'
+            #self.base = super(type(self), self)
+            BaseFilter.__init__(self, params) # __init__ method of the superclass is not done implicitly
+            print 'self.cnt = %s' % (self.cnt)
+
+        def filter(self, params):
+            print params
+            print 'cnt=%s, matchcnt=%s, time_type=%s, overunder=%s, value=%s' % (self.cnt, self.matchcnt, self.time_type, self.overunder, self.value)
+            results = query_reveune_ann_growth_rate(self.cnt, self.matchcnt, self.overunder, self.value, self.time_type)
+            return results
+
+    class FinancialRatio(BaseFilter):
+        #check financial ratio
+        def __init__(self):
+            print 'Initialize FinancialRatio'
 
         def filter(self, params):
             print params
@@ -54,16 +82,36 @@ class FilterClasses:
             if params['matchcnt'] != '':
                 matchcnt = int(params['matchcnt'])
             else:
-                matchcnt = cnt
+                matchcnt = cnt 
             results = query_reveune_ann_growth_rate(cnt, matchcnt, overunder, value, time_type)
-
             return results
-
-    #class SeasonRevenueYoy(AbstractFilter):
-
 
 @csrf_exempt
 def filter_start(request):
+    print '%s, get json = %s' % ('Start to Filter (new version)', request.body)
+    filter_list = [] #array
+    json_data = simplejson.loads(request.body)
+    #pdb.set_trace()
+    for item in json_data:
+        #create filter object according to the class name
+        targetClass = getattr(FilterClasses, item['class'])
+        if inspect.isclass(targetClass): #check does the class exist
+            instance = targetClass(item)
+            results = instance.filter(item)
+            filter_list.append(results)
+
+    results_dic = {}
+    for item in filter_list:
+        for symbol in item:
+            results_dic[symbol] = StockId.objects.get(symbol=symbol).name
+    #print results_dic
+    return render_to_response(
+                'filter/filter_result.html', {
+                "results": results_dic},
+                context_instance = RequestContext(request))
+
+@csrf_exempt
+def filter_start2(request):
 
     print 'Start to Filter'
     conditions = {}
@@ -104,7 +152,7 @@ def filter_start(request):
             value = int(value['value'])
             if cnt == '' or value == '':
                 continue
-            update_lists = query_reveune_ann_growth_rate(cnt, cnt, value, 'season')
+            update_lists = query_reveune_ann_growth_rate(cnt, cnt, 'gte', value, 'season')
             print 'reveune_s_ann_growth_rate'
             #print update_lists
             filter_list.append(update_lists)
@@ -331,7 +379,7 @@ def query_reveune_ann_growth_rate(cnt, matchcnt, overunder, growth_rate, revenue
     else:
         return None
 
-    print 'overunder = ' + overunder
+    #print 'overunder = ' + overunder
     dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt + 1]
     not_update_kwargs = {
         '{0}__{1}'.format('year_growth_rate', overunder):growth_rate,
@@ -350,14 +398,7 @@ def query_reveune_ann_growth_rate(cnt, matchcnt, overunder, growth_rate, revenue
                        values_list(strSymbol, flat=True)
     update_lists = revenue_model.objects.values(strSymbol).filter(**update_kwargs).\
                    annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).values_list(strSymbol, flat=True)
-    # not_update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-    #                    date__gte=dates[len(dates)-1][strDate], date__lte=dates[1][strDate]).\
-    #                    annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).\
-    #                    exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
-    #                    values_list(strSymbol, flat=True)
-    # update_lists = revenue_model.objects.values(strSymbol).filter(year_growth_rate__gte=growth_rate, 
-    #                date__gte=dates[len(dates)-2][strDate], date__lte=dates[0][strDate]).\
-    #                annotate(symbol_count=Count(strSymbol)).filter(symbol_count__gte=matchcnt).values_list(strSymbol, flat=True)
+
     update_lists = list(set(update_lists).union(set(not_update_lists)))
     return update_lists
 
@@ -564,8 +605,8 @@ def test3(request):
 def tree_table(request):
     return render_to_response('filter/test3.html', context_instance = RequestContext(request))
 
-def filter_test(request):
-    return render_to_response('filter/filter_test.html', context_instance = RequestContext(request))
+def filter(request):
+    return render_to_response('filter/filter.html', context_instance = RequestContext(request))
 
 def filter_test2(request):
     return render_to_response('filter/filter_test2.html', context_instance = RequestContext(request))
