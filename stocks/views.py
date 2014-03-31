@@ -314,6 +314,24 @@ def update_season_revenue(request):
     return HttpResponse('update season revenue')
 
 def update_dividend(request):
+    print 'hello'
+    today = datetime.date.today() 
+    year = today.year
+    year = 2013
+    
+    url = "http://mops.twse.com.tw/server-java/t05st09sub"
+    values = {'step' : '1', 'TYPEK' : 'sii',
+              'YEAR' : '101', 'firstin' : ''}
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    soup = BeautifulSoup(response, from_encoding="utf-8")
+    datas = soup.find_all('tr', {'class':'even'})
+    
+    print response.read()
+    return HttpResponse(response.read())
+
+def new_update_dividend(request):
     if 'year' in request.GET:
         input_year = int(request.GET['year'])
     else:
