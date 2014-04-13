@@ -123,18 +123,17 @@ def filter_start2(request):
             cnt = int(value['cnt'])
             value = int(value['value'])
             update_lists = query_revenue_ann_growth_rate(cnt, cnt, 'gte', value, 'month')
-            print update_lists
             #targetClass = getattr(FilterClasses, key)
             #instance = targetClass()
             #results = instance.filter(value)
-            filter_list.append(results)
+            filter_list.append(update_lists)
         elif key == 'revenue_avg_ann_growth_rate': #月營收平均N個月的營收年增率>
             cnt = int(value['cnt'])
             value = int(value['value'])
             if cnt == '' or value == '':
                 continue
+            print cnt
             update_lists = query_revenue_avg_ann_growth_rate(cnt, value, 'month')
-            print 'revenue_s_ann_growth_rate'
             #print update_lists
             filter_list.append(update_lists)
         elif key == 'revenue_s_ann_growth_rate': #季營收連續幾季年增率>
@@ -429,28 +428,29 @@ def query_revenue_avg_ann_growth_rate2(cnt, growth_rate, revenue_type):
     return result_symbols
 
 def query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
-	strDate = 'date'
-	strSymbol = 'symbol'
-	if revenue_type == 'month':
-		revenue_model = MonthRevenue
-	elif revenue_type == 'season':
-		revenue_model = SeasonRevenue
-	else:
-		return None
-	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
-	kwargs = {
-		'{0}__{1}'.format('field_avg', 'gte'):growth_rate
-	}
-	dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
-	not_update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
-					   date__lte=dates[1][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
-					   exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
-					   filter(**kwargs).values_list(strSymbol, flat=True)
-	update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
-				   date__lte=dates[0][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
-				   filter(**kwargs).values_list(strSymbol, flat=True)
-	update_lists = list(set(update_lists).union(set(not_update_lists)))
-	return update_lists
+    strDate = 'date'
+    strSymbol = 'symbol'
+    if revenue_type == 'month':
+        revenue_model = MonthRevenue
+    elif revenue_type == 'season':
+        revenue_model = SeasonRevenue
+    else:
+        return None
+    con_cnt = cnt
+    dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:con_cnt + 1]
+    kwargs = {
+        '{0}__{1}'.format('field_avg', 'gte'):growth_rate
+    }
+    dates = revenue_model.objects.values(strDate).distinct().order_by('-'+strDate)[:cnt+1]
+    not_update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-1][strDate],
+                       date__lte=dates[1][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+                       exclude(symbol__in=revenue_model.objects.filter(date=dates[0][strDate]).values_list(strSymbol, flat=True)).\
+                       filter(**kwargs).values_list(strSymbol, flat=True)
+    update_lists = revenue_model.objects.values(strSymbol).filter(date__gte=dates[len(dates)-2][strDate],
+                   date__lte=dates[0][strDate]).annotate(field_avg=Avg('year_growth_rate')).\
+                   filter(**kwargs).values_list(strSymbol, flat=True)
+    update_lists = list(set(update_lists).union(set(not_update_lists)))
+    return update_lists
 
 
 def old_query_revenue_avg_ann_growth_rate(cnt, growth_rate, revenue_type):
