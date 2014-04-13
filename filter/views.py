@@ -99,7 +99,7 @@ def filter_start(request):
 @csrf_exempt
 def filter_start2(request):
 
-    print 'Start to Filter'
+    print 'Start to Filter2'
     conditions = {}
 
     #處理前端post的條件參數
@@ -207,7 +207,7 @@ def filter_start2(request):
     print 'Print filterIntersection'
     print filterIntersection
     results_dic = {}
-    for item in filter_list:
+    for item in filterIntersection:
         if StockId.objects.filter(symbol=item):
             results_dic[item] = StockId.objects.get(symbol=item).name
 
