@@ -325,10 +325,10 @@ def update_dividend(request):
     url_data = urllib.urlencode(values)
     req = urllib2.Request(url, url_data)
     response = urllib2.urlopen(req)
-    soup = BeautifulSoup(response, from_encoding="utf-8")
-    datas = soup.find_all('tr', {'class':'even'})
+    # soup = BeautifulSoup(response, from_encoding="utf-8")
+    # datas = soup.find_all('tr', {'class':'even'})
     
-    print response.read()
+    # print response.read()
     return HttpResponse(response.read())
 
 def new_update_dividend(request):
