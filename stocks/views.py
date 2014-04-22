@@ -209,7 +209,6 @@ def update_month_revenue(request):
                     # revenue.save()
     return HttpResponse('update month revenue year:' + str(year) + " month:" + str(month))
 
-
 def old_update_month_revenue(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()

@@ -14,7 +14,7 @@ import datetime
 from core.utils import st_to_decimal, season_to_date, last_season
 
 #income statement from TWSE 綜合損益表
-def show_season_income_statement(request):
+def old_show_season_income_statement(request):
     stock_symbol = '2454'
     year = 102
     season = 1
@@ -41,6 +41,15 @@ def show_season_income_statement(request):
                 print data.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string
                 if income_statement.basic_earnings_per_share is not None:
                     print Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    return HttpResponse(response.read())
+
+def show_season_income_statement(request):
+    url = 'http://mops.twse.com.tw/mops/web/ajax_t163sb04'
+    values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
+              'TYPEK' : 'sii', 'year' : '102', 'season' : '01'}
+    url_data = urllib.urlencode(values)
     req = urllib2.Request(url, url_data)
     response = urllib2.urlopen(req)
     return HttpResponse(response.read())
