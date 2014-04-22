@@ -318,10 +318,10 @@ def update_dividend(request):
     today = datetime.date.today() 
     year = today.year
     year = 2013
-    
+    pdb.set_trace()
     url = "http://mops.twse.com.tw/server-java/t05st09sub"
-    values = {'step' : '1', 'TYPEK' : 'sii',
-              'YEAR' : '101', 'firstin' : ''}
+    values = {'step' : '1', 'TYPEK' : 'otc',
+              'YEAR' : '102', 'first' : ''}
     url_data = urllib.urlencode(values)
     req = urllib2.Request(url, url_data)
     response = urllib2.urlopen(req)
