@@ -260,6 +260,62 @@ def new_update_season_revenue(request):
     return HttpResponse("update season revenue")
 
 def update_season_revenue(request):
+    if 'year' in request.GET:
+        year = int(request.GET['year'])
+    else:
+        return HttpResponse('please input year')
+    if 'season' in request.GET:
+        season = int(request.GET['season'])
+    else:
+        return HttpResponse('please input season')
+    if season == 1:
+        startMonth = 1
+    elif season == 2:
+        startMonth = 4
+    elif season == 3:
+        startMonth = 7
+    elif season == 4:
+        startMonth = 10
+    else:
+        return HttpResponse('please input correct season')
+
+    firtMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth).values_list('symbol', flat=True)
+    secondMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+1).values_list('symbol', flat=True)
+    thirdMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+2).values_list('symbol', flat=True)
+    firstMonthRevenues = MonthRevenue.objects.filter(year=year, month=startMonth)
+    secondMonthRevenues = MonthRevenue.objects.filter(year=year, month=startMonth+1)
+    thirdMonthRevenues = MonthRevenue.objects.filter(year=year, month=startMonth+2)
+    date = datetime.date(year, startMonth, 1)
+    lastYear, lastSeason = last_season(date)
+    lastSeasonRevenues = SeasonRevenue.objects.filter(year=lastYear, season=lastSeason)
+    symbols = list(set(firtMonthStockIds).intersection(set(secondMonthStockIds)).intersection(set(thirdMonthStockIds)))
+    for symbol in symbols:
+        revenue = SeasonRevenue()
+        revenue.surrogate_key = symbol + '_' + str(year) + str(season).zfill(2)
+        revenue.year = year
+        revenue.season = season
+        revenue.date = date
+        revenue.symbol = symbol
+        revenue.revenue = firstMonthRevenues.get(symbol=symbol).revenue +\
+                          secondMonthRevenues.get(symbol=symbol).revenue +\
+                          thirdMonthRevenues.get(symbol=symbol).revenue
+        revenue.last_year_revenue = firstMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                    secondMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                    thirdMonthRevenues.get(symbol=symbol).last_year_revenue
+        if revenue.last_year_revenue > 0:
+            revenue.year_growth_rate = revenue.revenue / revenue.last_year_revenue * 100 - 100
+        if lastSeasonRevenues.filter(symbol=symbol):
+            last_season_revenue = lastSeasonRevenues.get(symbol=symbol).revenue
+            if last_season_revenue > 0:
+                revenue.season_growth_rate = revenue.revenue / last_season_revenue * 100 - 100
+        revenue.acc_revenue = thirdMonthRevenues.get(symbol=symbol).acc_revenue
+        revenue.acc_year_growth_rate = thirdMonthRevenues.get(symbol=symbol).acc_year_growth_rate
+        revenue.save()
+        print symbol
+
+    return HttpResponse('update season revenue year:' + str(year) + " season:" + str(season))
+
+def old_update_season_revenue(request):
     stock_ids = StockId.objects.all()
     for stockid in stock_ids:
         symbol = stockid.symbol
