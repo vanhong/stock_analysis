@@ -256,6 +256,9 @@ def old_update_month_revenue(request):
                 revenue.save()
     return HttpResponse("update revenue")
 
+def new_update_season_revenue(request):
+    return HttpResponse("update season revenue")
+
 def update_season_revenue(request):
     stock_ids = StockId.objects.all()
     for stockid in stock_ids:
