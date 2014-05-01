@@ -8,6 +8,7 @@ import time
 from decimal import Decimal
 from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement, YearFinancialRatio
+from stocks.models import SeasonRevenue
 from bs4 import BeautifulSoup
 import html5lib
 import datetime
@@ -62,7 +63,8 @@ def update_season_income_statement(request):
         season = int(request.GET['season'])
     else:
         return HttpResponse('please input year or season')
-    stock_ids = StockId.objects.all()
+    seasonRevenues = SeasonRevenue.objects.filter(year=year, season=season)
+    #stock_ids = StockId.objects.all()
     if season == 4:
         incomeStatementsSeason1 = SeasonIncomeStatement.objects.filter(year=year, season=1)
         incomeStatementsSeason2 = SeasonIncomeStatement.objects.filter(year=year, season=2)
@@ -70,8 +72,11 @@ def update_season_income_statement(request):
         lastYearIncomeStatementsSeason1 = SeasonIncomeStatement.objects.filter(year=year-1, season=1)
         lastYearIncomeStatementsSeason2 = SeasonIncomeStatement.objects.filter(year=year-1, season=2)
         lastYearIncomeStatementsSeason3 = SeasonIncomeStatement.objects.filter(year=year-1, season=3)
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
+    depositoryShareSymbols = StockId.objects.filter(company_type='存託憑證').values_list('symbol', flat=True)
+    for seasonRevenue in seasonRevenues:
+        stock_symbol = seasonRevenue.symbol
+        if stock_symbol in depositoryShareSymbols:
+            continue
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year-1, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
