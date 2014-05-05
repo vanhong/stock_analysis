@@ -1177,13 +1177,15 @@ def update_year_financial_ratio(request):
 
 def update_season_financial_ratio(request):
     stock_ids = StockId.objects.all()
-    today = datetime.date.today()
+    if 'year' in request.GET and  'season' in request.GET:
+        year = int(request.GET['year'])
+        season = int(request.GET['season'])
+    else:
+        return HttpResponse('please input year or season')
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        (last_season_year, last_season_season) = last_season(today)
-        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
+        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=year, season=season)
         if ratioInDb:
-            # print stock_symbol + ' exists'
             continue
         url = 'http://jsjustweb.jihsun.com.tw/z/zc/zcr/zcr_' + stock_symbol + '.djhtm'
         webcode = urllib.urlopen(url)
