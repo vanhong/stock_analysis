@@ -8,7 +8,7 @@
             $.get(url, function(jData){
                 //alert(JSON.stringify(jData));
                 //$('#chart_result').html(jData);
-                if (jData.dataNum >= 36) {
+                if (jData.dataNum >= 24) {
                     scroll = true;
                 } else {
                     scroll = false;
