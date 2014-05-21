@@ -13,7 +13,7 @@ from chip.models import *
 from bs4 import BeautifulSoup
 import pdb
 
-# Create your views here.
+#更新法人買賣超
 def update_corp_trade(request):
     print 'Ready to update_corp_trade'
     dateFrom = ''
@@ -137,6 +137,7 @@ def update_corp_trade(request):
         
     return HttpResponse('%s, %s, %s' % (securityIdList[0], securityIdList[0].next, securityIdList[0].next.next_sibling))
 
+#更新股權分佈
 def update_shareholder_structure(request):
     monthcount = 1
     if 'monthcount' in request.GET:
@@ -153,7 +154,7 @@ def update_shareholder_structure(request):
     options = [option.string for option in soup.findAll('option')]
     print options
 
-    pdb.set_trace() #中斷點
+    #pdb.set_trace() #中斷點
     stock_ids = StockId.objects.all()
     cnt = 1
     for dateStr in options:
@@ -259,6 +260,11 @@ def update_shareholder_structure(request):
     # print response.read()
     return HttpResponse(dataList[0])
 
+def update_branch_trade
+    stocks = StockId.objects.all()
+        for stock in stocks:
+            symbol = stock.symbol
+            
 
 def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):
