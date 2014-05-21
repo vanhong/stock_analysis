@@ -12,7 +12,108 @@ from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
 import pdb
 
+class ObjStock:
+    def __init__(self, symbol, name):
+        self.symbol = symbol
+        self.name = name
+    def __str__(self):
+        return u'%s %s' % (self.symbol, self.name)
+
 def update_stock_id(request):
+    url = "http://www.emega.com.tw/js/StockTable.htm"
+    webcode = urllib.urlopen(url)
+    if webcode.code != 200:
+        return HttpResponse("Update failed")
+    req = urllib2.Request(url)
+    response = urllib2.urlopen(req)
+    soup = BeautifulSoup(response, from_encoding="big-5")
+    datas = soup.find_all("table", {'class' : 'TableBorder'})
+
+    twod_list = []
+    tr_datas = datas[0].tr
+    # pdb.set_trace()
+    isSymbol = True
+    while(tr_datas):
+        stockNum = 0
+        for data in tr_datas:
+            if hasattr(data, 'b'):
+                if isSymbol:
+                    if data.b:
+                        symbol = data.b.string.replace(u'\xa0','').encode('utf-8')
+                        isSymbol = False
+                    elif data.string:
+                        symbol = data.string.replace(u'\xa0','').encode('utf-8')
+                        isSymbol = False
+                else:
+                    if data.b:
+                        name = data.b.string.replace(u'\xa0','').encode('utf-8')
+                        stock = ObjStock(symbol, name)
+                        isSymbol = True
+                    elif data.string:
+                        name = data.string.replace(u'\xa0','').encode('utf-8')
+                        stock = ObjStock(symbol, name)
+                        isSymbol = True
+                    elif data.font:
+                        name = data.next.string.replace(u'\xa0','').encode('utf-8')
+                        stock = ObjStock(symbol, name)
+                        isSymbol = True
+                    if isSymbol:
+                        if stock.symbol != '':
+                            if len(twod_list) > stockNum:
+                                twod_list[stockNum].append(stock)
+                            else:
+                                twod_list.append([])
+                                twod_list[stockNum].append(stock)
+                            stockNum = stockNum + 1
+        tr_datas = tr_datas.next_sibling.next_sibling
+    marketType = ''
+    company_type = ''
+    for stockList in twod_list:
+        for stock in stockList:
+            if stock.symbol == r'上市' or stock.symbol == r'上櫃':
+                marketType = stock.symbol
+                companyType = stock.name
+            else:
+                stockid = StockId(symbol = stock.symbol, name = stock.name.strip(),
+                                  market_type = marketType, company_type = companyType)
+                stockid.save()
+    # pdb.set_trace()
+
+    return HttpResponse(twod_list)
+
+    for data in datas:
+        tr_datas = data.tr
+        pdb.set_trace()
+    return HttpResponse(datas)
+    marketSignal = False
+    symbolSignal = False
+    nameSignal = False
+    twod_list = []
+    company_type = ""
+    for data in datas:
+        if marketSignal:
+            if data.b.string:
+                company_type = data.b.string.encode("utf-8")
+            marketSignal = False
+        elif data.b.string and data.b.string.encode("utf-8") == r'上市':
+            market_type == '上市'
+            marketSignal = True
+            symbolSignal = True
+        elif symbolSignal:
+            if data.b.string:
+                symbol = data.b.string.encode("utf-8")
+                symbolSignal = False
+                nameSignal = True
+        elif nameSignal:
+            if data.b.string:
+                name = data.b.string("utf-8")
+                nameSignal = False
+                symbolSignal = True
+
+    pdb.set_trace()
+    return HttpResponse(datas)
+
+def old_update_stock_id(request):
     StockType = [2, 4]
 
     for i in xrange(0, len(StockType)):
