@@ -259,14 +259,3 @@ def update_shareholder_structure(request):
             break
     # print response.read()
     return HttpResponse(dataList[0])
-
-def update_branch_trade
-    stocks = StockId.objects.all()
-        for stock in stocks:
-            symbol = stock.symbol
-            
-
-def daterange(start_date, end_date):
-    for n in range(int ((end_date - start_date).days)):
-        yield start_date + timedelta(n)
-
