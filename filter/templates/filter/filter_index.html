@@ -39,54 +39,63 @@
 				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
 				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
 				-->
-				<input type="checkbox" id="con-reveune_ann_growth_rate" class="css-checkbox" />
-				<label for="con-reveune_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+				<input type="checkbox" id="con-RevenueYoY" class="css-checkbox" />
+				<label for="con-RevenueYoY" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
 			<td>
-				連續 <input type="search" id="reveune_ann_growth_rate-cnt" class="dateCnt"/> 月
+				<input type="search" id="RevenueYoY-cnt" class="dateCnt"/> 
+				個
+				<select id="RevenueYoY-timetype">
+				  <option value="month">月</option>
+				  <option value="season">季</option>
+				</select>
+				內
+				<input type="search" id="RevenueYoY-matchcnt" class="dateCnt"/> 個月(季)
+				<input type="search" id="RevenueYoY-timetype" style="display:none;" value="month"/> 
 			<td>
 			<td>
-				年增率大於 <input type="search" id="reveune_ann_growth_rate-value"  placeholder=""/> (%)
+				年增率
+				<select id="RevenueYoY-overunder">
+				  <option value="gte">大於</option>
+				  <option value="lte">小於</option>
+				</select>
+				<input type="search" id="RevenueYoY-value"  placeholder=""/> (%)
 			<td>
 		</tr>
 		<tr>
 			<td>
-				<!--
-				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
-				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
-				-->
-				<input type="checkbox" id="con-reveune_avg_ann_growth_rate" class="css-checkbox" />
-				<label for="con-reveune_avg_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+				<input type="checkbox" id="con-revenue_avg_ann_growth_rate" class="css-checkbox" />
+				<label for="con-revenue_avg_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
 			<td>
-				<input type="search" id="reveune_avg_ann_growth_rate-cnt" class="dateCnt"/> 個月的
+				<input type="search" id="revenue_avg_ann_growth_rate-cnt" class="dateCnt"/> 個月的
 			<td>
 			<td>
-				平均年增率大於 <input type="search" id="reveune_avg_ann_growth_rate-value"  placeholder=""/> (%)
+				平均年增率大於 <input type="search" id="revenue_avg_ann_growth_rate-value"  placeholder=""/> (%)
 			<td>
 		</tr>
 		<tr>
 			<td>
-				<input type="checkbox" id="con-reveune_s_ann_growth_rate" class="css-checkbox" />
-				<label for="con-reveune_s_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+				<input type="checkbox" id="con-revenue_s_ann_growth_rate" class="css-checkbox" />
+				<label for="con-revenue_s_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
 			<td>
-				連續 <input type="text" id="reveune_s_ann_growth_rate-cnt" class="dateCnt"/> 季
+				連續 <input type="text" id="revenue_s_ann_growth_rate-cnt" class="dateCnt"/> 季
 			<td>
 			<td>
-				年增率大於 <input type="text" id="reveune_s_ann_growth_rate-value"  placeholder=""/> (%)
+				年增率大於 <input type="text" id="revenue_s_ann_growth_rate-value"  placeholder=""/> (%)
 			<td>
 		</tr>
 		<tr>
 			<td>
-				<input type="checkbox" id="con-reveune_s_avg_ann_growth_rate" class="css-checkbox" />
-				<label for="con-reveune_s_avg_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+				<input type="checkbox" id="con-revenue_s_avg_ann_growth_rate" class="css-checkbox" />
+				<label for="con-revenue_s_avg_ann_growth_rate" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
 			<td>
-				<input type="search" id="reveune_s_avg_ann_growth_rate-cnt" class="dateCnt"/> 季的
+				<input type="search" id="revenue_s_avg_ann_growth_rate-cnt" class="dateCnt"/> 季的
 			<td>
 			<td>
-				平均年增率大於 <input type="search" id="reveune_s_avg_ann_growth_rate-value"  placeholder=""/> (%)
+				平均年增率大於 <input type="search" id="revenue_s_avg_ann_growth_rate-value"  placeholder=""/> (%)
 			<td>
 		</tr>
 	</table>
@@ -105,7 +114,7 @@
 				<label for="con-opm_s" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
 			</td>
 			<td>
-				連續 <input type="text" id="opm_s-cnt"   class="dateCnt"/> 季
+				連續 <input type="text" id="opm_s-cnt" class="dateCnt"/> 季
 			<td>
 			<td>
 				營益率大於 <input type="text" id="opm_s-value" /> (%)
@@ -133,6 +142,34 @@
 	</table>	
 </fieldset>
 
+<legend>籌碼</legend>
+	<table class="conditionTable">
+		<tr>
+			<td>
+				<input type="checkbox" id="con-chip_flow" class="css-checkbox" />
+				<label for="con-chip_flow" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="text" id="chip_flow-cnt" class="dateCnt"/>月
+			<td>
+			<td>
+				大戶比例增加 <input type="text" id="chip_flow-value"  placeholder=""/> %
+			<td>
+		</tr>
+		<tr>
+			<td>
+				<input type="checkbox" id="con-corp_over_buy" class="css-checkbox" />
+				<label for="con-corp_over_buy" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
+			</td>
+			<td>
+				連續 <input type="text" id="corp_over_buy-cnt" class="dateCnt"/>天
+			<td>
+			<td>
+				買超大於 <input type="text" id="corp_over_buy-value"  placeholder=""/> (張)
+			<td>
+		</tr>
+	</table>	
+</fieldset>
 <fieldset>
 	<legend>殖利率</legend>
 		<table class="conditionTable">
@@ -152,26 +189,6 @@
 </fieldset>
 
 <fieldset>
-<legend>法人買賣超</legend>
-	<table class="conditionTable">
-		<tr>
-			<td>
-				<!--
-				<input type="checkbox" id="MonthRevenueContinuousAnnualGrowth" class="css-checkbox med" checked=""/>
-				<label for="MonthRevenueContinuousAnnualGrowth" name="checkbox65_lbl" class="css-label med elegant"></label>
-				-->
-				<input type="checkbox" id="con-corp_over_buy" class="css-checkbox" />
-				<label for="con-corp_over_buy" name="checkbox17_lbl" class="css-label dark-check-cyan"></label>
-			</td>
-			<td>
-				連續 <input type="text" id="corp_over_buy-cnt" class="dateCnt"/>天
-			<td>
-			<td>
-				買超大於 <input type="text" id="corp_over_buy-value"  placeholder=""/> (張)
-			<td>
-		</tr>
-	</table>	
-</fieldset>
 </div>
 
 <div id="FilterResult" class="condition"></div>

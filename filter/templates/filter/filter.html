@@ -30,7 +30,7 @@ td.filter_button{width:50px;}
 {% endblock %}
 
 {% block content %}
-  <div class="container">    <div class="row">
+  <div class="container">    
       <div class="col-md-2">
         <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
           <li class="dropdown-submenu">
@@ -73,5 +73,9 @@ td.filter_button{width:50px;}
           </div>
         </dir>
       </div>
+      <div id="filter_content" class="filter_div" width="30em" >
+       <button id="start_filter" class="btn btn-link" style="font-size:1.2em;">GO!</button>
+      </div>
+      <div id="filter_result" class="filter_div" ></div>
   </div>
 {% endblock %}

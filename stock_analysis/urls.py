@@ -91,8 +91,9 @@ urlpatterns += patterns('',
 urlpatterns += patterns('filter.views',
     url(r'^filter/index/$', 'filter_index', name= 'filter_index'),
     url(r'^filter/start/$', 'filter_start', name= 'filter_start'),
+    url(r'^filter/start2/$', 'filter_start2', name= 'filter_start2'),
+    url(r'^filter/$', 'filter'),
     url(r'^filter/test/$', 'filter_test'),
-    url(r'^filter/test2/$', 'filter_test2'),
     url(r'^filter_menu/$', 'filter_menu'),
     url(r'^tree_table/$', 'tree_table'),
     url(r'^test3/$', 'test3'),
@@ -102,8 +103,12 @@ urlpatterns += patterns('filter.views',
 
 urlpatterns += patterns('chip.views',
     url(r'^update_corp_trade/$', 'update_corp_trade'),
-    #url(r'^test_chip/$', 'test_chip'),
-    )
+    url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
+)
+
+urlpatterns += patterns('reaserch.views',
+    url(r'^chip_price_relation/$', 'chip_price_relation'),
+)
 
 urlpatterns += patterns('us_stocks.views',
     url( r'^us/update_finance/$', 'update_finance', name= 'us_update_finance'),

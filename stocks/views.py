@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import urllib, datetime
+import urllib, urllib2, datetime
 from django.http import HttpResponse
 from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
@@ -10,8 +10,110 @@ from decimal import Decimal
 from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
+import pdb
+
+class ObjStock:
+    def __init__(self, symbol, name):
+        self.symbol = symbol
+        self.name = name
+    def __str__(self):
+        return u'%s %s' % (self.symbol, self.name)
 
 def update_stock_id(request):
+    url = "http://www.emega.com.tw/js/StockTable.htm"
+    webcode = urllib.urlopen(url)
+    if webcode.code != 200:
+        return HttpResponse("Update failed")
+    req = urllib2.Request(url)
+    response = urllib2.urlopen(req)
+    soup = BeautifulSoup(response, from_encoding="big-5")
+    datas = soup.find_all("table", {'class' : 'TableBorder'})
+
+    twod_list = []
+    tr_datas = datas[0].tr
+    # pdb.set_trace()
+    isSymbol = True
+    while(tr_datas):
+        stockNum = 0
+        for data in tr_datas:
+            if hasattr(data, 'b'):
+                if isSymbol:
+                    if data.b:
+                        symbol = data.b.string.replace(u'\xa0','').encode('utf-8')
+                        isSymbol = False
+                    elif data.string:
+                        symbol = data.string.replace(u'\xa0','').encode('utf-8')
+                        isSymbol = False
+                else:
+                    if data.b:
+                        name = data.b.string.replace(u'\xa0','').encode('utf-8')
+                        stock = ObjStock(symbol, name)
+                        isSymbol = True
+                    elif data.string:
+                        name = data.string.replace(u'\xa0','').encode('utf-8')
+                        stock = ObjStock(symbol, name)
+                        isSymbol = True
+                    elif data.font:
+                        name = data.next.string.replace(u'\xa0','').encode('utf-8')
+                        stock = ObjStock(symbol, name)
+                        isSymbol = True
+                    if isSymbol:
+                        if stock.symbol != '':
+                            if len(twod_list) > stockNum:
+                                twod_list[stockNum].append(stock)
+                            else:
+                                twod_list.append([])
+                                twod_list[stockNum].append(stock)
+                            stockNum = stockNum + 1
+        tr_datas = tr_datas.next_sibling.next_sibling
+    marketType = ''
+    company_type = ''
+    for stockList in twod_list:
+        for stock in stockList:
+            if stock.symbol == r'上市' or stock.symbol == r'上櫃':
+                marketType = stock.symbol
+                companyType = stock.name
+            else:
+                stockid = StockId(symbol = stock.symbol, name = stock.name.strip(),
+                                  market_type = marketType, company_type = companyType)
+                stockid.save()
+    # pdb.set_trace()
+
+    return HttpResponse(twod_list)
+
+    for data in datas:
+        tr_datas = data.tr
+        pdb.set_trace()
+    return HttpResponse(datas)
+    marketSignal = False
+    symbolSignal = False
+    nameSignal = False
+    twod_list = []
+    company_type = ""
+    for data in datas:
+        if marketSignal:
+            if data.b.string:
+                company_type = data.b.string.encode("utf-8")
+            marketSignal = False
+        elif data.b.string and data.b.string.encode("utf-8") == r'上市':
+            market_type == '上市'
+            marketSignal = True
+            symbolSignal = True
+        elif symbolSignal:
+            if data.b.string:
+                symbol = data.b.string.encode("utf-8")
+                symbolSignal = False
+                nameSignal = True
+        elif nameSignal:
+            if data.b.string:
+                name = data.b.string("utf-8")
+                nameSignal = False
+                symbolSignal = True
+
+    pdb.set_trace()
+    return HttpResponse(datas)
+
+def old_update_stock_id(request):
     StockType = [2, 4]
 
     for i in xrange(0, len(StockType)):
@@ -141,7 +243,74 @@ def update_season_profit(request):
                 profit.save()
     return HttpResponse("update revenue")
 
+def is_decimal(s):
+    try:
+        Decimal(s)
+    except:
+        return False
+    return True
+
 def update_month_revenue(request):
+    today = datetime.date.today() 
+    year = today.year
+    month = today.month
+    if month == 1:
+        year = year - 1
+        month = 12
+    else:
+        month = month - 1
+    if 'year' in request.GET:
+        year = int(request.GET['year'])
+    if 'month' in request.GET:
+        month = int(request.GET['month'])
+    market = ['otc', 'sii']
+    for i in range(len(market)):
+        url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        soup = BeautifulSoup(response, from_encoding="utf-8")
+        datas = soup.find_all('td', {'align':'center'})
+        for data in datas:
+            if data.string:
+                if data.string != '-':
+                    revenue = MonthRevenue()
+                    revenue.surrogate_key = data.string + "_" + str(year) + str(month).zfill(2)
+                    revenue.year = year
+                    revenue.month = month
+                    revenue.date = datetime.date(year, month, 1)
+                    revenue.symbol = data.string
+                    revenue_data = data.next_sibling.next_sibling
+                    if is_decimal(revenue_data.string.strip().replace(',', '')):
+                        revenue.revenue = revenue_data.string.strip().replace(',', '')
+                    last_year_revenue_data = revenue_data.next_sibling.next_sibling
+                    if is_decimal(last_year_revenue_data.string.strip().replace(',', '')):
+                        revenue.last_year_revenue = last_year_revenue_data.string.strip().replace(',', '')
+                    month_growth_rate_data = last_year_revenue_data.next_sibling
+                    if is_decimal(month_growth_rate_data.string.strip().replace(',', '')):
+                        revenue.month_growth_rate = month_growth_rate_data.string.strip().replace(',', '')
+                    year_growth_rate_data = month_growth_rate_data.next_sibling
+                    if is_decimal(year_growth_rate_data.string.strip().replace(',', '')):
+                        revenue.year_growth_rate = year_growth_rate_data.string.strip().replace(',', '')
+                    acc_revenue_data = year_growth_rate_data.next_sibling
+                    if is_decimal(acc_revenue_data.string.strip().replace(',', '')):
+                        revenue.acc_revenue = acc_revenue_data.string.strip().replace(',', '')
+                    last_acc_revenue_data = acc_revenue_data.next_sibling
+                    if is_decimal(last_acc_revenue_data.string.strip().replace(',', '')):
+                        revenue.last_acc_revenue = last_acc_revenue_data.string.strip().replace(',', '')
+                    acc_year_growth_rate_data = last_acc_revenue_data.next_sibling
+                    if is_decimal(acc_year_growth_rate_data.string.strip().replace(',', '')):
+                        revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
+                    print (revenue.symbol)
+                    revenue.save()
+                    # revenue.revenue = datas1[0].strip().replace(',', '')
+                    # revenue.last_year_revenue = datas2[0].strip().replace(',', '')
+                    # revenue.year_growth_rate = datas2[1].strip().replace(',', '')
+                    # revenue.acc_revenue = datas1[2].strip().replace(',', '')
+                    # revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
+                    # revenue.save()
+    return HttpResponse('update month revenue year:' + str(year) + " month:" + str(month))
+
+def old_update_month_revenue(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()
     for stock_id in stock_ids:
@@ -188,7 +357,66 @@ def update_month_revenue(request):
                 revenue.save()
     return HttpResponse("update revenue")
 
+def new_update_dividendupdate_season_revenue(request):
+    return HttpResponse("update season revenue")
+
 def update_season_revenue(request):
+    if 'year' in request.GET:
+        year = int(request.GET['year'])
+    else:
+        return HttpResponse('please input year')
+    if 'season' in request.GET:
+        season = int(request.GET['season'])
+    else:
+        return HttpResponse('please input season')
+    if season == 1:
+        startMonth = 1
+    elif season == 2:
+        startMonth = 4
+    elif season == 3:
+        startMonth = 7
+    elif season == 4:
+        startMonth = 10
+    else:
+        return HttpResponse('please input correct season')
+
+    firtMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth).values_list('symbol', flat=True)
+    secondMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+1).values_list('symbol', flat=True)
+    thirdMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+2).values_list('symbol', flat=True)
+    firstMonthRevenues = MonthRevenue.objects.filter(year=year, month=startMonth)
+    secondMonthRevenues = MonthRevenue.objects.filter(year=year, month=startMonth+1)
+    thirdMonthRevenues = MonthRevenue.objects.filter(year=year, month=startMonth+2)
+    date = datetime.date(year, startMonth, 1)
+    lastYear, lastSeason = last_season(date)
+    lastSeasonRevenues = SeasonRevenue.objects.filter(year=lastYear, season=lastSeason)
+    symbols = list(set(firtMonthStockIds).intersection(set(secondMonthStockIds)).intersection(set(thirdMonthStockIds)))
+    for symbol in symbols:
+        revenue = SeasonRevenue()
+        revenue.surrogate_key = symbol + '_' + str(year) + str(season).zfill(2)
+        revenue.year = year
+        revenue.season = season
+        revenue.date = date
+        revenue.symbol = symbol
+        revenue.revenue = firstMonthRevenues.get(symbol=symbol).revenue +\
+                          secondMonthRevenues.get(symbol=symbol).revenue +\
+                          thirdMonthRevenues.get(symbol=symbol).revenue
+        revenue.last_year_revenue = firstMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                    secondMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                    thirdMonthRevenues.get(symbol=symbol).last_year_revenue
+        if revenue.last_year_revenue > 0:
+            revenue.year_growth_rate = revenue.revenue / revenue.last_year_revenue * 100 - 100
+        if lastSeasonRevenues.filter(symbol=symbol):
+            last_season_revenue = lastSeasonRevenues.get(symbol=symbol).revenue
+            if last_season_revenue > 0:
+                revenue.season_growth_rate = revenue.revenue / last_season_revenue * 100 - 100
+        revenue.acc_revenue = thirdMonthRevenues.get(symbol=symbol).acc_revenue
+        revenue.acc_year_growth_rate = thirdMonthRevenues.get(symbol=symbol).acc_year_growth_rate
+        revenue.save()
+        print symbol
+
+    return HttpResponse('update season revenue year:' + str(year) + " season:" + str(season))
+
+def old_update_season_revenue(request):
     stock_ids = StockId.objects.all()
     for stockid in stock_ids:
         symbol = stockid.symbol
@@ -246,6 +474,24 @@ def update_season_revenue(request):
     return HttpResponse('update season revenue')
 
 def update_dividend(request):
+    print 'hello'
+    today = datetime.date.today() 
+    year = today.year
+    year = 2013
+    pdb.set_trace()
+    url = "http://mops.twse.com.tw/server-java/t05st09sub"
+    values = {'step' : '1', 'TYPEK' : 'otc',
+              'YEAR' : '102', 'first' : ''}
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    # soup = BeautifulSoup(response, from_encoding="utf-8")
+    # datas = soup.find_all('tr', {'class':'even'})
+    
+    # print response.read()
+    return HttpResponse(response.read())
+
+def new_update_dividend(request):
     if 'year' in request.GET:
         input_year = int(request.GET['year'])
     else:
