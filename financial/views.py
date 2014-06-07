@@ -1178,14 +1178,15 @@ def update_year_financial_ratio(request):
 def update_season_financial_ratio(request):
     stock_ids = StockId.objects.all()
     if 'year' in request.GET and  'season' in request.GET:
-        year = int(request.GET['year'])
-        season = int(request.GET['season'])
+        input_year = int(request.GET['year'])
+        input_season = int(request.GET['season'])
     else:
         return HttpResponse('please input year or season')
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=year, season=season)
+        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=input_year, season=input_season)
         if ratioInDb:
+            ratioInDb = None
             continue
         url = 'http://jsjustweb.jihsun.com.tw/z/zc/zcr/zcr_' + stock_symbol + '.djhtm'
         webcode = urllib.urlopen(url)
@@ -1196,22 +1197,25 @@ def update_season_financial_ratio(request):
         arrRatioDatas = []
         for stage_data in stage_datas:
             if isDataStart:
-                year = int(stage_data.string.split('Q')[0].split('.')[0]) + 1911
-                season = int(stage_data.string.split('Q')[0].split('.')[1])
-                season_ratio = SeasonFinancialRatio()
-                season_ratio.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
-                season_ratio.year = year
-                season_ratio.season = season
-                season_ratio.symbol = stock_symbol
-                if season == 1:
-                    season_ratio.date = datetime.date(year, 1, 1)
-                elif season == 2:
-                    season_ratio.date = datetime.date(year, 4, 1)
-                elif season == 3:
-                    season_ratio.date = datetime.date(year, 7, 1)
-                elif season == 4:
-                    season_ratio.date = datetime.date(year, 10, 1)
-                arrRatioDatas.append(season_ratio)
+                try:
+                    year = int(stage_data.string.split('Q')[0].split('.')[0]) + int(1911)
+                    season = int(stage_data.string.split('Q')[0].split('.')[1])
+                    season_ratio = SeasonFinancialRatio()
+                    season_ratio.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
+                    season_ratio.year = year
+                    season_ratio.season = season
+                    season_ratio.symbol = stock_symbol
+                    if season == 1:
+                        season_ratio.date = datetime.date(year, 1, 1)
+                    elif season == 2:
+                        season_ratio.date = datetime.date(year, 4, 1)
+                    elif season == 3:
+                        season_ratio.date = datetime.date(year, 7, 1)
+                    elif season == 4:
+                        season_ratio.date = datetime.date(year, 10, 1)
+                    arrRatioDatas.append(season_ratio)
+                except:
+                    break
             if stage_data.string.encode('utf-8') == r'期別':
                 isDataStart = True
         ratio_datas = soup.find_all('td', {'class':'t4t1'})

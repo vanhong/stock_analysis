@@ -391,28 +391,31 @@ def update_season_revenue(request):
     lastSeasonRevenues = SeasonRevenue.objects.filter(year=lastYear, season=lastSeason)
     symbols = list(set(firtMonthStockIds).intersection(set(secondMonthStockIds)).intersection(set(thirdMonthStockIds)))
     for symbol in symbols:
+        print symbol
         revenue = SeasonRevenue()
         revenue.surrogate_key = symbol + '_' + str(year) + str(season).zfill(2)
         revenue.year = year
         revenue.season = season
         revenue.date = date
         revenue.symbol = symbol
-        revenue.revenue = firstMonthRevenues.get(symbol=symbol).revenue +\
-                          secondMonthRevenues.get(symbol=symbol).revenue +\
-                          thirdMonthRevenues.get(symbol=symbol).revenue
-        revenue.last_year_revenue = firstMonthRevenues.get(symbol=symbol).last_year_revenue +\
-                                    secondMonthRevenues.get(symbol=symbol).last_year_revenue +\
-                                    thirdMonthRevenues.get(symbol=symbol).last_year_revenue
-        if revenue.last_year_revenue > 0:
-            revenue.year_growth_rate = revenue.revenue / revenue.last_year_revenue * 100 - 100
-        if lastSeasonRevenues.filter(symbol=symbol):
-            last_season_revenue = lastSeasonRevenues.get(symbol=symbol).revenue
-            if last_season_revenue > 0:
-                revenue.season_growth_rate = revenue.revenue / last_season_revenue * 100 - 100
-        revenue.acc_revenue = thirdMonthRevenues.get(symbol=symbol).acc_revenue
-        revenue.acc_year_growth_rate = thirdMonthRevenues.get(symbol=symbol).acc_year_growth_rate
-        revenue.save()
-        print symbol
+        try:
+            revenue.revenue = firstMonthRevenues.get(symbol=symbol).revenue +\
+                              secondMonthRevenues.get(symbol=symbol).revenue +\
+                              thirdMonthRevenues.get(symbol=symbol).revenue
+            revenue.last_year_revenue = firstMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                        secondMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                        thirdMonthRevenues.get(symbol=symbol).last_year_revenue
+            if revenue.last_year_revenue > 0:
+                revenue.year_growth_rate = revenue.revenue / revenue.last_year_revenue * 100 - 100
+            if lastSeasonRevenues.filter(symbol=symbol):
+                last_season_revenue = lastSeasonRevenues.get(symbol=symbol).revenue
+                if last_season_revenue > 0:
+                    revenue.season_growth_rate = revenue.revenue / last_season_revenue * 100 - 100
+            revenue.acc_revenue = thirdMonthRevenues.get(symbol=symbol).acc_revenue
+            revenue.acc_year_growth_rate = thirdMonthRevenues.get(symbol=symbol).acc_year_growth_rate
+            revenue.save()
+        except:
+            pass
 
     return HttpResponse('update season revenue year:' + str(year) + " season:" + str(season))
 
@@ -473,7 +476,7 @@ def old_update_season_revenue(request):
 
     return HttpResponse('update season revenue')
 
-def update_dividend(request):
+def old_update_dividend(request):
     print 'hello'
     today = datetime.date.today() 
     year = today.year
@@ -491,7 +494,7 @@ def update_dividend(request):
     # print response.read()
     return HttpResponse(response.read())
 
-def new_update_dividend(request):
+def update_dividend(request):
     if 'year' in request.GET:
         input_year = int(request.GET['year'])
     else:
