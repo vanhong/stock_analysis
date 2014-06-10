@@ -79,39 +79,7 @@ def update_stock_id(request):
                 stockid.save()
     # pdb.set_trace()
 
-    return HttpResponse(twod_list)
-
-    for data in datas:
-        tr_datas = data.tr
-        pdb.set_trace()
-    return HttpResponse(datas)
-    marketSignal = False
-    symbolSignal = False
-    nameSignal = False
-    twod_list = []
-    company_type = ""
-    for data in datas:
-        if marketSignal:
-            if data.b.string:
-                company_type = data.b.string.encode("utf-8")
-            marketSignal = False
-        elif data.b.string and data.b.string.encode("utf-8") == r'上市':
-            market_type == '上市'
-            marketSignal = True
-            symbolSignal = True
-        elif symbolSignal:
-            if data.b.string:
-                symbol = data.b.string.encode("utf-8")
-                symbolSignal = False
-                nameSignal = True
-        elif nameSignal:
-            if data.b.string:
-                name = data.b.string("utf-8")
-                nameSignal = False
-                symbolSignal = True
-
-    pdb.set_trace()
-    return HttpResponse(datas)
+    return HttpResponse('update stock id')
 
 def old_update_stock_id(request):
     StockType = [2, 4]
