@@ -19,7 +19,7 @@ class ObjStock:
     def __str__(self):
         return u'%s %s' % (self.symbol, self.name)
 
-def update_stock_id(request):
+def new_update_stock_id(request):
     url = "http://www.emega.com.tw/js/StockTable.htm"
     webcode = urllib.urlopen(url)
     if webcode.code != 200:
@@ -28,7 +28,6 @@ def update_stock_id(request):
     response = urllib2.urlopen(req)
     soup = BeautifulSoup(response, from_encoding="big-5")
     datas = soup.find_all("table", {'class' : 'TableBorder'})
-
     twod_list = []
     tr_datas = datas[0].tr
     # pdb.set_trace()
@@ -81,12 +80,11 @@ def update_stock_id(request):
 
     return HttpResponse('update stock id')
 
-def old_update_stock_id(request):
-    StockType = [2, 4]
+def update_stock_id(request):
+    StockType = [2]
 
     for i in xrange(0, len(StockType)):
-        url = "http://brk.twse.com.tw:8000/isin/C_public.jsp?strMode=" + str(StockType[i])
-
+        url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(StockType[i])
         webcode = urllib.urlopen(url)
         stock = ParseStockId()
         if webcode.code == 200:
@@ -98,7 +96,7 @@ def old_update_stock_id(request):
             totaldata = stock.totaldata[i]
             stockid = StockId(symbol = totaldata[0].decode("cp950").encode("utf-8"), name = totaldata[1].decode("cp950").encode("utf-8"),
                               market_type = totaldata[2].decode("cp950").encode("utf-8"), company_type = totaldata[3].decode("cp950").encode("utf-8"))
-            stockid.save()
+            # stockid.save()
             print (totaldata[0].decode("cp950").encode("utf-8") + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
                    totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8"))
     return HttpResponse("Update StockId")
