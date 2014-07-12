@@ -85,9 +85,9 @@ def filter_start(request):
             instance = targetClass(item)
             results = instance.filter(item)
             filter_list.append(results)
-
+    new_list = sorted(filter_list)
     results_dic = {}
-    for item in filter_list:
+    for item in new_list:
         for symbol in item:
             results_dic[symbol] = StockId.objects.get(symbol=symbol).name
     #print results_dic
@@ -206,14 +206,14 @@ def filter_start2(request):
 
     print 'Print filterIntersection'
     print filterIntersection
+    new_list = sorted(filterIntersection)    
     results_dic = {}
-    for item in filterIntersection:
+    for item in new_list:
         if StockId.objects.filter(symbol=item):
             results_dic[item] = StockId.objects.get(symbol=item).name
-
     return render_to_response(
                 'filter/filter_result.html', {
-                "results": results_dic},
+                "results": sorted(results_dic.iteritems())},
                 context_instance = RequestContext(request))
 
 #not used
