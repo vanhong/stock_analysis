@@ -86,19 +86,40 @@ def update_stock_id(request):
     for i in xrange(0, len(StockType)):
         url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(StockType[i])
         webcode = urllib.urlopen(url)
-        stock = ParseStockId()
-        if webcode.code == 200:
-            stock.feed(webcode.read())
-            webcode.close()
-        else:
-            return HttpResponse("Update Failed")
-        for i in xrange(len(stock.totaldata)):
-            totaldata = stock.totaldata[i]
-            stockid = StockId(symbol = totaldata[0].decode("cp950").encode("utf-8"), name = totaldata[1].decode("cp950").encode("utf-8"),
-                              market_type = totaldata[2].decode("cp950").encode("utf-8"), company_type = totaldata[3].decode("cp950").encode("utf-8"))
-            # stockid.save()
-            print (totaldata[0].decode("cp950").encode("utf-8") + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
-                   totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8"))
+        if webcode.code != 200:
+            return HttpResponse("Update failed")
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        soup = BeautifulSoup(response, from_encoding="big-5")
+        datas = soup.find('tr')
+        # print datas
+        pdb.set_trace()
+        while(datas.next_sibling):
+            data = datas.next_sibling.td.next
+            try:
+                symbol_name = data.split()
+                if len(symbol_name) == 2:
+                    print symbol_name
+                datas = datas.next_sibling
+            except:
+                datas = datas.next_sibling
+        pdb.set_trace()
+        
+    return HttpResponse("Update StockId")
+
+    # stock = ParseStockId()
+    #     if webcode.code == 200:
+    #         stock.feed(webcode.read())
+    #         webcode.close()
+    #     else:
+    #         return HttpResponse("Update Failed")
+    #     for i in xrange(len(stock.totaldata)):
+    #         totaldata = stock.totaldata[i]
+    #         stockid = StockId(symbol = totaldata[0].decode("cp950").encode("utf-8"), name = totaldata[1].decode("cp950").encode("utf-8"),
+    #                           market_type = totaldata[2].decode("cp950").encode("utf-8"), company_type = totaldata[3].decode("cp950").encode("utf-8"))
+    #         # stockid.save()
+    #         print (totaldata[0].decode("cp950").encode("utf-8") + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
+    #                totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8"))
     return HttpResponse("Update StockId")
 
 class ParseStockId(HTMLParser):
