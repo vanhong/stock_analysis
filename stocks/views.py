@@ -19,7 +19,7 @@ class ObjStock:
     def __str__(self):
         return u'%s %s' % (self.symbol, self.name)
 
-def new_update_stock_id(request):
+def old_update_stock_id(request):
     url = "http://www.emega.com.tw/js/StockTable.htm"
     webcode = urllib.urlopen(url)
     if webcode.code != 200:
