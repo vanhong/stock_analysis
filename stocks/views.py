@@ -81,7 +81,7 @@ def new_update_stock_id(request):
     return HttpResponse('update stock id')
 
 def update_stock_id(request):
-    StockType = [2]
+    StockType = [2, 4]
 
     for i in xrange(0, len(StockType)):
         url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(StockType[i])
@@ -93,17 +93,20 @@ def update_stock_id(request):
         soup = BeautifulSoup(response, from_encoding="big-5")
         datas = soup.find('tr')
         # print datas
-        pdb.set_trace()
         while(datas.next_sibling):
             data = datas.next_sibling.td.next
             try:
-                symbol_name = data.split()
-                if len(symbol_name) == 2:
-                    print symbol_name
+                if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR':
+                    symbol,name = data.split()
+                    listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
+                    market_type = data.next.next_sibling.next_sibling.string.split()[0]
+                    company_type = data.next.next_sibling.next_sibling.next_sibling.string.split()[0]
+                    stockid = StockId(symbol = symbol, name = name, market_type = market_type,
+                                      company_type = company_type, listing_date = listing_date)
+                    stockid.save()
                 datas = datas.next_sibling
             except:
                 datas = datas.next_sibling
-        pdb.set_trace()
         
     return HttpResponse("Update StockId")
 

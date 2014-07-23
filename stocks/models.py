@@ -5,6 +5,7 @@ class StockId(models.Model):
     name = models.CharField(max_length=20)
     market_type = models.CharField(max_length=10)
     company_type = models.CharField(max_length=20)
+    listing_date = models.DateField(null=False)
      
     def __unicode__(self):
         return u'%s %s' % (self.symbol, self.name)
