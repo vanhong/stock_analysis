@@ -10,6 +10,7 @@ from decimal import Decimal
 from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
+from django.utils import simplejson
 import pdb
 
 class ObjStock:
@@ -198,6 +199,7 @@ def update_month_revenue(request):
         month = int(request.GET['month'])
     market = ['otc', 'sii']
     for i in range(len(market)):
+        # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
         url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
         req = urllib2.Request(url)
         response = urllib2.urlopen(req)
@@ -242,6 +244,48 @@ def update_month_revenue(request):
                     # revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
                     # revenue.save()
     return HttpResponse('update month revenue year:' + str(year) + " month:" + str(month))
+
+def check_month_revenue(request):
+    if 'from' not in request.GET or 'to' not in request.GET:
+        return HttpResponse('please input date from Year-Month to Year-Month')
+    if 'from' in request.GET:
+        try:
+            dateFrom = datetime.datetime.strptime(request.GET['from'], '%Y-%m').date()
+        except:
+            return HttpResponse('please input correct "from" date type like Year-Month')
+    if 'to' in request.GET:
+        try:
+            dateTo = datetime.datetime.strptime(request.GET['to'], '%Y-%m').date()
+        except:
+            return HttpResponse('please input correct "to" date type like Year-Month')
+    stockIds = StockId.objects.all()
+    revenues = MonthRevenue.objects.filter(date__gte=dateFrom, date__lte=dateTo)
+    monthNum = month_between(dateFrom, dateTo) + 1
+    errorStockId = []
+    for stockId in stockIds:
+        revenue = revenues.filter(symbol=stockId.symbol)
+        if stockId.listing_date >= dateFrom and stockId.listing_date <= dateTo:
+            if len(revenue) == 0:
+                errorStockId.append(stockId.symbol)
+            else:
+                minMonth = revenue.order_by('date')[0].date
+                if minMonth > stockId.listing_date:
+                    minMonth = stockId.listing_date
+                newMonthNum = month_between(minMonth, dateTo) + 1
+                if (len(revenue) != newMonthNum):
+                    errorStockId.append(stockId.symbol)
+        elif stockId.listing_date < dateFrom:
+            if (len(revenue) != monthNum):
+                errorStockId.append(stockId.symbol)
+    if len(errorStockId) > 0:
+        json_obj = simplejson.dumps({"list_of_json" : errorStockId})
+        return HttpResponse(json_obj, content_type="application/json")
+
+
+    return HttpResponse('check month revenue ok')
+
+def month_between(startDate, endDate):
+    return (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
 
 def new_update_dividendupdate_season_revenue(request):
     return HttpResponse("update season revenue")
