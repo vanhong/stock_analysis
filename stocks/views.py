@@ -110,63 +110,6 @@ def update_stock_id(request):
         
     return HttpResponse("Update StockId")
 
-    # stock = ParseStockId()
-    #     if webcode.code == 200:
-    #         stock.feed(webcode.read())
-    #         webcode.close()
-    #     else:
-    #         return HttpResponse("Update Failed")
-    #     for i in xrange(len(stock.totaldata)):
-    #         totaldata = stock.totaldata[i]
-    #         stockid = StockId(symbol = totaldata[0].decode("cp950").encode("utf-8"), name = totaldata[1].decode("cp950").encode("utf-8"),
-    #                           market_type = totaldata[2].decode("cp950").encode("utf-8"), company_type = totaldata[3].decode("cp950").encode("utf-8"))
-    #         # stockid.save()
-    #         print (totaldata[0].decode("cp950").encode("utf-8") + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
-    #                totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8"))
-    return HttpResponse("Update StockId")
-
-class ParseStockId(HTMLParser):
-    def reset(self):
-        HTMLParser.reset(self)
-        self.stockinfo = False
-        self.datainfo = False
-        self.stock_name = ''
-        self.stock_symbol = ''
-        self.market_type = ''
-        self.company_type = ''
-        self.cell = 0
-        self.stockdata = []
-        self.totaldata = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'td':
-            if attrs[0][0] == 'bgcolor' and attrs[0][1] == '#FAFAD2':
-                self.stockinfo = True
-                self.cell += 1
-                self.cell %= 7
-
-    def handle_endtag(self, tag):
-        if tag == 'tr':
-            self.stockinfo = False
-            self.cell = 0
-
-    def handle_data(self, text):
-        if self.stockinfo:
-            if self.cell == 1:
-                data = text.strip().split("    ")
-                if data[0].isalnum() and len(data[0]) == 4:
-                    self.stockdata.append(data[0].strip())
-                    self.stockdata.append(data[1].strip())
-                    self.datainfo = True
-                else:
-                    self.datainfo = False
-            elif self.cell == 4 and self.datainfo == True:
-                self.stockdata.append(text.strip())
-            elif self.cell == 5 and self.datainfo == True:
-                self.stockdata.append(text.strip())
-                self.totaldata.append(self.stockdata)
-                self.stockdata = []
-
 def last_season(day):
     year = day.year
     month = day.month
@@ -299,53 +242,6 @@ def update_month_revenue(request):
                     # revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
                     # revenue.save()
     return HttpResponse('update month revenue year:' + str(year) + " month:" + str(month))
-
-def old_update_month_revenue(request):
-    stock_ids = StockId.objects.all()
-    today = datetime.date.today()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        if today.month == 1:
-            revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year-1, month=12)
-        else:
-            revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month-1)
-        if revenueInDb:
-            continue
-        else:
-            url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zch_" + stock_symbol + ".djhtm"
-            webcode = urllib.urlopen(url)
-            soup = BeautifulSoup(webcode, from_encoding='utf-8')
-            months = soup.find_all('td', {'class':'t3n0'})
-            print 'stockid ' + stock_symbol + ' loaded'
-            for month_data in months:
-                year = int(month_data.string.split("/")[0]) + 1911
-                month = int(month_data.string.split("/")[1])
-                revenue = MonthRevenue()
-                revenue.surrogate_key = stock_symbol + "_" + str(year) + str(month).zfill(2)
-                revenue.year = year
-                revenue.month = month
-                revenue.date = datetime.date(year, month, 1)
-                revenue.symbol = stock_symbol
-                next = month_data.next_sibling
-                if next.string:
-                    revenue.revenue = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.month_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.last_year_revenue = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.acc_revenue = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.acc_year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                revenue.save()
-    return HttpResponse("update revenue")
 
 def new_update_dividendupdate_season_revenue(request):
     return HttpResponse("update season revenue")
