@@ -6,7 +6,22 @@
 <script type="text/javascript">
 $( document ).ready( function() {
   //$( '#analysis').attr('class', 'active');
-
+  
+  $(".dropdown-menu > li > a.trigger").on("click",function(e){
+      var current=$(this).next();
+      var grandparent=$(this).parent().parent();
+      if($(this).hasClass('left-caret')||$(this).hasClass('right-caret'))
+        $(this).toggleClass('right-caret left-caret');
+      grandparent.find('.left-caret').not(this).toggleClass('right-caret left-caret');
+      grandparent.find(".sub-menu:visible").not(current).hide();
+      current.toggle();
+      e.stopPropagation();
+  });
+  $(".dropdown-menu > li > a:not(.trigger)").on("click",function(){
+    var root=$(this).closest('.dropdown');
+    root.find('.left-caret').toggleClass('right-caret left-caret');
+    root.find('.sub-menu:visible').hide();
+  });
   $( '#searchSubmit' ).click( function() {
     q = $( '#q' ).val();
     //stockid
@@ -19,6 +34,7 @@ $( document ).ready( function() {
     $.post('{% url "set_stockid" %}?q=' + q ,{}, function(){
       window.location.replace(window.location.pathname);
     });
+
   });
 });
 
@@ -40,9 +56,9 @@ $( document ).ready( function() {
     <div class="row">
       <div class="col-md-2">
         <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
-          <li class="dropdown-submenu">
-            <a class="" href="#">  基本分析</a>
-            <ul class="dropdown-menu">
+          <li>
+            <a class="trigger right-caret" href="#">  基本分析</a>
+            <ul class="dropdown-menu sub-menu">
               <li><a href="/revenue/">營收盈餘</a></li>
               <li><a href="/dividend/">股利政策</a></li>
               <li><a href="/profitability/">獲利能力</a></li>
@@ -78,6 +94,7 @@ $( document ).ready( function() {
       <div class="col-md-8">
         {% block analysis_content %}
         {% endblock %}
+      </div>
     </div>
   </div>
 {% endblock %}

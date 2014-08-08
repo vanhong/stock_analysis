@@ -124,8 +124,7 @@ def get_dividend_table(request):
 						bodys.append(item)
 			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
 			return render_to_response(
-				'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
-				"bodys": bodys},
+				'analysis/analysis_table.html', {"stock_id": name, "heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
 	return render_to_response(
 		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},

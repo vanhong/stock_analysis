@@ -47,4 +47,3 @@ class ShareholderStructure(models.Model):
     value800_1000 = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     value1000 = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     value_sum = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-
