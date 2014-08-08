@@ -3,6 +3,8 @@
 
 import urllib, urllib2, datetime
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from django.template.context import RequestContext
 from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
 import time
@@ -467,3 +469,6 @@ def update_dividend(request):
             print 'update ' + stock_symbol + ' dividend'
 
     return HttpResponse("update dividend")
+
+def update(request):
+    return render_to_response('analysis/update.html', context_instance = RequestContext(request))
