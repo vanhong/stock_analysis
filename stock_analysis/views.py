@@ -206,9 +206,7 @@ def get_month_revenue_table(request):
 				'analysis/analysis_table.html', {"stock_id": name,
 				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
-	return render_to_response(
-		'analysis/index.html',{"stock_id": symbol},
-		context_instance = RequestContext(request))
+	return HttpResponse('error')
 
 def get_season_revenue_table(request):
 	symbol = get_symbol(request)
@@ -241,9 +239,7 @@ def get_season_revenue_table(request):
 				'analysis/analysis_table.html', {"stock_id": name,
 				"heads": heads, "bodys": bodys},
 				context_instance = RequestContext(request))
-	return render_to_response(
-		'analysis/index.html',{"stock_id": symbol},
-		context_instance = RequestContext(request))
+	return HttpResponse('error')
 
 def get_season_profit_table(request):
 	symbol = get_symbol(request)
