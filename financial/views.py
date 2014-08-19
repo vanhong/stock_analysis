@@ -119,8 +119,11 @@ def update_season_income_statement(request):
             req = urllib2.Request(url, url_data, headers)
             try:
                 response = urllib2.urlopen(req)
-            except:
-                raise Http404()
+            except URLError, e:
+                if hasattr(e, "reason"):
+                    print(symbol + "(" + str(count) + '/' + str(countAll) + "). Reason:"), e.reason
+                elif hasattr(e, "code"):
+                    print(symbol + "(" + str(count) + '/' + str(countAll) + "). Error code:"), e.reason
             soup = BeautifulSoup(response,from_encoding="utf-8")
             season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
             busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
@@ -131,8 +134,11 @@ def update_season_income_statement(request):
                 req = urllib2.Request(url, url_data, headers)
                 try:
                     response = urllib2.urlopen(req)
-                except:
-                    raise Http404()
+                except URLError, e:
+                    if hasattr(e, "reason"):
+                        print(symbol + "(" + str(count) + '/' + str(countAll) + "). Reason:"), e.reason
+                    elif hasattr(e, "code"):
+                        print(symbol + "(" + str(count) + '/' + str(countAll) + "). Error code:"), e.reason
                 soup = BeautifulSoup(response,from_encoding="utf-8")
                 season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
                 busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
