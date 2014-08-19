@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import urllib2
 import urllib
+from urllib2 import URLError
 from django.http import HttpResponse, Http404
 from HTMLParser import HTMLParser
 import time
@@ -124,6 +125,7 @@ def update_season_income_statement(request):
                     print(symbol + "(" + str(count) + '/' + str(countAll) + "). Reason:"), e.reason
                 elif hasattr(e, "code"):
                     print(symbol + "(" + str(count) + '/' + str(countAll) + "). Error code:"), e.reason
+                continue
             soup = BeautifulSoup(response,from_encoding="utf-8")
             season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
             busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
@@ -139,6 +141,7 @@ def update_season_income_statement(request):
                         print(symbol + "(" + str(count) + '/' + str(countAll) + "). Reason:"), e.reason
                     elif hasattr(e, "code"):
                         print(symbol + "(" + str(count) + '/' + str(countAll) + "). Error code:"), e.reason
+                    continue
                 soup = BeautifulSoup(response,from_encoding="utf-8")
                 season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
                 busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
