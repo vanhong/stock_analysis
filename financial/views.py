@@ -15,6 +15,40 @@ import datetime
 from core.utils import st_to_decimal, season_to_date, last_season
 import pdb
 
+#already got certification's financial report
+def test_financial_company(request):
+    url = 'http://mops.twse.com.tw/mops/web/t163sb14'
+    values = {'encodeURIComponent': '1', 'step': '1', 'firstin': '1', 'off': '1', 
+              'TYPEK': 'sii', 'year': '103', 'season': '02'} 
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    return HttpResponse(response.read())
+
+def get_financial_company(request):
+    stock_type = ['sii', 'otc']
+    company_list = []
+    year = 2013
+    season = 2
+    url = 'http://mops.twse.com.tw/mops/web/t163sb14'
+    values = {'encodeURIComponent': '1', 'step': '1', 'firstin': '1', 'off': '1', 
+              'TYPEK': 'sii', 'year': str(year-1911), 'season': str(season).zfill(2)} 
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    soup = BeautifulSoup(response,from_encoding="utf-8")
+    table_datas = soup.find_all("table", {'class' : 'hasBorder'})
+    company = table_datas[0].td
+    while(company):
+        pdb.set_trace()
+        company_list.append(company)
+        compnay = company.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling
+
+    for data in table_datas:
+        pdb.set_trace()
+        print data
+    return HttpResponse(table_datas)
+
 #income statement from TWSE 綜合損益表
 def old_show_season_income_statement(request):
     stock_symbol = '2454'
@@ -72,11 +106,8 @@ def update_season_income_statement(request):
         lastYearIncomeStatementsSeason1 = SeasonIncomeStatement.objects.filter(year=year-1, season=1)
         lastYearIncomeStatementsSeason2 = SeasonIncomeStatement.objects.filter(year=year-1, season=2)
         lastYearIncomeStatementsSeason3 = SeasonIncomeStatement.objects.filter(year=year-1, season=3)
-    depositoryShareSymbols = StockId.objects.filter(company_type='存託憑證').values_list('symbol', flat=True)
     for seasonRevenue in seasonRevenues:
         stock_symbol = seasonRevenue.symbol
-        if stock_symbol in depositoryShareSymbols:
-            continue
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year, season=season) and SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year-1, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
