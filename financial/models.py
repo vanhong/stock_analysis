@@ -216,13 +216,13 @@ class SeasonFinancialRatio(models.Model):
     season = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
     date = models.DateField(db_index=True)
-    # 營業毛利率
+    # 營業毛利率 = 營業毛利 / 營業收入
     gross_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    # 營業利益率
+    # 營業利益率 = 營業利益 / 營業收入
     operating_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    # 稅前淨利率
+    # 稅前淨利率 = 稅前純益 / 營業收入
     net_before_tax_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
-    # 稅後淨利率
+    # 稅後淨利率 = 稅後純益 / 營業收入
     net_after_tax_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     # 每股淨值(元)
     net_value_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
