@@ -44,7 +44,7 @@ def get_updated_id(year, season):
     for tr in trs:
         td = tr.find('td')
         if td and len(td.string) == 4:
-            company_list.append(td.string)
+            company_list.append(unicode(td.string))
 
     return company_list
 
@@ -103,9 +103,6 @@ def update_season_income_statement(request):
         incomeStatementsSeason1 = SeasonIncomeStatement.objects.filter(year=year, season=1)
         incomeStatementsSeason2 = SeasonIncomeStatement.objects.filter(year=year, season=2)
         incomeStatementsSeason3 = SeasonIncomeStatement.objects.filter(year=year, season=3)
-        lastYearIncomeStatementsSeason1 = SeasonIncomeStatement.objects.filter(year=year-1, season=1)
-        lastYearIncomeStatementsSeason2 = SeasonIncomeStatement.objects.filter(year=year-1, season=2)
-        lastYearIncomeStatementsSeason3 = SeasonIncomeStatement.objects.filter(year=year-1, season=3)
     for stockID in stockIDs:
         stock_symbol = stockID
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year, season=season)):
@@ -120,15 +117,21 @@ def update_season_income_statement(request):
             req = urllib2.Request(url, url_data, headers)
             try:
                 response = urllib2.urlopen(req)
+                soup = BeautifulSoup(response,from_encoding="utf-8")
+                season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
             except URLError, e:
                 if hasattr(e, "reason"):
-                    print(symbol + "(" + str(count) + '/' + str(countAll) + "). Reason:"), e.reason
+                    print(stock_symbol + " Reason:"), e.reason
+                    print stock_symbol + 'time sleep' 
+                    time.sleep(20)
+                    busy_msg = True
                 elif hasattr(e, "code"):
-                    print(symbol + "(" + str(count) + '/' + str(countAll) + "). Error code:"), e.reason
+                    print(stock_symbol + " Error code:"), e.code
+                    print stock_symbol + 'time sleep' 
+                    time.sleep(20)
+                    busy_msg = True
                 continue
-            soup = BeautifulSoup(response,from_encoding="utf-8")
-            season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
-            busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
             # 如果連線正常，還得再確認是否因查詢頻繁而給空表格；若有，則先sleep再重新連線
             while busy_msg:
                 response.close()
@@ -138,9 +141,14 @@ def update_season_income_statement(request):
                     response = urllib2.urlopen(req)
                 except URLError, e:
                     if hasattr(e, "reason"):
-                        print(symbol + "(" + str(count) + '/' + str(countAll) + "). Reason:"), e.reason
+                        print(stock_symbol + " Reason:"), e.reason
+                        print stock_symbol + 'time sleep' 
+                        time.sleep(20)
                     elif hasattr(e, "code"):
-                        print(symbol + "(" + str(count) + '/' + str(countAll) + "). Error code:"), e.reason
+                        print(stock_symbol + " Error code:"), e.code
+                        print stock_symbol + 'time sleep' 
+                        time.sleep(20)
+                    busy_msg = True
                     continue
                 soup = BeautifulSoup(response,from_encoding="utf-8")
                 season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})

@@ -75,22 +75,39 @@ class SeasonIncomeStatement(models.Model):
     basic_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 稀釋每股盈餘
     diluted_earnings_per_share = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 利息收入
     interest_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 減：利息費用
     interest_expenses = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 利息淨收益
     net_income_of_interest = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 手續費淨收益
     net_service_fee_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 透過損益按公允價值衡量之金融資產及負債損益
     gain_on_financial_assets_or_liabilities_measured = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 備供出售金融資產之已實現損益
     realized_gains_for_sale_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 持有至到期日金融資產之已實現損益
     realized_gains_on_held_to_maturity_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 兌換損益
     foreign_exchange_gain = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 資產減損（損失）迴轉利益淨額
     reversal_of_impairment_loss_on_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 採用權益法認列之關聯企業及合資損益之份額
     gain_on_disposal_of_investments_accounted = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 其他利息以外淨損益
     net_other_non_interest_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 利息以外淨損益
     net_non_interest_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 淨收益
     net_income = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 呆帳費用及保證責任準備提存（各項提存）
     total_bad_debts_expense = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 員工福利費用
     employee_benefits_expenses = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 折舊及攤銷費用
     depreciation_and_amortization_expense = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 停業單位損益
     income_from_discontinued_operations = models.DecimalField(max_digits=20, decimal_places=0, null=True)
 
 
@@ -199,35 +216,65 @@ class SeasonFinancialRatio(models.Model):
     season = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
     date = models.DateField(db_index=True)
+    # 營業毛利率
     gross_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 營業利益率
     operating_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 稅前淨利率
     net_before_tax_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 稅後淨利率
     net_after_tax_profit_margin = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 每股淨值(元)
     net_value_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股營業額(元)
     revenue_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股營業利益(元)
     operating_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股稅前淨利(元)
     net_before_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 股東權益報酬率
     return_on_equity = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 資產報酬率
     return_on_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 每股稅後淨利(元)
     net_after_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 營收成長率
     revenue_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 營業利益成長率
     operating_profit_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 稅前淨利成長率
     net_before_tax_profit_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 稅後淨利成長率
     net_after_tax_profit_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 總資產成長率
     assets_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 淨值成長率
     net_value_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 固定資產成長率
     fixed_assets_growth_rate = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 流動比率
     current_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 速動比率
     quick_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 負債比率
     debt_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 利息保障倍數
     interest_cover = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 應收帳款周轉率(次)
     account_receivable_turnover_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 存貨周轉率(次)
     inventory_turnover_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 固定資產周轉率(次)
     fixed_assets_turnover_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 總資產周轉率(次)
     assets_turnover_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 員工平均營業額(千元)
     revenue_per_employee = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 淨值周轉率
     equity_turnover_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 負債對淨值比率
     debt_equity_ratio = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # 長期資金適合率
     long_term_funds_to_fixed_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     chinese_map = {
