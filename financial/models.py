@@ -232,9 +232,9 @@ class SeasonFinancialRatio(models.Model):
     operating_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
     # 每股稅前淨利(元)
     net_before_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
-    # 股東權益報酬率
+    # 股東權益報酬率 = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
     return_on_equity = models.DecimalField(max_digits=20, decimal_places=4, null=True)
-    # 資產報酬率
+    # 資產報酬率 = 
     return_on_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     # 每股稅後淨利(元)
     net_after_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
