@@ -121,15 +121,14 @@ def update_season_income_statement(request):
                 season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
                 busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
             except URLError, e:
+                time.sleep(20)
                 if hasattr(e, "reason"):
                     print(stock_symbol + " Reason:"), e.reason
                     print stock_symbol + 'time sleep' 
-                    time.sleep(20)
                     busy_msg = True
                 elif hasattr(e, "code"):
                     print(stock_symbol + " Error code:"), e.code
                     print stock_symbol + 'time sleep' 
-                    time.sleep(20)
                     busy_msg = True
                 continue
             # 如果連線正常，還得再確認是否因查詢頻繁而給空表格；若有，則先sleep再重新連線
@@ -140,14 +139,13 @@ def update_season_income_statement(request):
                 try:
                     response = urllib2.urlopen(req)
                 except URLError, e:
+                    time.sleep(20)
                     if hasattr(e, "reason"):
                         print(stock_symbol + " Reason:"), e.reason
                         print stock_symbol + 'time sleep' 
-                        time.sleep(20)
                     elif hasattr(e, "code"):
                         print(stock_symbol + " Error code:"), e.code
                         print stock_symbol + 'time sleep' 
-                        time.sleep(20)
                     busy_msg = True
                     continue
                 soup = BeautifulSoup(response,from_encoding="utf-8")
@@ -505,7 +503,7 @@ def update_season_income_statement(request):
 
     return HttpResponse("update_season_income_statement")
 
-#balance sheet from TWSE
+#資產負債表
 def show_season_balance_sheet(request):
     stock_symbol = '2823'
     year = 102
@@ -536,6 +534,7 @@ def show_season_balance_sheet(request):
     response = urllib2.urlopen(req)
     return HttpResponse(response.read())
 
+#資產負債表
 def update_season_balance_sheet(request):
     if 'year' in request.GET and  'season' in request.GET:
         year = int(request.GET['year'])
@@ -582,11 +581,21 @@ def update_season_balance_sheet(request):
                     balance_sheet.cash_and_cash_equivalents = st_to_decimal(next_data.string)
                     next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
                     last_balance_sheet.cash_and_cash_equivalents = st_to_decimal(next_data.string)
-                elif r'透過損益按公允價值衡量之金融資產－流動' in data.string.encode('utf-8') or r'備供出售金融資產－流動淨額' in data.string.encode('utf-8'):
+                elif r'透過損益按公允價值衡量之金融資產－流動' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.current_financial_assets = st_to_decimal(next_data.string)
                     next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
                     last_balance_sheet.current_financial_assets = st_to_decimal(next_data.string)
+                elif r'備供出售金融資產－流動淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.current_available_for_sale_financial_assets = st_to_decimal(next_data.string)
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_balance_sheet.current_available_for_sale_financial_assets = st_to_decimal(next_data.string)
+                elif r'持有至到期日金融資產－流動淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.current_available_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
+                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+                    last_balance_sheet.current_available_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
                 elif r'應收票據淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.notes_receivable = st_to_decimal(next_data.string)
