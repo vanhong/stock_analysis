@@ -30,13 +30,17 @@ def test_financial_company(request):
 def get_updated_id(year, season):
     url = 'http://mops.twse.com.tw/mops/web/t163sb14'
     values = {'encodeURIComponent': '1', 'step': '1', 'firstin': '1', 'off': '1', 
-              'TYPEK': 'all', 'year': str(year-1911), 'season': str(season).zfill(2)} 
+              'TYPEK': 'otc', 'year': str(year-1911), 'season': str(season).zfill(2)} 
     url_data = urllib.urlencode(values)
     req = urllib2.Request(url, url_data)
     try:
         response = urllib2.urlopen(req)
-    except:
-        return HttpResponse(response.read())
+    except URLError, e:
+        if hasattr(e, "reason"):
+            print("get update stockIDs error" + " Reason:"), e.reason
+        elif hasattr(e, "code"):
+            print("get update stockIDs error" + " Error code:"), e.code
+        return []
     soup = BeautifulSoup(response, from_encoding = "utf-8")
     table = soup.find('table', attrs={'class': 'hasBorder'})
     trs = table.find_all('tr')
@@ -46,6 +50,25 @@ def get_updated_id(year, season):
         if td and len(td.string) == 4:
             company_list.append(unicode(td.string))
 
+    values = {'encodeURIComponent': '1', 'step': '1', 'firstin': '1', 'off': '1', 
+              'TYPEK': 'sii', 'year': str(year-1911), 'season': str(season).zfill(2)} 
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url, url_data)
+    try:
+        response = urllib2.urlopen(req)
+    except URLError, e:
+        if hasattr(e, "reason"):
+            print("get update stockIDs error" + " Reason:"), e.reason
+        elif hasattr(e, "code"):
+            print("get update stockIDs error" + " Error code:"), e.code
+        return []
+    soup = BeautifulSoup(response, from_encoding = "utf-8")
+    table = soup.find('table', attrs={'class': 'hasBorder'})
+    trs = table.find_all('tr')
+    for tr in trs:
+        td = tr.find('td')
+        if td and len(td.string) == 4:
+            company_list.append(unicode(td.string))
     return company_list
 
 #income statement from TWSE 綜合損益表
@@ -122,15 +145,13 @@ def update_season_income_statement(request):
                 busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
             except URLError, e:
                 time.sleep(20)
+                busy_msg = True
                 if hasattr(e, "reason"):
                     print(stock_symbol + " Reason:"), e.reason
                     print stock_symbol + 'time sleep' 
-                    busy_msg = True
                 elif hasattr(e, "code"):
                     print(stock_symbol + " Error code:"), e.code
                     print stock_symbol + 'time sleep' 
-                    busy_msg = True
-                continue
             # 如果連線正常，還得再確認是否因查詢頻繁而給空表格；若有，則先sleep再重新連線
             while busy_msg:
                 response.close()
@@ -138,19 +159,17 @@ def update_season_income_statement(request):
                 req = urllib2.Request(url, url_data, headers)
                 try:
                     response = urllib2.urlopen(req)
+                    soup = BeautifulSoup(response,from_encoding="utf-8")
+                    season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                    busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
                 except URLError, e:
-                    time.sleep(20)
+                    busy_msg = True
                     if hasattr(e, "reason"):
                         print(stock_symbol + " Reason:"), e.reason
                         print stock_symbol + 'time sleep' 
                     elif hasattr(e, "code"):
                         print(stock_symbol + " Error code:"), e.code
                         print stock_symbol + 'time sleep' 
-                    busy_msg = True
-                    continue
-                soup = BeautifulSoup(response,from_encoding="utf-8")
-                season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
-                busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
                 if busy_msg:
                     print stock_symbol + 'time sleep' 
                     time.sleep(20)
@@ -180,322 +199,358 @@ def update_season_income_statement(request):
                         symbolSeason3 = incomeStatementsSeason3.get(symbol=stock_symbol)
                 if symbolSeason1 and symbolSeason2 and symbolSeason3:
                     hasPrevSeasons = True
-
             for data in season_income_datas:
                 if r'營業收入合計' in data.string.encode('utf-8') or r'收入合計' == data.string.encode('utf-8') or r'淨收益' == data.string.encode('utf-8') or r'收益合計' == data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.operating_revenue = st_to_decimal(next_data.string)
-                    elif symbolSeason1.operating_revenue and symbolSeason2.operating_revenue and symbolSeason3.operating_revenue:
-                        income_statement.operating_revenue = st_to_decimal(next_data.string) - symbolSeason1.operating_revenue - symbolSeason2.operating_revenue - symbolSeason3.operating_revenue
+                        income_statement.total_operating_revenue = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_operating_revenue is not None and symbolSeason2.total_operating_revenue is not None and symbolSeason3.total_operating_revenue is not None:
+                        income_statement.total_operating_revenue = st_to_decimal(next_data.string) - symbolSeason1.total_operating_revenue - symbolSeason2.total_operating_revenue - symbolSeason3.total_operating_revenue
                 elif r'營業成本合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.operating_cost = st_to_decimal(next_data.string)
-                    elif symbolSeason1.operating_cost and symbolSeason2.operating_cost and symbolSeason3.operating_cost:
-                        income_statement.operating_cost = st_to_decimal(next_data.string) - symbolSeason1.operating_cost - symbolSeason2.operating_cost - symbolSeason3.operating_cost
+                        income_statement.total_operating_cost = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_operating_cost is not None and symbolSeason2.total_operating_cost is not None and symbolSeason3.total_operating_cost is not None:
+                        income_statement.total_operating_cost = st_to_decimal(next_data.string) - symbolSeason1.total_operating_cost - symbolSeason2.total_operating_cost - symbolSeason3.total_operating_cost
                 elif r'營業毛利（毛損）' == data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.gross_profit_from_operations = st_to_decimal(next_data.string)
-                    elif symbolSeason1.gross_profit_from_operations and symbolSeason2.gross_profit_from_operations and symbolSeason3.gross_profit_from_operations:
-                        income_statement.gross_profit_from_operations = st_to_decimal(next_data.string) - symbolSeason1.gross_profit_from_operations - symbolSeason2.gross_profit_from_operations - symbolSeason3.gross_profit_from_operations
+                        income_statement.gross_profit_loss_from_operations = st_to_decimal(next_data.string)
+                    elif symbolSeason1.gross_profit_loss_from_operations is not None and symbolSeason2.gross_profit_loss_from_operations is not None and symbolSeason3.gross_profit_loss_from_operations is not None:
+                        income_statement.gross_profit_loss_from_operations = st_to_decimal(next_data.string) - symbolSeason1.gross_profit_loss_from_operations - symbolSeason2.gross_profit_loss_from_operations - symbolSeason3.gross_profit_loss_from_operations
+                elif r'未實現銷貨（損）益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    if not hasPrevSeasons:
+                        income_statement.unrealized_profit_loss_from_sales = st_to_decimal(next_data.string)
+                    elif symbolSeason1.unrealized_profit_loss_from_sales is not None and symbolSeason2.unrealized_profit_loss_from_sales is not None and symbolSeason3.unrealized_profit_loss_from_sales is not None:
+                        income_statement.unrealized_profit_loss_from_sales = st_to_decimal(next_data.string) - symbolSeason1.unrealized_profit_loss_from_sales - symbolSeason2.unrealized_profit_loss_from_sales - symbolSeason3.unrealized_profit_loss_from_sales
                 elif r'已實現銷貨（損）益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.realized_profit_from_sales = st_to_decimal(next_data.string)
-                    elif symbolSeason1.realized_profit_from_sales and symbolSeason2.realized_profit_from_sales and symbolSeason3.realized_profit_from_sales:
-                        income_statement.realized_profit_from_sales = st_to_decimal(next_data.string) - symbolSeason1.realized_profit_from_sales - symbolSeason2.realized_profit_from_sales - symbolSeason3.realized_profit_from_sales
+                        income_statement.realized_profit_loss_from_sales = st_to_decimal(next_data.string)
+                    elif symbolSeason1.realized_profit_loss_from_sales is not None and symbolSeason2.realized_profit_loss_from_sales is not None and symbolSeason3.realized_profit_loss_from_sales is not None:
+                        income_statement.realized_profit_loss_from_sales = st_to_decimal(next_data.string) - symbolSeason1.realized_profit_loss_from_sales - symbolSeason2.realized_profit_loss_from_sales - symbolSeason3.realized_profit_loss_from_sales
                 elif r'營業毛利（毛損）淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.net_gross_profit_from_operations = st_to_decimal(next_data.string)
-                    elif symbolSeason1.net_gross_profit_from_operations and symbolSeason2.net_gross_profit_from_operations and symbolSeason3.net_gross_profit_from_operations:
+                    elif symbolSeason1.net_gross_profit_from_operations is not None and symbolSeason2.net_gross_profit_from_operations is not None and symbolSeason3.net_gross_profit_from_operations is not None:
                         income_statement.net_gross_profit_from_operations = st_to_decimal(next_data.string) - symbolSeason1.net_gross_profit_from_operations - symbolSeason2.net_gross_profit_from_operations - symbolSeason3.net_gross_profit_from_operations
                 elif r'推銷費用' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.selling_expenses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.selling_expenses and symbolSeason2.selling_expenses and symbolSeason3.selling_expenses:
-                        income_statement.selling_expenses = st_to_decimal(next_data.string) - symbolSeason1.selling_expenses - symbolSeason2.selling_expenses - symbolSeason3.selling_expenses
+                        income_statement.total_selling_expenses = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_selling_expenses is not None and symbolSeason2.total_selling_expenses is not None and symbolSeason3.total_selling_expenses is not None:
+                        income_statement.total_selling_expenses = st_to_decimal(next_data.string) - symbolSeason1.total_selling_expenses - symbolSeason2.total_selling_expenses - symbolSeason3.total_selling_expenses
                 elif r'管理費用' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.administrative_expenses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.administrative_expenses and symbolSeason2.administrative_expenses and symbolSeason3.administrative_expenses:
+                    elif symbolSeason1.administrative_expenses is not None and symbolSeason2.administrative_expenses is not None and symbolSeason3.administrative_expenses is not None:
                         income_statement.administrative_expenses = st_to_decimal(next_data.string) - symbolSeason1.administrative_expenses - symbolSeason2.administrative_expenses - symbolSeason3.administrative_expenses
                 elif r'研究發展費用' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.research_and_development_expenses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.research_and_development_expenses and symbolSeason2.research_and_development_expenses and symbolSeason3.research_and_development_expenses:
+                    elif symbolSeason1.research_and_development_expenses is not None and symbolSeason2.research_and_development_expenses is not None and symbolSeason3.research_and_development_expenses is not None:
                         income_statement.research_and_development_expenses = st_to_decimal(next_data.string) - symbolSeason1.research_and_development_expenses - symbolSeason2.research_and_development_expenses - symbolSeason3.research_and_development_expenses
                 elif r'營業費用合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.operating_expenses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.operating_expenses and symbolSeason2.operating_expenses and symbolSeason3.operating_expenses:
-                        income_statement.operating_expenses = st_to_decimal(next_data.string) - symbolSeason1.operating_expenses - symbolSeason2.operating_expenses - symbolSeason3.operating_expenses
+                        income_statement.total_operating_expenses = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_operating_expenses is not None and symbolSeason2.total_operating_expenses is not None and symbolSeason3.total_operating_expenses is not None:
+                        income_statement.total_operating_expenses = st_to_decimal(next_data.string) - symbolSeason1.total_operating_expenses - symbolSeason2.total_operating_expenses - symbolSeason3.total_operating_expenses
                 elif r'其他收益及費損淨額' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         if not hasPrevSeasons:
-                            income_statement.net_other_income = st_to_decimal(next_data.string)
-                        elif symbolSeason1.net_other_income and symbolSeason2.net_other_income and symbolSeason3.net_other_income:
-                            income_statement.net_other_income = st_to_decimal(next_data.string) - symbolSeason1.net_other_income - symbolSeason2.net_other_income - symbolSeason3.net_other_income
+                            income_statement.net_other_income_expenses = st_to_decimal(next_data.string)
+                        elif symbolSeason1.net_other_income_expenses is not None and symbolSeason2.net_other_income_expenses is not None and symbolSeason3.net_other_income_expenses is not None:
+                            income_statement.net_other_income_expenses = st_to_decimal(next_data.string) - symbolSeason1.net_other_income_expenses - symbolSeason2.net_other_income_expenses - symbolSeason3.net_other_income_expenses
                 elif r'營業利益（損失）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.net_operating_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.net_operating_income and symbolSeason2.net_operating_income and symbolSeason3.net_operating_income:
-                        income_statement.net_operating_income = st_to_decimal(next_data.string) - symbolSeason1.net_operating_income - symbolSeason2.net_operating_income - symbolSeason3.net_operating_income
+                        income_statement.net_operating_income_loss = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_operating_income_loss is not None and symbolSeason2.net_operating_income_loss is not None and symbolSeason3.net_operating_income_loss is not None:
+                        income_statement.net_operating_income_loss = st_to_decimal(next_data.string) - symbolSeason1.net_operating_income_loss - symbolSeason2.net_operating_income_loss - symbolSeason3.net_operating_income_loss
                 elif r'其他收入' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.other_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.other_income and symbolSeason2.other_income and symbolSeason3.other_income:
+                    elif symbolSeason1.other_income is not None and symbolSeason2.other_income is not None and symbolSeason3.other_income is not None:
                         income_statement.other_income = st_to_decimal(next_data.string) - symbolSeason1.other_income - symbolSeason2.other_income - symbolSeason3.other_income
                 elif r'其他利益及損失淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.other_gains_and_losses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.other_gains_and_losses and symbolSeason2.other_gains_and_losses and symbolSeason3.other_gains_and_losses:
+                    elif symbolSeason1.other_gains_and_losses is not None and symbolSeason2.other_gains_and_losses is not None and symbolSeason3.other_gains_and_losses is not None:
                         income_statement.other_gains_and_losses = st_to_decimal(next_data.string) - symbolSeason1.other_gains_and_losses - symbolSeason2.other_gains_and_losses - symbolSeason3.other_gains_and_losses
                 elif r'財務成本淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.finance_costs = st_to_decimal(next_data.string)
-                    elif symbolSeason1.finance_costs and symbolSeason2.finance_costs and symbolSeason3.finance_costs:
-                        income_statement.finance_costs = st_to_decimal(next_data.string) - symbolSeason1.finance_costs - symbolSeason2.finance_costs - symbolSeason3.finance_costs
+                        income_statement.net_finance_costs = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_finance_costs is not None and symbolSeason2.net_finance_costs is not None and symbolSeason3.net_finance_costs is not None:
+                        income_statement.net_finance_costs = st_to_decimal(next_data.string) - symbolSeason1.net_finance_costs - symbolSeason2.net_finance_costs - symbolSeason3.net_finance_costs
                 elif r'採用權益法認列之關聯企業及合資損益之份額淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.share_of_profit_of_associates = st_to_decimal(next_data.string)
-                    elif symbolSeason1.share_of_profit_of_associates and symbolSeason2.share_of_profit_of_associates and symbolSeason3.share_of_profit_of_associates:
-                        income_statement.share_of_profit_of_associates = st_to_decimal(next_data.string) - symbolSeason1.share_of_profit_of_associates - symbolSeason2.share_of_profit_of_associates - symbolSeason3.share_of_profit_of_associates
+                        income_statement.share_of_profit_loss_of_associates_using_equity_method = st_to_decimal(next_data.string)
+                    elif symbolSeason1.share_of_profit_loss_of_associates_using_equity_method is not None and symbolSeason2.share_of_profit_loss_of_associates_using_equity_method is not None and symbolSeason3.share_of_profit_loss_of_associates_using_equity_method is not None:
+                        income_statement.share_of_profit_loss_of_associates_using_equity_method = st_to_decimal(next_data.string) - symbolSeason1.share_of_profit_loss_of_associates_using_equity_method - symbolSeason2.share_of_profit_loss_of_associates_using_equity_method - symbolSeason3.share_of_profit_loss_of_associates_using_equity_method
                 elif r'營業外收入及支出合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.non_operating_income_and_expenses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.non_operating_income_and_expenses and symbolSeason2.non_operating_income_and_expenses and symbolSeason3.non_operating_income_and_expenses:
-                        income_statement.non_operating_income_and_expenses = st_to_decimal(next_data.string) - symbolSeason1.non_operating_income_and_expenses - symbolSeason2.non_operating_income_and_expenses - symbolSeason3.non_operating_income_and_expenses
+                        income_statement.total_non_operating_income_and_expenses = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_non_operating_income_and_expenses is not None and symbolSeason2.total_non_operating_income_and_expenses is not None and symbolSeason3.total_non_operating_income_and_expenses is not None:
+                        income_statement.total_non_operating_income_and_expenses = st_to_decimal(next_data.string) - symbolSeason1.total_non_operating_income_and_expenses - symbolSeason2.total_non_operating_income_and_expenses - symbolSeason3.total_non_operating_income_and_expenses
                 elif r'稅前淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位稅前淨利（淨損）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.profit_from_continuing_operations_before_tax = st_to_decimal(next_data.string)
-                    elif symbolSeason1.profit_from_continuing_operations_before_tax and symbolSeason2.profit_from_continuing_operations_before_tax and symbolSeason3.profit_from_continuing_operations_before_tax:
-                        income_statement.profit_from_continuing_operations_before_tax = st_to_decimal(next_data.string) - symbolSeason1.profit_from_continuing_operations_before_tax - symbolSeason2.profit_from_continuing_operations_before_tax - symbolSeason3.profit_from_continuing_operations_before_tax
+                        income_statement.profit_loss_from_continuing_operations_before_tax = st_to_decimal(next_data.string)
+                    elif symbolSeason1.profit_loss_from_continuing_operations_before_tax is not None and symbolSeason2.profit_loss_from_continuing_operations_before_tax is not None and symbolSeason3.profit_loss_from_continuing_operations_before_tax is not None:
+                        income_statement.profit_loss_from_continuing_operations_before_tax = st_to_decimal(next_data.string) - symbolSeason1.profit_loss_from_continuing_operations_before_tax - symbolSeason2.profit_loss_from_continuing_operations_before_tax - symbolSeason3.profit_loss_from_continuing_operations_before_tax
                 elif r'所得稅費用（利益）合計' in data.string.encode('utf-8') or r'所得稅（費用）利益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.tax_expense = st_to_decimal(next_data.string)
-                    elif symbolSeason1.tax_expense and symbolSeason2.tax_expense and symbolSeason3.tax_expense:
-                        income_statement.tax_expense = st_to_decimal(next_data.string) - symbolSeason1.tax_expense - symbolSeason2.tax_expense - symbolSeason3.tax_expense
-                elif r'繼續營業單位本期淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位本期稅後淨利（淨損）' in data.string.encode('utf-8'):
+                        income_statement.total_tax_expense = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_tax_expense is not None and symbolSeason2.total_tax_expense is not None and symbolSeason3.total_tax_expense is not None:
+                        income_statement.total_tax_expense = st_to_decimal(next_data.string) - symbolSeason1.total_tax_expense - symbolSeason2.total_tax_expense - symbolSeason3.total_tax_expense
+                elif r'繼續營業單位本期淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位本期稅後淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位淨利（淨損）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.profit_from_continuing_operations = st_to_decimal(next_data.string)
-                    elif symbolSeason1.profit_from_continuing_operations and symbolSeason2.profit_from_continuing_operations and symbolSeason3.profit_from_continuing_operations:
-                        income_statement.profit_from_continuing_operations = st_to_decimal(next_data.string) - symbolSeason1.profit_from_continuing_operations - symbolSeason2.profit_from_continuing_operations - symbolSeason3.profit_from_continuing_operations
+                        income_statement.profit_loss_from_continuing_operations = st_to_decimal(next_data.string)
+                    elif symbolSeason1.profit_loss_from_continuing_operations is not None and symbolSeason2.profit_loss_from_continuing_operations is not None and symbolSeason3.profit_loss_from_continuing_operations is not None:
+                        income_statement.profit_loss_from_continuing_operations = st_to_decimal(next_data.string) - symbolSeason1.profit_loss_from_continuing_operations - symbolSeason2.profit_loss_from_continuing_operations - symbolSeason3.profit_loss_from_continuing_operations
                 elif r'本期淨利（淨損）' in data.string.encode('utf-8') or r'本期稅後淨利（淨損）' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         if not hasPrevSeasons:
-                            income_statement.profit = st_to_decimal(next_data.string)
-                        elif symbolSeason1.profit and symbolSeason2.profit and symbolSeason3.profit:
-                            income_statement.profit = st_to_decimal(next_data.string) - symbolSeason1.profit - symbolSeason2.profit - symbolSeason3.profit
+                            income_statement.profit_loss = st_to_decimal(next_data.string)
+                        elif symbolSeason1.profit_loss is not None and symbolSeason2.profit_loss is not None and symbolSeason3.profit_loss is not None:
+                            income_statement.profit_loss = st_to_decimal(next_data.string) - symbolSeason1.profit_loss - symbolSeason2.profit_loss - symbolSeason3.profit_loss
                 elif r'國外營運機構財務報表換算之兌換差額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.exchange_differences_on_translation = st_to_decimal(next_data.string)
-                    elif symbolSeason1.exchange_differences_on_translation and symbolSeason2.exchange_differences_on_translation and symbolSeason3.exchange_differences_on_translation:
+                    elif symbolSeason1.exchange_differences_on_translation is not None and symbolSeason2.exchange_differences_on_translation is not None and symbolSeason3.exchange_differences_on_translation is not None:
                         income_statement.exchange_differences_on_translation = st_to_decimal(next_data.string) - symbolSeason1.exchange_differences_on_translation - symbolSeason2.exchange_differences_on_translation - symbolSeason3.exchange_differences_on_translation
                 elif r'備供出售金融資產未實現評價損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.unrealised_gains_for_sale_financial_assets = st_to_decimal(next_data.string)
-                    elif symbolSeason1.unrealised_gains_for_sale_financial_assets and symbolSeason2.unrealised_gains_for_sale_financial_assets and symbolSeason3.unrealised_gains_for_sale_financial_assets:
-                        income_statement.unrealised_gains_for_sale_financial_assets = st_to_decimal(next_data.string) - symbolSeason1.unrealised_gains_for_sale_financial_assets - symbolSeason2.unrealised_gains_for_sale_financial_assets - symbolSeason3.unrealised_gains_for_sale_financial_assets
+                        income_statement.unrealised_gains_losses_for_sale_financial_assets = st_to_decimal(next_data.string)
+                    elif symbolSeason1.unrealised_gains_losses_for_sale_financial_assets is not None and symbolSeason2.unrealised_gains_losses_for_sale_financial_assets is not None and symbolSeason3.unrealised_gains_losses_for_sale_financial_assets is not None:
+                        income_statement.unrealised_gains_losses_for_sale_financial_assets = st_to_decimal(next_data.string) - symbolSeason1.unrealised_gains_losses_for_sale_financial_assets - symbolSeason2.unrealised_gains_losses_for_sale_financial_assets - symbolSeason3.unrealised_gains_losses_for_sale_financial_assets
                 elif r'採用權益法認列之關聯企業及合資之其他綜合損益之份額合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.total_share_of_income_of_associates = st_to_decimal(next_data.string)
-                    elif symbolSeason1.total_share_of_income_of_associates and symbolSeason2.total_share_of_income_of_associates and symbolSeason3.total_share_of_income_of_associates:
-                        income_statement.total_share_of_income_of_associates = st_to_decimal(next_data.string) - symbolSeason1.total_share_of_income_of_associates - symbolSeason2.total_share_of_income_of_associates - symbolSeason3.total_share_of_income_of_associates
+                        income_statement.total_share_of_other_income_of_associates_using_equity_method = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_share_of_other_income_of_associates_using_equity_method is not None and symbolSeason2.total_share_of_other_income_of_associates_using_equity_method is not None and symbolSeason3.total_share_of_other_income_of_associates_using_equity_method is not None:
+                        income_statement.total_share_of_other_income_of_associates_using_equity_method = st_to_decimal(next_data.string) - symbolSeason1.total_share_of_other_income_of_associates_using_equity_method - symbolSeason2.total_share_of_other_income_of_associates_using_equity_method - symbolSeason3.total_share_of_other_income_of_associates_using_equity_method
                 elif r'與其他綜合損益組成部分相關之所得稅' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.income_tax_of_other_comprehensive_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.income_tax_of_other_comprehensive_income and symbolSeason2.income_tax_of_other_comprehensive_income and symbolSeason3.income_tax_of_other_comprehensive_income:
-                        income_statement.income_tax_of_other_comprehensive_income = st_to_decimal(next_data.string) - symbolSeason1.income_tax_of_other_comprehensive_income - symbolSeason2.income_tax_of_other_comprehensive_income - symbolSeason3.income_tax_of_other_comprehensive_income
+                        income_statement.income_tax_related_of_other_comprehensive_income = st_to_decimal(next_data.string)
+                    elif symbolSeason1.income_tax_related_of_other_comprehensive_income is not None and symbolSeason2.income_tax_related_of_other_comprehensive_income is not None and symbolSeason3.income_tax_related_of_other_comprehensive_income is not None:
+                        income_statement.income_tax_related_of_other_comprehensive_income = st_to_decimal(next_data.string) - symbolSeason1.income_tax_related_of_other_comprehensive_income - symbolSeason2.income_tax_related_of_other_comprehensive_income - symbolSeason3.income_tax_related_of_other_comprehensive_income
                 elif r'其他綜合損益（淨額）' in data.string.encode('utf-8') or r'其他綜合損益（稅後）淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.other_comprehensive_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.other_comprehensive_income and symbolSeason2.other_comprehensive_income and symbolSeason3.other_comprehensive_income:
-                        income_statement.other_comprehensive_income = st_to_decimal(next_data.string) - symbolSeason1.other_comprehensive_income - symbolSeason2.other_comprehensive_income - symbolSeason3.other_comprehensive_income
+                        income_statement.net_other_comprehensive_income = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_other_comprehensive_income is not None and symbolSeason2.net_other_comprehensive_income is not None and symbolSeason3.net_other_comprehensive_income is not None:
+                        income_statement.net_other_comprehensive_income = st_to_decimal(next_data.string) - symbolSeason1.net_other_comprehensive_income - symbolSeason2.net_other_comprehensive_income - symbolSeason3.net_other_comprehensive_income
+                elif r'其他綜合損益' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        if not hasPrevSeasons:
+                            income_statement.other_comprehensive_income = st_to_decimal(next_data.string)
+                        elif symbolSeason1.other_comprehensive_income is not None and symbolSeason2.other_comprehensive_income is not None and symbolSeason3.other_comprehensive_income is not None:
+                            income_statement.other_comprehensive_income = st_to_decimal(next_data.string) - symbolSeason1.other_comprehensive_income - symbolSeason2.other_comprehensive_income - symbolSeason3.other_comprehensive_income
                 elif r'本期綜合損益總額' in data.string.encode('utf-8') or r'本期綜合損益總額（稅後）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.total_comprehensive_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.total_comprehensive_income and symbolSeason2.total_comprehensive_income and symbolSeason3.total_comprehensive_income:
+                    elif symbolSeason1.total_comprehensive_income is not None and symbolSeason2.total_comprehensive_income is not None and symbolSeason3.total_comprehensive_income is not None:
                         income_statement.total_comprehensive_income = st_to_decimal(next_data.string) - symbolSeason1.total_comprehensive_income - symbolSeason2.total_comprehensive_income - symbolSeason3.total_comprehensive_income
                 elif r'母公司業主（淨利／損）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.profit_to_owners_of_parent = st_to_decimal(next_data.string)
-                    elif symbolSeason1.profit_to_owners_of_parent and symbolSeason2.profit_to_owners_of_parent and symbolSeason3.profit_to_owners_of_parent:
-                        income_statement.profit_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.profit_to_owners_of_parent - symbolSeason2.profit_to_owners_of_parent - symbolSeason3.profit_to_owners_of_parent
+                        income_statement.profit_loss_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                    elif symbolSeason1.profit_loss_attributable_to_owners_of_parent is not None and symbolSeason2.profit_loss_attributable_to_owners_of_parent is not None and symbolSeason3.profit_loss_attributable_to_owners_of_parent is not None:
+                        income_statement.profit_loss_attributable_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.profit_loss_attributable_to_owners_of_parent - symbolSeason2.profit_loss_attributable_to_owners_of_parent - symbolSeason3.profit_loss_attributable_to_owners_of_parent
                 elif r'非控制權益（淨利／損）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.profit_to_non_controlling_interests = st_to_decimal(next_data.string)
-                    elif symbolSeason1.profit_to_non_controlling_interests and symbolSeason2.profit_to_non_controlling_interests and symbolSeason3.profit_to_non_controlling_interests:
-                        income_statement.profit_to_non_controlling_interests = st_to_decimal(next_data.string) - symbolSeason1.profit_to_non_controlling_interests - symbolSeason2.profit_to_non_controlling_interests - symbolSeason3.profit_to_non_controlling_interests
+                        income_statement.profit_loss_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                    elif symbolSeason1.profit_loss_attributable_to_owners_of_parent is not None and symbolSeason2.profit_loss_attributable_to_owners_of_parent is not None and symbolSeason3.profit_loss_attributable_to_owners_of_parent is not None:
+                        income_statement.profit_loss_attributable_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.profit_loss_attributable_to_owners_of_parent - symbolSeason2.profit_loss_attributable_to_owners_of_parent - symbolSeason3.profit_loss_attributable_to_owners_of_parent
                 elif r'母公司業主（綜合損益）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.comprehensive_income_to_owners_of_parent = st_to_decimal(next_data.string)
-                    elif symbolSeason1.comprehensive_income_to_owners_of_parent and symbolSeason2.comprehensive_income_to_owners_of_parent and symbolSeason3.comprehensive_income_to_owners_of_parent:
-                        income_statement.comprehensive_income_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.comprehensive_income_to_owners_of_parent - symbolSeason2.comprehensive_income_to_owners_of_parent - symbolSeason3.comprehensive_income_to_owners_of_parent
+                        income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                    elif symbolSeason1.comprehensive_income_attributable_to_owners_of_parent is not None and symbolSeason2.comprehensive_income_attributable_to_owners_of_parent is not None and symbolSeason3.comprehensive_income_attributable_to_owners_of_parent is not None:
+                        income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.comprehensive_income_attributable_to_owners_of_parent - symbolSeason2.comprehensive_income_attributable_to_owners_of_parent - symbolSeason3.comprehensive_income_attributable_to_owners_of_parent
                 elif r'母公司業主' in data.string.encode('utf-8'):
                     if owners_of_parent == 0:
                         next_data = data.next_sibling.next_sibling
                         if not hasPrevSeasons:
-                            income_statement.profit_to_owners_of_parent = st_to_decimal(next_data.string)
-                        elif symbolSeason1.profit_to_owners_of_parent and symbolSeason2.profit_to_owners_of_parent and symbolSeason3.profit_to_owners_of_parent:
-                            income_statement.profit_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.profit_to_owners_of_parent - symbolSeason2.profit_to_owners_of_parent - symbolSeason3.profit_to_owners_of_parent
+                            income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                        elif symbolSeason1.comprehensive_income_attributable_to_owners_of_parent is not None and symbolSeason2.comprehensive_income_attributable_to_owners_of_parent is not None and symbolSeason3.comprehensive_income_attributable_to_owners_of_parent is not None:
+                            income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.comprehensive_income_attributable_to_owners_of_parent - symbolSeason2.comprehensive_income_attributable_to_owners_of_parent - symbolSeason3.comprehensive_income_attributable_to_owners_of_parent
                         owners_of_parent = 1
                     else:
                         next_data = data.next_sibling.next_sibling
                         if not hasPrevSeasons:
-                            income_statement.comprehensive_income_to_owners_of_parent = st_to_decimal(next_data.string)
-                        elif symbolSeason1.comprehensive_income_to_owners_of_parent and symbolSeason2.comprehensive_income_to_owners_of_parent and symbolSeason3.comprehensive_income_to_owners_of_parent:
-                            income_statement.comprehensive_income_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.comprehensive_income_to_owners_of_parent - symbolSeason2.comprehensive_income_to_owners_of_parent - symbolSeason3.comprehensive_income_to_owners_of_parent
+                            income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                        elif symbolSeason1.comprehensive_income_attributable_to_owners_of_parent is not None and symbolSeason2.comprehensive_income_attributable_to_owners_of_parent is not None and symbolSeason3.comprehensive_income_attributable_to_owners_of_parent is not None:
+                            income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string) - symbolSeason1.comprehensive_income_attributable_to_owners_of_parent - symbolSeason2.comprehensive_income_attributable_to_owners_of_parent - symbolSeason3.comprehensive_income_attributable_to_owners_of_parent
                 elif r'非控制權益（綜合損益）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.comprehensive_income_to_non_controlling_interests = st_to_decimal(next_data.string)
-                    elif symbolSeason1.comprehensive_income_to_non_controlling_interests and symbolSeason2.comprehensive_income_to_non_controlling_interests and symbolSeason3.comprehensive_income_to_non_controlling_interests:
-                        income_statement.comprehensive_income_to_non_controlling_interests = st_to_decimal(next_data.string) - symbolSeason1.comprehensive_income_to_non_controlling_interests - symbolSeason2.comprehensive_income_to_non_controlling_interests - symbolSeason3.comprehensive_income_to_non_controlling_interests
+                        income_statement.comprehensive_income_attributable_to_non_controlling_interests = st_to_decimal(next_data.string)
+                    elif symbolSeason1.comprehensive_income_attributable_to_non_controlling_interests is not None and symbolSeason2.comprehensive_income_attributable_to_non_controlling_interests is not None and symbolSeason3.comprehensive_income_attributable_to_non_controlling_interests is not None:
+                        income_statement.comprehensive_income_attributable_to_non_controlling_interests = st_to_decimal(next_data.string) - symbolSeason1.comprehensive_income_attributable_to_non_controlling_interests - symbolSeason2.comprehensive_income_attributable_to_non_controlling_interests - symbolSeason3.comprehensive_income_attributable_to_non_controlling_interests
                 elif r'基本每股盈餘' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         if not hasPrevSeasons:
-                            income_statement.basic_earnings_per_share = st_to_decimal(next_data.string)
-                        elif symbolSeason1.basic_earnings_per_share and symbolSeason2.basic_earnings_per_share and symbolSeason3.basic_earnings_per_share:
-                            income_statement.basic_earnings_per_share = st_to_decimal(next_data.string) - symbolSeason1.basic_earnings_per_share - symbolSeason2.basic_earnings_per_share - symbolSeason3.basic_earnings_per_share
+                            income_statement.total_basic_earnings_per_share = st_to_decimal(next_data.string)
+                        elif symbolSeason1.total_basic_earnings_per_share is not None and symbolSeason2.total_basic_earnings_per_share is not None and symbolSeason3.total_basic_earnings_per_share is not None:
+                            income_statement.total_basic_earnings_per_share = st_to_decimal(next_data.string) - symbolSeason1.total_basic_earnings_per_share - symbolSeason2.total_basic_earnings_per_share - symbolSeason3.total_basic_earnings_per_share
                 elif r'稀釋每股盈餘' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         if not hasPrevSeasons:
-                            income_statement.diluted_earnings_per_share = st_to_decimal(next_data.string)
-                        elif symbolSeason1.diluted_earnings_per_share and symbolSeason2.diluted_earnings_per_share and symbolSeason3.diluted_earnings_per_share:
-                            income_statement.diluted_earnings_per_share = st_to_decimal(next_data.string) - symbolSeason1.diluted_earnings_per_share - symbolSeason2.diluted_earnings_per_share - symbolSeason3.diluted_earnings_per_share
+                            income_statement.total_diluted_earnings_per_share = st_to_decimal(next_data.string)
+                        elif symbolSeason1.total_diluted_earnings_per_share is not None and symbolSeason2.total_diluted_earnings_per_share is not None and symbolSeason3.total_diluted_earnings_per_share is not None:
+                            income_statement.total_diluted_earnings_per_share = st_to_decimal(next_data.string) - symbolSeason1.total_diluted_earnings_per_share - symbolSeason2.total_diluted_earnings_per_share - symbolSeason3.total_diluted_earnings_per_share
                 elif r'利息收入' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.interest_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.interest_income and symbolSeason2.interest_income and symbolSeason3.interest_income:
+                    elif symbolSeason1.interest_income is not None and symbolSeason2.interest_income is not None and symbolSeason3.interest_income is not None:
                         income_statement.interest_income = st_to_decimal(next_data.string) - symbolSeason1.interest_income - symbolSeason2.interest_income - symbolSeason3.interest_income
                 elif r'減：利息費用' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.interest_expenses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.interest_expenses and symbolSeason2.interest_expenses and symbolSeason3.interest_expenses:
+                    elif symbolSeason1.interest_expenses is not None and symbolSeason2.interest_expenses is not None and symbolSeason3.interest_expenses is not None:
                         income_statement.interest_expenses = st_to_decimal(next_data.string) - symbolSeason1.interest_expenses - symbolSeason2.interest_expenses - symbolSeason3.interest_expenses
                 elif r'利息淨收益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.net_income_of_interest = st_to_decimal(next_data.string)
-                    elif symbolSeason1.net_income_of_interest and symbolSeason2.net_income_of_interest and symbolSeason3.net_income_of_interest:
-                        income_statement.net_income_of_interest = st_to_decimal(next_data.string) - symbolSeason1.net_income_of_interest - symbolSeason2.net_income_of_interest - symbolSeason3.net_income_of_interest
+                        income_statement.net_interest_income_expense = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_interest_income_expense is not None and symbolSeason2.net_interest_income_expense is not None and symbolSeason3.net_interest_income_expense is not None:
+                        income_statement.net_interest_income_expense = st_to_decimal(next_data.string) - symbolSeason1.net_interest_income_expense - symbolSeason2.net_interest_income_expense - symbolSeason3.net_interest_income_expense
                 elif r'手續費淨收益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.net_service_fee_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.net_service_fee_income and symbolSeason2.net_service_fee_income and symbolSeason3.net_service_fee_income:
-                        income_statement.net_service_fee_income = st_to_decimal(next_data.string) - symbolSeason1.net_service_fee_income - symbolSeason2.net_service_fee_income - symbolSeason3.net_service_fee_income
+                        income_statement.net_service_fee_charge_and_commisions_income_loss = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_service_fee_charge_and_commisions_income_loss is not None and symbolSeason2.net_service_fee_charge_and_commisions_income_loss is not None and symbolSeason3.net_service_fee_charge_and_commisions_income_loss is not None:
+                        income_statement.net_service_fee_charge_and_commisions_income_loss = st_to_decimal(next_data.string) - symbolSeason1.net_service_fee_charge_and_commisions_income_loss - symbolSeason2.net_service_fee_charge_and_commisions_income_loss - symbolSeason3.net_service_fee_charge_and_commisions_income_loss
                 elif r'透過損益按公允價值衡量之金融資產及負債損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.gain_on_financial_assets_or_liabilities_measured = st_to_decimal(next_data.string)
-                    elif symbolSeason1.gain_on_financial_assets_or_liabilities_measured and symbolSeason2.gain_on_financial_assets_or_liabilities_measured and symbolSeason3.gain_on_financial_assets_or_liabilities_measured:
-                        income_statement.gain_on_financial_assets_or_liabilities_measured = st_to_decimal(next_data.string) - symbolSeason1.gain_on_financial_assets_or_liabilities_measured - symbolSeason2.gain_on_financial_assets_or_liabilities_measured - symbolSeason3.gain_on_financial_assets_or_liabilities_measured
+                        income_statement.gain_loss_on_financial_assets_liabilities_at_fair_value = st_to_decimal(next_data.string)
+                    elif symbolSeason1.gain_loss_on_financial_assets_liabilities_at_fair_value is not None and symbolSeason2.gain_loss_on_financial_assets_liabilities_at_fair_value is not None and symbolSeason3.gain_loss_on_financial_assets_liabilities_at_fair_value is not None:
+                        income_statement.gain_loss_on_financial_assets_liabilities_at_fair_value = st_to_decimal(next_data.string) - symbolSeason1.gain_loss_on_financial_assets_liabilities_at_fair_value - symbolSeason2.gain_loss_on_financial_assets_liabilities_at_fair_value - symbolSeason3.gain_loss_on_financial_assets_liabilities_at_fair_value
+                elif r'保險業務淨收益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    if not hasPrevSeasons:
+                        income_statement.net_income_loss_of_insurance_operations = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_income_loss_of_insurance_operations is not None and symbolSeason2.net_income_loss_of_insurance_operations is not None and symbolSeason3.net_income_loss_of_insurance_operations is not None:
+                        income_statement.net_income_loss_of_insurance_operations = st_to_decimal(next_data.string) - symbolSeason1.net_income_loss_of_insurance_operations - symbolSeason2.net_income_loss_of_insurance_operations - symbolSeason3.net_income_loss_of_insurance_operations
+                elif r'投資性不動產損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    if not hasPrevSeasons:
+                        income_statement.gain_loss_on_investment_property = st_to_decimal(next_data.string)
+                    elif symbolSeason1.gain_loss_on_investment_property is not None and symbolSeason2.gain_loss_on_investment_property is not None and symbolSeason3.gain_loss_on_investment_property is not None:
+                        income_statement.gain_loss_on_investment_property = st_to_decimal(next_data.string) - symbolSeason1.gain_loss_on_investment_property - symbolSeason2.gain_loss_on_investment_property - symbolSeason3.gain_loss_on_investment_property
                 elif r'備供出售金融資產之已實現損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.realized_gains_for_sale_financial_assets = st_to_decimal(next_data.string)
-                    elif symbolSeason1.realized_gains_for_sale_financial_assets and symbolSeason2.realized_gains_for_sale_financial_assets and symbolSeason3.realized_gains_for_sale_financial_assets:
-                        income_statement.realized_gains_for_sale_financial_assets = st_to_decimal(next_data.string) - symbolSeason1.realized_gains_for_sale_financial_assets - symbolSeason2.realized_gains_for_sale_financial_assets - symbolSeason3.realized_gains_for_sale_financial_assets
+                        income_statement.realized_gains_on_available_for_sale_financial_assets = st_to_decimal(next_data.string)
+                    elif symbolSeason1.realized_gains_on_available_for_sale_financial_assets is not None and symbolSeason2.realized_gains_on_available_for_sale_financial_assets is not None and symbolSeason3.realized_gains_on_available_for_sale_financial_assets is not None:
+                        income_statement.realized_gains_on_available_for_sale_financial_assets = st_to_decimal(next_data.string) - symbolSeason1.realized_gains_on_available_for_sale_financial_assets - symbolSeason2.realized_gains_on_available_for_sale_financial_assets - symbolSeason3.realized_gains_on_available_for_sale_financial_assets
                 elif r'持有至到期日金融資產之已實現損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.realized_gains_on_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
-                    elif symbolSeason1.realized_gains_on_held_to_maturity_financial_assets and symbolSeason2.realized_gains_on_held_to_maturity_financial_assets and symbolSeason3.realized_gains_on_held_to_maturity_financial_assets:
+                    elif symbolSeason1.realized_gains_on_held_to_maturity_financial_assets is not None and symbolSeason2.realized_gains_on_held_to_maturity_financial_assets is not None and symbolSeason3.realized_gains_on_held_to_maturity_financial_assets is not None:
                         income_statement.realized_gains_on_held_to_maturity_financial_assets = st_to_decimal(next_data.string) - symbolSeason1.realized_gains_on_held_to_maturity_financial_assets - symbolSeason2.realized_gains_on_held_to_maturity_financial_assets - symbolSeason3.realized_gains_on_held_to_maturity_financial_assets
                 elif r'兌換損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.foreign_exchange_gain = st_to_decimal(next_data.string)
-                    elif symbolSeason1.foreign_exchange_gain and symbolSeason2.foreign_exchange_gain and symbolSeason3.foreign_exchange_gain:
-                        income_statement.foreign_exchange_gain = st_to_decimal(next_data.string) - symbolSeason1.foreign_exchange_gain - symbolSeason2.foreign_exchange_gain - symbolSeason3.foreign_exchange_gain
+                        income_statement.foreign_exchange_gains_losses = st_to_decimal(next_data.string)
+                    elif symbolSeason1.foreign_exchange_gains_losses is not None and symbolSeason2.foreign_exchange_gains_losses is not None and symbolSeason3.foreign_exchange_gains_losses is not None:
+                        income_statement.foreign_exchange_gains_losses = st_to_decimal(next_data.string) - symbolSeason1.foreign_exchange_gains_losses - symbolSeason2.foreign_exchange_gains_losses - symbolSeason3.foreign_exchange_gains_losses
                 elif r'資產減損（損失）迴轉利益淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.reversal_of_impairment_loss_on_assets = st_to_decimal(next_data.string)
-                    elif symbolSeason1.reversal_of_impairment_loss_on_assets and symbolSeason2.reversal_of_impairment_loss_on_assets and symbolSeason3.reversal_of_impairment_loss_on_assets:
-                        income_statement.reversal_of_impairment_loss_on_assets = st_to_decimal(next_data.string) - symbolSeason1.reversal_of_impairment_loss_on_assets - symbolSeason2.reversal_of_impairment_loss_on_assets - symbolSeason3.reversal_of_impairment_loss_on_assets
-                elif r'採用權益法認列之關聯企業及合資損益之份額' in data.string.encode('utf-8'):
-                    next_data = data.next_sibling.next_sibling
-                    if not hasPrevSeasons:
-                        income_statement.gain_on_disposal_of_investments_accounted = st_to_decimal(next_data.string)
-                    elif symbolSeason1.gain_on_disposal_of_investments_accounted and symbolSeason2.gain_on_disposal_of_investments_accounted and symbolSeason3.gain_on_disposal_of_investments_accounted:
-                        income_statement.gain_on_disposal_of_investments_accounted = st_to_decimal(next_data.string) - symbolSeason1.gain_on_disposal_of_investments_accounted - symbolSeason2.gain_on_disposal_of_investments_accounted - symbolSeason3.gain_on_disposal_of_investments_accounted
+                        income_statement.impairment_loss_or_reversal_of_impairment_loss_on_assets = st_to_decimal(next_data.string)
+                    elif symbolSeason1.impairment_loss_or_reversal_of_impairment_loss_on_assets is not None and symbolSeason2.impairment_loss_or_reversal_of_impairment_loss_on_assets is not None and symbolSeason3.impairment_loss_or_reversal_of_impairment_loss_on_assets is not None:
+                        income_statement.impairment_loss_or_reversal_of_impairment_loss_on_assets = st_to_decimal(next_data.string) - symbolSeason1.impairment_loss_or_reversal_of_impairment_loss_on_assets - symbolSeason2.impairment_loss_or_reversal_of_impairment_loss_on_assets - symbolSeason3.impairment_loss_or_reversal_of_impairment_loss_on_assets
                 elif r'其他利息以外淨損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.net_other_non_interest_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.net_other_non_interest_income and symbolSeason2.net_other_non_interest_income and symbolSeason3.net_other_non_interest_income:
-                        income_statement.net_other_non_interest_income = st_to_decimal(next_data.string) - symbolSeason1.net_other_non_interest_income - symbolSeason2.net_other_non_interest_income - symbolSeason3.net_other_non_interest_income
+                        income_statement.net_other_non_interest_incomes_losses = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_other_non_interest_incomes_losses is not None and symbolSeason2.net_other_non_interest_incomes_losses is not None and symbolSeason3.net_other_non_interest_incomes_losses is not None:
+                        income_statement.net_other_non_interest_incomes_losses = st_to_decimal(next_data.string) - symbolSeason1.net_other_non_interest_incomes_losses - symbolSeason2.net_other_non_interest_incomes_losses - symbolSeason3.net_other_non_interest_incomes_losses
                 elif r'利息以外淨損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.net_non_interest_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.net_non_interest_income and symbolSeason2.net_non_interest_income and symbolSeason3.net_non_interest_income:
-                        income_statement.net_non_interest_income = st_to_decimal(next_data.string) - symbolSeason1.net_non_interest_income - symbolSeason2.net_non_interest_income - symbolSeason3.net_non_interest_income
+                        income_statement.net_income_loss_except_interest = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_income_loss_except_interest is not None and symbolSeason2.net_income_loss_except_interest is not None and symbolSeason3.net_income_loss_except_interest is not None:
+                        income_statement.net_income_loss_except_interest = st_to_decimal(next_data.string) - symbolSeason1.net_income_loss_except_interest - symbolSeason2.net_income_loss_except_interest - symbolSeason3.net_income_loss_except_interest
                 elif r'淨收益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.net_income = st_to_decimal(next_data.string)
-                    elif symbolSeason1.net_income and symbolSeason2.net_income and symbolSeason3.net_income:
-                        income_statement.net_income = st_to_decimal(next_data.string) - symbolSeason1.net_income - symbolSeason2.net_income - symbolSeason3.net_income
+                        income_statement.net_income_loss = st_to_decimal(next_data.string)
+                    elif symbolSeason1.net_income_loss and symbolSeason2.net_income_loss and symbolSeason3.net_income_loss:
+                        income_statement.net_income_loss = st_to_decimal(next_data.string) - symbolSeason1.net_income_loss - symbolSeason2.net_income_loss - symbolSeason3.net_income_loss
                 elif r'呆帳費用及保證責任準備提存（各項提存）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.total_bad_debts_expense = st_to_decimal(next_data.string)
-                    elif symbolSeason1.total_bad_debts_expense and symbolSeason2.total_bad_debts_expense and symbolSeason3.total_bad_debts_expense:
-                        income_statement.total_bad_debts_expense = st_to_decimal(next_data.string) - symbolSeason1.total_bad_debts_expense - symbolSeason2.total_bad_debts_expense - symbolSeason3.total_bad_debts_expense
+                        income_statement.total_bad_debts_expense_and_guarantee_liability_provisions = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_bad_debts_expense_and_guarantee_liability_provisions is not None and symbolSeason2.total_bad_debts_expense_and_guarantee_liability_provisions is not None and symbolSeason3.total_bad_debts_expense_and_guarantee_liability_provisions is not None:
+                        income_statement.total_bad_debts_expense_and_guarantee_liability_provisions = st_to_decimal(next_data.string) - symbolSeason1.total_bad_debts_expense_and_guarantee_liability_provisions - symbolSeason2.total_bad_debts_expense_and_guarantee_liability_provisions - symbolSeason3.total_bad_debts_expense_and_guarantee_liability_provisions
+                elif r'保險負債準備淨變動' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    if not hasPrevSeasons:
+                        income_statement.total_net_change_in_provisions_for_insurance_liabilities = st_to_decimal(next_data.string)
+                    elif symbolSeason1.total_net_change_in_provisions_for_insurance_liabilities is not None and symbolSeason2.total_net_change_in_provisions_for_insurance_liabilities is not None and symbolSeason3.total_net_change_in_provisions_for_insurance_liabilities is not None:
+                        income_statement.total_net_change_in_provisions_for_insurance_liabilities = st_to_decimal(next_data.string) - symbolSeason1.total_net_change_in_provisions_for_insurance_liabilities - symbolSeason2.total_net_change_in_provisions_for_insurance_liabilities - symbolSeason3.total_net_change_in_provisions_for_insurance_liabilities
                 elif r'員工福利費用' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
                         income_statement.employee_benefits_expenses = st_to_decimal(next_data.string)
-                    elif symbolSeason1.employee_benefits_expenses and symbolSeason2.employee_benefits_expenses and symbolSeason3.employee_benefits_expenses:
+                    elif symbolSeason1.employee_benefits_expenses is not None and symbolSeason2.employee_benefits_expenses is not None and symbolSeason3.employee_benefits_expenses is not None:
                         income_statement.employee_benefits_expenses = st_to_decimal(next_data.string) - symbolSeason1.employee_benefits_expenses - symbolSeason2.employee_benefits_expenses - symbolSeason3.employee_benefits_expenses
                 elif r'折舊及攤銷費用' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if not hasPrevSeasons:
-                        income_statement.depreciation_and_amortization_expense = st_to_decimal(next_data.string)
-                    elif symbolSeason1.depreciation_and_amortization_expense and symbolSeason2.depreciation_and_amortization_expense and symbolSeason3.depreciation_and_amortization_expense:
-                        income_statement.depreciation_and_amortization_expense = st_to_decimal(next_data.string) - symbolSeason1.depreciation_and_amortization_expense - symbolSeason2.depreciation_and_amortization_expense - symbolSeason3.depreciation_and_amortization_expense
+                        income_statement.employee_benefits_expenses = st_to_decimal(next_data.string)
+                    elif symbolSeason1.employee_benefits_expenses is not None and symbolSeason2.employee_benefits_expenses is not None and symbolSeason3.employee_benefits_expenses is not None:
+                        income_statement.employee_benefits_expenses = st_to_decimal(next_data.string) - symbolSeason1.employee_benefits_expenses - symbolSeason2.employee_benefits_expenses - symbolSeason3.employee_benefits_expenses
+                elif r'其他業務及管理費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    if not hasPrevSeasons:
+                        income_statement.other_general_and_administrative_expenses = st_to_decimal(next_data.string)
+                    elif symbolSeason1.other_general_and_administrative_expenses is not None and symbolSeason2.other_general_and_administrative_expenses is not None and symbolSeason3.other_general_and_administrative_expenses is not None:
+                        income_statement.other_general_and_administrative_expenses = st_to_decimal(next_data.string) - symbolSeason1.other_general_and_administrative_expenses - symbolSeason2.other_general_and_administrative_expenses - symbolSeason3.other_general_and_administrative_expenses
+                elif r'現金流量避險中屬有效避險不分之避險工具利益（損失）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    if not hasPrevSeasons:
+                        income_statement.gain_loss_on_effective_portion_of_cash_flow_hedges = st_to_decimal(next_data.string)
+                    elif symbolSeason1.gain_loss_on_effective_portion_of_cash_flow_hedges is not None and symbolSeason2.gain_loss_on_effective_portion_of_cash_flow_hedges is not None and symbolSeason3.gain_loss_on_effective_portion_of_cash_flow_hedges is not None:
+                        income_statement.gain_loss_on_effective_portion_of_cash_flow_hedges = st_to_decimal(next_data.string) - symbolSeason1.gain_loss_on_effective_portion_of_cash_flow_hedges - symbolSeason2.gain_loss_on_effective_portion_of_cash_flow_hedges - symbolSeason3.gain_loss_on_effective_portion_of_cash_flow_hedges
                 elif r'停業單位損益' in data.string.encode('utf-8') or r'停業單位損益合計' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         if not hasPrevSeasons:
                             income_statement.income_from_discontinued_operations = st_to_decimal(next_data.string)
-                        elif symbolSeason1.income_from_discontinued_operations and symbolSeason2.income_from_discontinued_operations and symbolSeason3.income_from_discontinued_operations:
+                        elif symbolSeason1.income_from_discontinued_operations is not None and symbolSeason2.income_from_discontinued_operations is not None and symbolSeason3.income_from_discontinued_operations is not None:
                             income_statement.income_from_discontinued_operations = st_to_decimal(next_data.string) - symbolSeason1.income_from_discontinued_operations - symbolSeason2.income_from_discontinued_operations - symbolSeason3.income_from_discontinued_operations
-            if income_statement.basic_earnings_per_share is not None:
+            if income_statement.total_basic_earnings_per_share is not None:
                 income_statement.save()
                 print stock_symbol + ' data updated'
             else:
@@ -505,14 +560,14 @@ def update_season_income_statement(request):
 
 #資產負債表
 def show_season_balance_sheet(request):
-    stock_symbol = '2823'
+    stock_symbol = '5880'
     year = 102
     season = 2
-    url = 'http://mops.twse.com.tw/mops/web/t164sb03'
+    url = 'http://mops.twse.com.tw/mops/web/t164sb04'
     values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
             'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
             'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
-    values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'sii', 'step' : '2',
+    values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
               'year' : '102', 'season' : '2', 'co_id' : stock_symbol, 'firstin' : '1'}
     url_data = urllib.urlencode(values) 
     req = urllib2.Request(url, url_data)
@@ -540,292 +595,322 @@ def update_season_balance_sheet(request):
         year = int(request.GET['year'])
         season = int(request.GET['season'])
     else:
-        year = 102
-        season = 3
-    stock_ids = StockId.objects.all()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year+1911, season=season):
+        today = datetime.datetime.now()
+        year, season = last_season(today)
+    stockIDs = get_updated_id(year, season)
+    for stock_id in stockIDs:
+        stock_symbol = stock_id
+        if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year, season=season):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb03'
-            values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
-                    'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
-                    'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : stock_symbol, 
-                    'year' : year, 'season' : str(season).zfill(2) }
-            values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'sii', 'step' : '2',
-              'year' : year, 'season' : str(season).zfill(2), 'co_id' : stock_symbol, 'firstin' : '1'}
+            if stock_symbol[:2] == '28' or stock_symbol == '5880' or stock_symbol == '5820' or stock_symbol == '3990' or stock_symbol == '5871':
+                values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
+                        'year' : str(year-1911), 'season' : str(season).zfill(1), 'co_id' : stock_symbol, 'firstin' : '1'}
+            else:
+                values = {'encodeURIComponent': '1', 'step': '1', 'firstin': '1', 'off': '1',
+                        'keyword4': '', 'code1': '', 'TYPEK2': '', 'checkbtn': '',
+                        'queryName': 'co_id', 'TYPEK': 'all', 'isnew': 'false',
+                        'co_id': stock_symbol, 'year': str(year-1911), 'season': str(season).zfill(2)}
             url_data = urllib.urlencode(values)
-            req = urllib2.Request(url, url_data)
-            response = urllib2.urlopen(req)
-            soup = BeautifulSoup(response,from_encoding="utf-8")
-           
-            balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            req = urllib2.Request(url, url_data, headers)
+            try:
+                response = urllib2.urlopen(req)
+                soup = BeautifulSoup(response,from_encoding="utf-8")
+                balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
+            except URLError, e:
+                print stock_symbol + ' time sleep'
+                time.sleep(20)
+                busy_msg = True
+                if hasattr(e, "reason"):
+                    print(stock_symbol + " Reason:"), e.reason
+                elif hasattr(e, "code"):
+                    print(stock_symbol + " Error code:"), e.code
+            # 如果連線正常，還得再確認是否因查詢頻繁而給空表格；若有，則先sleep再重新連線
+            while (busy_msg is not None):
+                response.close()
+                headers = {'User-Agent': 'Mozilla/4.0'}
+                req = urllib2.Request(url, url_data, headers)
+                try:
+                    response = urllib2.urlopen(req)
+                    soup = BeautifulSoup(response,from_encoding="utf-8")
+                    balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                    busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
+                except URLError, e:
+                    busy_msg = True
+                    if hasattr(e, "reason"):
+                        print(stock_symbol + " Reason:"), e.reason
+                    elif hasattr(e, "code"):
+                        print(stock_symbol + " Error code:"), e.code
+                if busy_msg:
+                    print stock_symbol + ' time sleep' 
+                    time.sleep(20)
+
             balance_sheet = SeasonBalanceSheet()
             balance_sheet.symbol = stock_symbol
-            balance_sheet.year = str(1911+year)
+            balance_sheet.year = str(year)
             balance_sheet.season = season
-
-            balance_sheet.date = season_to_date(1911+year, season)
-            balance_sheet.surrogate_key = stock_symbol + '_' + str(1911+year) + str(season).zfill(2)
-
-            last_balance_sheet = SeasonBalanceSheet()
-            last_balance_sheet.symbol = stock_symbol
-            last_balance_sheet.year = str(1910+year)
-            last_balance_sheet.season = season
-            last_balance_sheet.date = season_to_date(1910+year, season)
-            last_balance_sheet.surrogate_key = stock_symbol + '_' + str(1910+year) + str(season).zfill(2)
+            balance_sheet.date = season_to_date(year, season)
+            balance_sheet.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
 
             for data in balance_sheet_datas:
                 if r'現金及約當現金' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.cash_and_cash_equivalents = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.cash_and_cash_equivalents = st_to_decimal(next_data.string)
+                    balance_sheet.total_cash_and_cash_equivalents = st_to_decimal(next_data.string)
+                elif r'無活絡市場之債券投資' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.current_bond_investment_without_active_market = st_to_decimal(next_data.string)
                 elif r'透過損益按公允價值衡量之金融資產－流動' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.current_financial_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.current_financial_assets = st_to_decimal(next_data.string)
+                    balance_sheet.current_financial_assets_at_fair_value_through_profit_or_loss = st_to_decimal(next_data.string)
                 elif r'備供出售金融資產－流動淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.current_available_for_sale_financial_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.current_available_for_sale_financial_assets = st_to_decimal(next_data.string)
                 elif r'持有至到期日金融資產－流動淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.current_available_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.current_available_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
+                    balance_sheet.current_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
                 elif r'應收票據淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.notes_receivable = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.notes_receivable = st_to_decimal(next_data.string)
                 elif r'應收帳款淨額' in data.string.encode('utf-8') or r'應收款項淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.accounts_receivable = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.accounts_receivable = st_to_decimal(next_data.string)
+                elif r'應收帳款－關係人淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.accounts_receivable_due_from_related_parties = st_to_decimal(next_data.string)
+                elif r'其他應收款淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_other_receivables = st_to_decimal(next_data.string)
+                elif r'其他應收款－關係人淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.other_receivables_due_from_related_parties = st_to_decimal(next_data.string)
+                elif r'當期所得稅資產' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_current_tax_assets = st_to_decimal(next_data.string)
                 elif r'存貨' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.inventories = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.inventories = st_to_decimal(next_data.string)
+                    balance_sheet.total_inventories = st_to_decimal(next_data.string)
                 elif r'預付款項' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.prepayments = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.prepayments = st_to_decimal(next_data.string)
+                    balance_sheet.total_prepayments = st_to_decimal(next_data.string)
                 elif r'其他流動資產' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.other_current_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.other_current_assets = st_to_decimal(next_data.string)
+                    balance_sheet.total_other_current_assets = st_to_decimal(next_data.string)
                 elif r'流動資產合計' in data.string.encode('utf-8') and r'非' not in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_current_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_current_assets = st_to_decimal(next_data.string)
                 elif r'備供出售金融資產－非流動淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.non_current_available_for_sale_financial_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.non_current_available_for_sale_financial_assets = st_to_decimal(next_data.string)
+                elif r'以成本衡量之金融資產－非流動淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.non_current_financial_assets_at_cost = st_to_decimal(next_data.string)
+                elif r'採用權益法之投資淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.investment_accounted_for_using_equity_method = st_to_decimal(next_data.string)
                 elif r'不動產、廠房及設備' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.property_plant_and_equipment = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.property_plant_and_equipment = st_to_decimal(next_data.string)
+                    balance_sheet.total_property_plant_and_equipment = st_to_decimal(next_data.string)
                 elif r'投資性不動產淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.investment_property = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.investment_property = st_to_decimal(next_data.string)
+                    balance_sheet.net_investment_property = st_to_decimal(next_data.string)
                 elif r'無形資產' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         balance_sheet.intangible_assets = st_to_decimal(next_data.string)
-                        next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                        last_balance_sheet.intangible_assets = st_to_decimal(next_data.string)
                 elif r'遞延所得稅資產' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.deferred_tax_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.deferred_tax_assets = st_to_decimal(next_data.string)
                 elif r'其他非流動資產' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.other_non_current_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.other_non_current_assets = st_to_decimal(next_data.string)
+                    balance_sheet.total_other_non_current_assets = st_to_decimal(next_data.string)
                 elif r'非流動資產合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_non_current_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_non_current_assets = st_to_decimal(next_data.string)
                 elif r'資產總額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_assets = st_to_decimal(next_data.string)
                 elif r'短期借款' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.short_term_borrowings = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.short_term_borrowings = st_to_decimal(next_data.string)
+                    balance_sheet.total_short_term_borrowings = st_to_decimal(next_data.string)
                 elif r'透過損益按公允價值衡量之金融負債－流動' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.current_financial_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.current_financial_liabilities = st_to_decimal(next_data.string)
+                    balance_sheet.current_financial_liabilities_fair_value_through_profit_or_loss = st_to_decimal(next_data.string)
+                elif r'避險之衍生金融負債－流動' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.current_derivative_financial_liabilities_for_hedging = st_to_decimal(next_data.string)
                 elif r'應付票據' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.notes_payable = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.notes_payable = st_to_decimal(next_data.string)
-                elif r'應付帳款' in data.string.encode('utf-8'):
+                    balance_sheet.total_notes_payable = st_to_decimal(next_data.string)
+                elif r'應付帳款－關係人' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.accounts_payable = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.accounts_payable = st_to_decimal(next_data.string)
+                    balance_sheet.total_accounts_payable_to_related_parties = st_to_decimal(next_data.string)
+                elif r'其他應付款項－關係人' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.other_payables_to_related_parties = st_to_decimal(next_data.string)
                 elif r'其他應付款' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.other_payables = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.other_payables = st_to_decimal(next_data.string)
+                    balance_sheet.total_other_payables = st_to_decimal(next_data.string)
+                elif r'應付帳款' in data.string.encode('utf-8') or r'應付款項' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        balance_sheet.total_accounts_payable = st_to_decimal(next_data.string)
+                elif r'應付建造合約款－關係人' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.construction_contracts_payable_to_related_parties = st_to_decimal(next_data.string)
+                elif r'應付建造合約款' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.construction_contracts_payable = st_to_decimal(next_data.string)
                 elif r'當期所得稅負債' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.current_tax_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.current_tax_liabilities = st_to_decimal(next_data.string)
                 elif r'負債準備－流動' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.current_provisions = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.current_provisions = st_to_decimal(next_data.string)
                 elif r'其他流動負債' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.other_current_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.other_current_liabilities = st_to_decimal(next_data.string)
+                    balance_sheet.total_other_current_liabilities = st_to_decimal(next_data.string)
                 elif r'流動負債合計' in data.string.encode('utf-8') and r'非' not in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_current_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_current_liabilities = st_to_decimal(next_data.string)
+                elif r'避險之衍生金融負債－非流動' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.non_current_derivative_financial_liabilities_for_hedeging = st_to_decimal(next_data.string)
+                elif r'長期借款' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_long_term_borrowings = st_to_decimal(next_data.string)
+                elif r'負債準備－非流動' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_non_current_provisions = st_to_decimal(next_data.string)
                 elif r'遞延所得稅負債' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.deferred_tax_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.deferred_tax_liabilities = st_to_decimal(next_data.string)
+                    balance_sheet.total_deferred_tax_liabilities = st_to_decimal(next_data.string)
                 elif r'其他非流動負債' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.other_non_current_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.other_non_current_liabilities = st_to_decimal(next_data.string)
                 elif r'非流動負債合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_non_current_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_non_current_liabilities = st_to_decimal(next_data.string)
                 elif r'負債總額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_liabilities = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_liabilities = st_to_decimal(next_data.string)
                 elif r'普通股股本' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.ordinary_share = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.ordinary_share = st_to_decimal(next_data.string)
                 elif r'股本合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_capital_stock = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_capital_stock = st_to_decimal(next_data.string)
                 elif r'資本公積－發行溢價' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.additional_paid_in_capital = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.additional_paid_in_capital = st_to_decimal(next_data.string)
                 elif r'資本公積－庫藏股票交易' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.treasury_share_transactions = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.treasury_share_transactions = st_to_decimal(next_data.string)
                 elif r'資本公積－合併溢額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.net_assets_from_merger = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.net_assets_from_merger = st_to_decimal(next_data.string)
                 elif r'資本公積合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_capital_surplus = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_capital_surplus = st_to_decimal(next_data.string)
                 elif r'法定盈餘公積' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.legal_reserve = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.legal_reserve = st_to_decimal(next_data.string)
                 elif r'特別盈餘公積' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.special_reserve = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.special_reserve = st_to_decimal(next_data.string)
                 elif r'未分配盈餘（或待彌補虧損）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.unappropriated_retained_earnings = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.unappropriated_retained_earnings = st_to_decimal(next_data.string)
+                    balance_sheet.total_unappropriated_retained_earnings_or_accumulated_deficit = st_to_decimal(next_data.string)
                 elif r'保留盈餘合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.retained_earnings = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.retained_earnings = st_to_decimal(next_data.string)
+                    balance_sheet.total_retained_earnings = st_to_decimal(next_data.string)
                 elif r'國外營運機構財務報表換算之兌換差額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.exchange_differences_of_foreign_financial_statements = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.exchange_differences_of_foreign_financial_statements = st_to_decimal(next_data.string)
                 elif r'備供出售金融資產未實現損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.unrealised_gains_for_sale_financial_assets = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.unrealised_gains_for_sale_financial_assets = st_to_decimal(next_data.string)
                 elif r'其他權益合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.other_equity_interest = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.other_equity_interest = st_to_decimal(next_data.string)
                 elif r'歸屬於母公司業主之權益合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.equity_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.equity_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                    balance_sheet.total_equity_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                elif r'共同控制下前手權益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.equity_attributable_to_former_owner_of_business_combination = st_to_decimal(next_data.string)
                 elif r'非控制權益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.non_controlling_interests = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.non_controlling_interests = st_to_decimal(next_data.string)
                 elif r'權益總額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_equity = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.total_equity = st_to_decimal(next_data.string)
+                elif r'待註銷股本股數（單位：股）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.number_of_shares_capital_awaiting_retirement = st_to_decimal(next_data.string)
                 elif r'預收股款（權益項下）之約當發行股數（單位：股）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.equivalent_issue_shares_of_advance_receipts = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.equivalent_issue_shares_of_advance_receipts = st_to_decimal(next_data.string)
                 elif r'母公司暨子公司所持有之母公司庫藏股股數（單位：股）' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.number_of_shares_in_entity_held_by_entity = st_to_decimal(next_data.string)
-                    next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
-                    last_balance_sheet.number_of_shares_in_entity_held_by_entity = st_to_decimal(next_data.string)
-            if balance_sheet.cash_and_cash_equivalents:
+                elif r'存放央行及拆款同業' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.due_from_the_central_bank_and_call_loans_to_banks = st_to_decimal(next_data.string)
+                elif r'避險之衍生金融資產' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.derivative_financial_assets_for_hedging = st_to_decimal(next_data.string)
+                elif r'待出售資產－淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_assets_classified_as_held_for_sale = st_to_decimal(next_data.string)
+                elif r'貼現及放款－淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_loans_discounted = st_to_decimal(next_data.string)
+                elif r'再保險合約資產－淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_reinsurance_contract_assets = st_to_decimal(next_data.string)
+                elif r'其他金融資產－淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_other_financial_assets = st_to_decimal(next_data.string)
+                elif r'不動產及設備－淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_property_and_equipment = st_to_decimal(next_data.string)
+                elif r'其他資產－淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_other_assets = st_to_decimal(next_data.string)
+                elif r'央行及金融同業存款' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.deposits_from_the_central_bank_and_banks = st_to_decimal(next_data.string)
+                elif r'央行及同業融資' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.due_to_the_central_bank_and_banks = st_to_decimal(next_data.string)
+                elif r'附買回票券及債券負債' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.securities_sold_under_repurchase_agreements = st_to_decimal(next_data.string)
+                elif r'應付商業本票－淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.net_commercial_papers_issued = st_to_decimal(next_data.string)
+                elif r'存款及匯款' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.deposits = st_to_decimal(next_data.string)
+                elif r'負債準備' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        balance_sheet.total_provisions = st_to_decimal(next_data.string)
+                elif r'其他金融負債' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_other_financial_liabilities = st_to_decimal(next_data.string)
+                elif r'其他負債' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        balance_sheet.total_other_liabilities = st_to_decimal(next_data.string)
+                elif r'庫藏股票' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.treasury_share = st_to_decimal(next_data.string)
+            if balance_sheet.total_cash_and_cash_equivalents:
                 balance_sheet.save()
-                last_balance_sheet.save()
             else:
                 print stock_symbol + ' time sleep'
                 time.sleep(5)
