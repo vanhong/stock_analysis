@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 
-# 綜合損益表
+# 綜合損益表(季)
 class SeasonIncomeStatement(models.Model):
     surrogate_key = models.CharField(max_length=50, primary_key=True)
     symbol = models.CharField(max_length=20, db_index=True)
@@ -478,6 +478,38 @@ class SeasonBalanceSheet(models.Model):
     total_other_liabilities = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 庫藏股票
     treasury_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+
+# 現金流量表(季)
+class SeasonStatementsOfCashFlows(models.Model):
+    surrogate_key = models.CharField(max_length=20, primary_key=True)
+    year = models.IntegerField(db_index=True)
+    season = models.IntegerField(db_index=True)
+    symbol = models.CharField(max_length=20, db_index=True)
+    date = models.DateField(db_index=True)
+    # 繼續營業單位稅前淨利（淨損）
+    # 本期稅前淨利（淨損）
+    # 折舊費用
+    # 攤銷費用
+    # 利息費用
+    # 利息收入
+    # 股份基礎給付酬勞成本
+    # 採用權益法認列之關聯企業及合資損失（利益）之份額
+    # 處分及報廢不動產、廠房及設備損失（利益）
+    # 處分投資損失（利益）
+    # 處分採用權益法之投資損失（利益）
+    # 已實現銷貨損失（利益）
+    # 未實現外幣兌換損失（利益）
+    # 其他項目
+    # 不影響現金流量之收益費損項目合計
+    # 持有供交易之金融資產（增加）減少
+    # 應收帳款（增加）減少
+    # 應收帳款－關係人（增加）減少
+    # 其他應收款－關係人（增加）減少
+    # 與營業活動相關之資產之淨變動合計
+    # 應付帳款（增加）減少
+    # 應付帳款－關係人（增加）減少
+
+
 
 
 
