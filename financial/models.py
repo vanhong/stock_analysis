@@ -486,28 +486,162 @@ class SeasonStatementsOfCashFlows(models.Model):
     season = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
     date = models.DateField(db_index=True)
+    # ---營業活動之現金流量－間接法---
     # 繼續營業單位稅前淨利（淨損）
+    profit_loss_from_continuing_operations_before_tax = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 本期稅前淨利（淨損）
+    profit_loss_before_tax = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 折舊費用
+    depreciation_expense = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 攤銷費用
+    amortization_expense = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 利息費用
+    interest_expense = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 利息收入
+    interest_income = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 股份基礎給付酬勞成本
+    share_based_payments = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 採用權益法認列之關聯企業及合資損失（利益）之份額
+    share_of_profit_loss_of_associates_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 處分及報廢不動產、廠房及設備損失（利益）
+    loss_gain_on_disposal_of_property_plan_and_equipment = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 處分投資損失（利益）
+    loss_gain_on_disposal_of_investments = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 處分採用權益法之投資損失（利益）
+    loss_gain_on_disposal_of_investments_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    # 金融資產減損損失
+    impairment_loss_on_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    # 非金融資產減損損失
+    impairment_loss_on_non_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 已實現銷貨損失（利益）
+    realized_loss_profit_on_from_sales = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 未實現外幣兌換損失（利益）
+    unrealized_foreign_exchange_loss_gain = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
     # 其他項目
+    other_adjustments_to_reconcile_profit_loss
     # 不影響現金流量之收益費損項目合計
+    total_adjustments_to_reconcile_profit_loss
     # 持有供交易之金融資產（增加）減少
+    decrease_increase_in_financial_assets_held_for_trading
+    # 避險之衍生金融資產（增加）減少
+    decrease_increase_in_derivative_financial_assets_for_hedging
     # 應收帳款（增加）減少
+    decrease_increase_in_accounts_receivable
     # 應收帳款－關係人（增加）減少
+    decrease_increase_in_accounts_receivable_due_from_related_parties
     # 其他應收款－關係人（增加）減少
+    decrease_increase_in_other_receivable_due_from_related_parties
+    # 存貨（增加）減少
+    decrease_increase_in_inventories
+    # 其他流動資產（增加）減少
+    decrease_increase_in_other_current_assets
+    # 其他金融資產（增加）減少
+    decrease_increase_in_other_financial_assets
     # 與營業活動相關之資產之淨變動合計
+    total_changes_in_operating_assets
     # 應付帳款（增加）減少
+    Increase_decrease_in_accounts_payable
     # 應付帳款－關係人（增加）減少
+    Increase_decrease_in_accounts_payable_to_related_parties
+    # 負債準備增加（減少）
+    Increase_decrease_in_provisions
+    # 其他流動負債增加（減少）
+    Increase_decrease_in_other_current_liabilities
+    # 應計退休金負債增加（減少）
+    Increase_decrease_in_accrued pension liabilities
+    # 其他營業負債增加（減少）
+    Increase_decrease_in_other operating liabilities
+    # 與營業活動相關之負債之淨變動合計
+    total_changes in operating liabilities
+    # 與營業活動相關之資產及負債之淨變動合計
+    total_changes in operating assets and liabilities
+    # 調整項目合計
+    total_adjustments
+    # 營運產生之現金流入（流出）
+    Cash inflow (outflow) generated from operations
+    # 退還（支付）之所得稅
+    Income taxes refund (paid)
+    # 營業活動之淨現金流入（流出）
+    Net cash flows from (used in) operating activities
+    # ---投資活動之現金流量---
+    # 取得備供出售金融資產
+    Acquisition of available-for-sale financial assets
+    # 處分備供出售金融資產
+    Proceeds from disposal of available-for-sale financial assets
+    # 取得持有至到期日金融資產
+    Acquisition of held-to-maturity financial assets
+    # 持有至到期日金融資產到期還本
+    Proceeds from repayments of held-to-maturity financial assets
+    # 取得以成本衡量之金融資產
+    Acquisition of financial assets at cost
+    # 處分以成本衡量之金融資產
+    Proceeds from disposal of financial assets at cost
+    # 處分採用權益法之投資
+    Proceeds from disposal of investments accounted for using equity method
+    # 處分子公司
+    Proceeds from disposal of subsidiaries
+    # 取得不動產、廠房及設備
+    Acquisition of property, plant and equipment
+    # 處分不動產、廠房及設備
+    Proceeds from disposal of property, plant and equipment
+    # 存出保證金增加
+    Increase in refundable deposits
+    # 存出保證金減少
+    decrease in refundable deposits
+    # 取得無形資產
+    Acquisition of intangible assets
+    # 長期應收租賃款減少 or 應收租賃款減少
+    decrease in long-term lease and installment receivables
+    # 其他金融資產增加
+    Increase in other financial assets
+    # 其他非流動資產增加
+    Increase in other non-current assets
+    # 收取之利息
+    Interest received
+    # 收取之股利
+    Dividends received
+    # 其他投資活動
+    Other investing activities
+    # 投資活動之淨現金流入（流出）
+    Net cash flows from (used in) investing activities
+    # ---籌資活動之現金流量---
+    # 短期借款增加
+    Increase in short-term loans
+    # 發行公司債
+    Proceeds from issuing bonds
+    # 償還公司債
+    Repayments of bonds
+    # 舉借長期借款
+    Proceeds from long-term debt
+    # 償還長期借款
+    Repayments of long-term debt
+    # 存入保證金增加
+    Increase in guarantee deposits received
+    # 存入保證金減少
+    decrease in guarantee deposits received
+    # 應付租賃款減少
+    decrease in lease payable
+    # 員工執行認股權
+    Exercise of employee share options
+    # 支付之利息
+    Interest paid
+    # 非控制權益變動
+    Change in non-controlling interests
+    # 其他籌資活動
+    Other financing activities
+    # 籌資活動之淨現金流入（流出）
+    Net cash flows from (used in) financing activities
+    # 匯率變動對現金及約當現金之影響
+    Effect of exchange rate changes on cash and cash equivalents
+    # 本期現金及約當現金增加（減少）數
+    Net increase (decrease) in cash and cash equivalents
+    # 期初現金及約當現金餘額
+    Cash and cash equivalents at beginning of period
+    # 期末現金及約當現金餘額
+    Cash and cash equivalents at end of period
+    # 資產負債表帳列之現金及約當現金
+    Cash and cash equivalents reported in the statement of financial position
+
 
 
 
