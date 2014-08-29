@@ -918,6 +918,72 @@ def show_statements_of_cashflows(reqquest):
     response = urllib2.urlopen(req)
     return HttpResponse(response.read())
 
+def update_statements_of_cashflows(request):
+    if 'year' in request.GET and  'season' in request.GET:
+        year = int(request.GET['year'])
+        season = int(request.GET['season'])
+    else:
+        today = datetime.datetime.now()
+        year, season = last_season(today)
+    stockIDs = get_updated_id(year, season)
+    for stock_id in stockIDs:
+        stock_symbol = stock_id
+        if not SeasonCashFlowStatement.objects.filter(symbol=stock_symbol, year=year, season=season):
+            print stock_symbol + ' loaded'
+            url = 'http://mops.twse.com.tw/mops/web/t164sb03'
+            if stock_symbol[:2] == '28' or stock_symbol == '5880' or stock_symbol == '5820' or stock_symbol == '3990' or stock_symbol == '5871':
+                values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
+                        'year' : str(year-1911), 'season' : str(season).zfill(1), 'co_id' : stock_symbol, 'firstin' : '1'}
+            else:
+                values = {'encodeURIComponent': '1', 'step': '1', 'firstin': '1', 'off': '1',
+                        'keyword4': '', 'code1': '', 'TYPEK2': '', 'checkbtn': '',
+                        'queryName': 'co_id', 'TYPEK': 'all', 'isnew': 'false',
+                        'co_id': stock_symbol, 'year': str(year-1911), 'season': str(season).zfill(2)}
+            url_data = urllib.urlencode(values)
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            req = urllib2.Request(url, url_data, headers)
+            try:
+                response = urllib2.urlopen(req)
+                soup = BeautifulSoup(response,from_encoding="utf-8")
+                balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
+            except URLError, e:
+                print stock_symbol + ' time sleep'
+                time.sleep(20)
+                busy_msg = True
+                if hasattr(e, "reason"):
+                    print(stock_symbol + " Reason:"), e.reason
+                elif hasattr(e, "code"):
+                    print(stock_symbol + " Error code:"), e.code
+            # 如果連線正常，還得再確認是否因查詢頻繁而給空表格；若有，則先sleep再重新連線
+            while (busy_msg is not None):
+                response.close()
+                headers = {'User-Agent': 'Mozilla/4.0'}
+                req = urllib2.Request(url, url_data, headers)
+                try:
+                    response = urllib2.urlopen(req)
+                    soup = BeautifulSoup(response,from_encoding="utf-8")
+                    balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                    busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
+                except URLError, e:
+                    busy_msg = True
+                    if hasattr(e, "reason"):
+                        print(stock_symbol + " Reason:"), e.reason
+                    elif hasattr(e, "code"):
+                        print(stock_symbol + " Error code:"), e.code
+                if busy_msg:
+                    print stock_symbol + ' time sleep' 
+                    time.sleep(20)
+
+            balance_sheet = SeasonBalanceSheet()
+            balance_sheet.symbol = stock_symbol
+            balance_sheet.year = str(year)
+            balance_sheet.season = season
+            balance_sheet.date = season_to_date(year, season)
+            balance_sheet.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
+
+    return HttpResponse('cashflow statement updated')
+
 def update_year_financial_ratio(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()

@@ -480,7 +480,7 @@ class SeasonBalanceSheet(models.Model):
     treasury_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
 
 # 現金流量表(季)
-class SeasonStatementsOfCashFlows(models.Model):
+class SeasonCashFlowStatement(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     season = models.IntegerField(db_index=True)
@@ -488,156 +488,156 @@ class SeasonStatementsOfCashFlows(models.Model):
     date = models.DateField(db_index=True)
     # ---營業活動之現金流量－間接法---
     # 繼續營業單位稅前淨利（淨損）
-    profit_loss_from_continuing_operations_before_tax = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    profit_loss_from_continuing_operations_before_tax = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 本期稅前淨利（淨損）
-    profit_loss_before_tax = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    profit_loss_before_tax = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 折舊費用
-    depreciation_expense = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    depreciation_expense = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 攤銷費用
-    amortization_expense = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    amortization_expense = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 利息費用
-    interest_expense = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    interest_expense = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 利息收入
-    interest_income = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    interest_income = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 股份基礎給付酬勞成本
-    share_based_payments = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    share_based_payments = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 採用權益法認列之關聯企業及合資損失（利益）之份額
-    share_of_profit_loss_of_associates_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    share_of_profit_loss_of_associates_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分及報廢不動產、廠房及設備損失（利益）
-    loss_gain_on_disposal_of_property_plan_and_equipment = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    loss_gain_on_disposal_of_property_plan_and_equipment = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分投資損失（利益）
-    loss_gain_on_disposal_of_investments = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    loss_gain_on_disposal_of_investments = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分採用權益法之投資損失（利益）
-    loss_gain_on_disposal_of_investments_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    loss_gain_on_disposal_of_investments_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 金融資產減損損失
-    impairment_loss_on_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    impairment_loss_on_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 非金融資產減損損失
-    impairment_loss_on_non_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    impairment_loss_on_non_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 已實現銷貨損失（利益）
-    realized_loss_profit_on_from_sales = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    realized_loss_profit_on_from_sales = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 未實現外幣兌換損失（利益）
-    unrealized_foreign_exchange_loss_gain = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    unrealized_foreign_exchange_loss_gain = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他項目
-    other_adjustments_to_reconcile_profit_loss = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    other_adjustments_to_reconcile_profit_loss = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 不影響現金流量之收益費損項目合計
-    total_adjustments_to_reconcile_profit_loss = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    total_adjustments_to_reconcile_profit_loss = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 持有供交易之金融資產（增加）減少
-    decrease_increase_in_financial_assets_held_for_trading = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_financial_assets_held_for_trading = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 避險之衍生金融資產（增加）減少
-    decrease_increase_in_derivative_financial_assets_for_hedging = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_derivative_financial_assets_for_hedging = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應收帳款（增加）減少
-    decrease_increase_in_accounts_receivable = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_accounts_receivable = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應收帳款－關係人（增加）減少
-    decrease_increase_in_accounts_receivable_from_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_accounts_receivable_from_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他應收款－關係人（增加）減少
-    decrease_increase_in_other_receivable_due_from_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_other_receivable_due_from_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 存貨（增加）減少
-    decrease_increase_in_inventories = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_inventories = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他流動資產（增加）減少
-    decrease_increase_in_other_current_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_other_current_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他金融資產（增加）減少
-    decrease_increase_in_other_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_increase_in_other_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 與營業活動相關之資產之淨變動合計
-    total_changes_in_operating_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    total_changes_in_operating_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應付帳款（增加）減少
-    Increase_decrease_in_accounts_payable = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    Increase_decrease_in_accounts_payable = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應付帳款－關係人（增加）減少
-    Increase_decrease_in_accounts_payable_to_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    Increase_decrease_in_accounts_payable_to_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 負債準備增加（減少）
-    Increase_decrease_in_provisions = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    Increase_decrease_in_provisions = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他流動負債增加（減少）
-    Increase_decrease_in_other_current_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    Increase_decrease_in_other_current_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應計退休金負債增加（減少）
-    Increase_decrease_in_accrued_pension_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    Increase_decrease_in_accrued_pension_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他營業負債增加（減少）
-    Increase_decrease_in_other_operating_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    Increase_decrease_in_other_operating_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 與營業活動相關之負債之淨變動合計
-    total_changes_in_operating_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    total_changes_in_operating_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 與營業活動相關之資產及負債之淨變動合計
-    total_changes_in_operating_assets_and_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    total_changes_in_operating_assets_and_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 調整項目合計
-    total_adjustments = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    total_adjustments = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 營運產生之現金流入（流出）
-    cash_inflow_outflow_generated_from_operations = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    cash_inflow_outflow_generated_from_operations = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 退還（支付）之所得稅
-    income_taxes_refund_paid = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    income_taxes_refund_paid = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 營業活動之淨現金流入（流出）
-    net_cash_flows_from_used_in_operating_activities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    net_cash_flows_from_used_in_operating_activities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # ---投資活動之現金流量---
     # 取得備供出售金融資產
-    acquisition_of_available_for_sale_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    acquisition_of_available_for_sale_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分備供出售金融資產
-    proceeds_from_disposal_of_available_for_sale_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_disposal_of_available_for_sale_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 取得持有至到期日金融資產
-    acquisition_of_held_to_maturity_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    acquisition_of_held_to_maturity_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 持有至到期日金融資產到期還本
-    proceeds_from_repayments_of_held_to_maturity_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_repayments_of_held_to_maturity_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 取得以成本衡量之金融資產
-    acquisition_of_financial_assets_at_cost = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    acquisition_of_financial_assets_at_cost = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分以成本衡量之金融資產
-    proceeds_from_disposal_of_financial_assets_at_cost = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_disposal_of_financial_assets_at_cost = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分採用權益法之投資
-    proceeds_from_disposal_of_investments_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_disposal_of_investments_using_equity_method = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分子公司
-    proceeds_from_disposal_of_subsidiaries = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_disposal_of_subsidiaries = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 取得不動產、廠房及設備
-    acquisition_of_property_plant_and_equipment = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    acquisition_of_property_plant_and_equipment = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 處分不動產、廠房及設備
-    proceeds_from_disposal_of_property_plant_and_equipment = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_disposal_of_property_plant_and_equipment = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 存出保證金增加
-    increase_in_refundable_deposits = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    increase_in_refundable_deposits = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 存出保證金減少
-    decrease_in_refundable_deposits = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_in_refundable_deposits = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 取得無形資產
-    acquisition_of_intangible_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    acquisition_of_intangible_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 長期應收租賃款減少 or 應收租賃款減少
-    decrease_in_long_term_lease_and_installment_receivables = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_in_long_term_lease_and_installment_receivables = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他金融資產增加
-    increase_in_other_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    increase_in_other_financial_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他非流動資產增加
-    increase_in_other_non_current_assets = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    increase_in_other_non_current_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 收取之利息
-    interest_received = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    interest_received = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 收取之股利
-    dividends_received = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    dividends_received = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他投資活動
-    other_investing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    other_investing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 投資活動之淨現金流入（流出）
-    net_cash_flows_from_used_in_investing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    net_cash_flows_from_used_in_investing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # ---籌資活動之現金流量---
     # 短期借款增加
-    increase_in_short_term_loans = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    increase_in_short_term_loans = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 發行公司債
-    proceeds_from_issuing_bonds = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_issuing_bonds = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 償還公司債
-    repayments_of_bonds = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    repayments_of_bonds = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 舉借長期借款
-    proceeds_from_long_term_debt = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    proceeds_from_long_term_debt = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 償還長期借款
-    repayments_of_long_term_debt = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    repayments_of_long_term_debt = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 存入保證金增加
-    increase_in_guarantee_deposits_received = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    increase_in_guarantee_deposits_received = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 存入保證金減少
-    decrease_in_guarantee_deposits_received = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_in_guarantee_deposits_received = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應付租賃款減少
-    decrease_in_lease_payable = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    decrease_in_lease_payable = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 員工執行認股權
-    exercise_of_employee_share_options = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    exercise_of_employee_share_options = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 支付之利息
-    interest_paid = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    interest_paid = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 非控制權益變動
-    change_in_non_controlling_interests = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    change_in_non_controlling_interests = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他籌資活動
-    other_financing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    other_financing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 籌資活動之淨現金流入（流出）
-    net_cash_flows_from_used_in_financing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    net_cash_flows_from_used_in_financing_activities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 匯率變動對現金及約當現金之影響
-    effect_of_exchange_rate_changes_on_cash_and_cash_equivalents = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    effect_of_exchange_rate_changes_on_cash_and_cash_equivalents = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 本期現金及約當現金增加（減少）數
-    net_increase_decrease_in_cash_and_cash_equivalents = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    net_increase_decrease_in_cash_and_cash_equivalents = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 期初現金及約當現金餘額
-    cash_and_cash_equivalents_at_beginning_of_period = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    cash_and_cash_equivalents_at_beginning_of_period = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 期末現金及約當現金餘額
-    cash_and_cash_equivalents_at_end_of_period = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    cash_and_cash_equivalents_at_end_of_period = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 資產負債表帳列之現金及約當現金
-    cash_and_cash_equivalents_in_the_statement_of_financial_position = models.DecimalField(max_digits=20 ,decimal_places=0, null=True)
+    cash_and_cash_equivalents_in_the_statement_of_financial_position = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
