@@ -72,37 +72,6 @@ def get_updated_id(year, season):
     return company_list
 
 #income statement from TWSE 綜合損益表
-def old_show_season_income_statement(request):
-    stock_symbol = '2454'
-    year = 102
-    season = 1
-    url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
-    values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
-              'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
-              'queryName':'co_id', 'TYPEK':'all', 'isnew':'false', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
-    values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'sii', 'step' : '2',
-              'year' : year, 'season' : season, 'co_id' : stock_symbol, 'firstin' : '1'}
-    url_data = urllib.urlencode(values)
-    req = urllib2.Request(url, url_data)
-    response = urllib2.urlopen(req)
-    income_statement = SeasonIncomeStatement()
-    soup = BeautifulSoup(response, from_encoding="utf-8")
-    # print soup 詳細資料
-
-    balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
-    for data in balance_sheet_datas:
-        if r'基本每股盈餘' in data.string.encode('utf-8'):
-            if income_statement.basic_earnings_per_share is None:
-                print 'init is none'
-            if data.next_sibling.next_sibling.string is not None:
-                income_statement.basic_earnings_per_share = Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
-                print data.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.string
-                if income_statement.basic_earnings_per_share is not None:
-                    print Decimal(data.next_sibling.next_sibling.string.strip().replace(',',''))
-    req = urllib2.Request(url, url_data)
-    response = urllib2.urlopen(req)
-    return HttpResponse(response.read())
-
 def show_season_income_statement(request):
     url = 'http://mops.twse.com.tw/mops/web/ajax_t163sb04'
     values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
@@ -918,6 +887,36 @@ def update_season_balance_sheet(request):
             print stock_symbol + ' data updated'
     
     return HttpResponse('balance sheet updated')
+
+#現金流量表
+def show_statements_of_cashflows(reqquest):
+    url = 'http://mops.twse.com.tw/mops/web/t164sb05'
+    year = 102
+    season = 2
+    values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
+            'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
+            'queryName':'co_id', 'TYPEK':'all', 'isnew':'true', 'co_id' : 8109, 'year' : year, 'season' : str(season).zfill(2) }
+    # values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
+    #           'year' : '102', 'season' : '2', 'co_id' : stock_symbol, 'firstin' : '1'}
+    url_data = urllib.urlencode(values) 
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+
+    soup = BeautifulSoup(response,from_encoding="utf-8")
+    # print soup 詳細資料
+    detail_button = soup.find_all("input", {'type': 'button', 'value': r'詳細資訊'})
+    print detail_button
+
+    balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+    # for data in balance_sheet_datas:
+    #     if r'現金及約當現金' in data.string.encode('utf-8'):
+    #         next_data = data.next_sibling.next_sibling
+    #         print st_to_decimal(next_data.string)
+    #         next_data = next_data.next_sibling.next_sibling.next_sibling.next_sibling
+    #         print st_to_decimal(next_data.string)
+    req = urllib2.Request(url, url_data)
+    response = urllib2.urlopen(req)
+    return HttpResponse(response.read())
 
 def update_year_financial_ratio(request):
     stock_ids = StockId.objects.all()
