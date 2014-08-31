@@ -13,6 +13,7 @@ from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonR
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
 from django.utils import simplejson
+from core.utils import st_to_decimal
 import pdb
 
 class ObjStock:
@@ -21,67 +22,6 @@ class ObjStock:
         self.name = name
     def __str__(self):
         return u'%s %s' % (self.symbol, self.name)
-
-def old_update_stock_id(request):
-    url = "http://www.emega.com.tw/js/StockTable.htm"
-    webcode = urllib.urlopen(url)
-    if webcode.code != 200:
-        return HttpResponse("Update failed")
-    req = urllib2.Request(url)
-    response = urllib2.urlopen(req)
-    soup = BeautifulSoup(response, from_encoding="big-5")
-    datas = soup.find_all("table", {'class' : 'TableBorder'})
-    twod_list = []
-    tr_datas = datas[0].tr
-    # pdb.set_trace()
-    isSymbol = True
-    while(tr_datas):
-        stockNum = 0
-        for data in tr_datas:
-            if hasattr(data, 'b'):
-                if isSymbol:
-                    if data.b:
-                        symbol = data.b.string.replace(u'\xa0','').encode('utf-8')
-                        isSymbol = False
-                    elif data.string:
-                        symbol = data.string.replace(u'\xa0','').encode('utf-8')
-                        isSymbol = False
-                else:
-                    if data.b:
-                        name = data.b.string.replace(u'\xa0','').encode('utf-8')
-                        stock = ObjStock(symbol, name)
-                        isSymbol = True
-                    elif data.string:
-                        name = data.string.replace(u'\xa0','').encode('utf-8')
-                        stock = ObjStock(symbol, name)
-                        isSymbol = True
-                    elif data.font:
-                        name = data.next.string.replace(u'\xa0','').encode('utf-8')
-                        stock = ObjStock(symbol, name)
-                        isSymbol = True
-                    if isSymbol:
-                        if stock.symbol != '':
-                            if len(twod_list) > stockNum:
-                                twod_list[stockNum].append(stock)
-                            else:
-                                twod_list.append([])
-                                twod_list[stockNum].append(stock)
-                            stockNum = stockNum + 1
-        tr_datas = tr_datas.next_sibling.next_sibling
-    marketType = ''
-    company_type = ''
-    for stockList in twod_list:
-        for stock in stockList:
-            if stock.symbol == r'上市' or stock.symbol == r'上櫃':
-                marketType = stock.symbol
-                companyType = stock.name
-            else:
-                stockid = StockId(symbol = stock.symbol, name = stock.name.strip(),
-                                  market_type = marketType, company_type = companyType)
-                stockid.save()
-    # pdb.set_trace()
-
-    return HttpResponse('update stock id')
 
 def update_stock_id(request):
     StockType = [2, 4]
@@ -96,6 +36,7 @@ def update_stock_id(request):
         soup = BeautifulSoup(response, from_encoding="big-5")
         datas = soup.find('tr')
         # print datas
+        cnt = 0
         while(datas.next_sibling):
             data = datas.next_sibling.td.next
             try:
@@ -107,6 +48,7 @@ def update_stock_id(request):
                     stockid = StockId(symbol = symbol, name = name, market_type = market_type,
                                       company_type = company_type, listing_date = listing_date)
                     stockid.save()
+                    cnt += 1
                 datas = datas.next_sibling
             except:
                 datas = datas.next_sibling
@@ -126,58 +68,6 @@ def last_season(day):
     elif month >= 10:
         season = 3
     return year, season
-
-def update_season_profit(request):
-    stock_ids = StockId.objects.all()
-    today = datetime.date.today()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        (last_season_year, last_season_season) = last_season(today)
-        revenueInDb = SeasonProfit.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
-        if revenueInDb:
-            continue
-        else:
-            url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zcha_" + stock_symbol + ".djhtm"
-            webcode = urllib.urlopen(url)
-            soup = BeautifulSoup(webcode, from_encoding='utf-8')
-            seasons = soup.find_all('td', {'class':'t3n0'})
-            print 'stockid ' + stock_symbol + ' loaded'
-            for season_data in seasons:
-                year = int(season_data.string.split("Q")[0].split(".")[0]) + 1911
-                season = int(season_data.string.split("Q")[0].split(".")[1])
-                profit = SeasonProfit()
-                profit.surrogate_key = stock_symbol + "_" + str(year) + str(season).zfill(2)
-                profit.year = year
-                profit.season = season
-                if season == 1:
-                    profit.date = datetime.date(year, 1, 1)
-                elif season == 2:
-                    profit.date = datetime.date(year, 4, 1)
-                elif season == 3:
-                    profit.date = datetime.date(year, 7, 1)
-                elif season == 4:
-                    profit.date = datetime.date(year, 10, 1)
-                profit.symbol = stock_symbol
-                next = season_data.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.profit = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.season_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.last_year_profit = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.acc_profit = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.acc_year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                profit.save()
-    return HttpResponse("update revenue")
 
 def is_decimal(s):
     try:
@@ -217,7 +107,7 @@ def update_month_revenue(request):
                     revenue.date = datetime.date(year, month, 1)
                     revenue.symbol = data.string
                     revenue_data = data.next_sibling.next_sibling
-                    if is_decimal(revenue_data.string.strip().replace(',', '')):
+                    if is_decimal(st_to_decimal(revenue_data.string)):
                         revenue.revenue = revenue_data.string.strip().replace(',', '')
                     last_year_revenue_data = revenue_data.next_sibling.next_sibling
                     if is_decimal(last_year_revenue_data.string.strip().replace(',', '')):
