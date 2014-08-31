@@ -540,17 +540,17 @@ class SeasonCashFlowStatement(models.Model):
     # 與營業活動相關之資產之淨變動合計
     total_changes_in_operating_assets = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應付帳款（增加）減少
-    Increase_decrease_in_accounts_payable = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
+    increase_decrease_in_accounts_payable = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應付帳款－關係人（增加）減少
-    Increase_decrease_in_accounts_payable_to_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
+    increase_decrease_in_accounts_payable_to_related_parties = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 負債準備增加（減少）
-    Increase_decrease_in_provisions = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
+    increase_decrease_in_provisions = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他流動負債增加（減少）
-    Increase_decrease_in_other_current_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
+    increase_decrease_in_other_current_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 應計退休金負債增加（減少）
-    Increase_decrease_in_accrued_pension_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
+    increase_decrease_in_accrued_pension_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 其他營業負債增加（減少）
-    Increase_decrease_in_other_operating_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
+    increase_decrease_in_other_operating_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 與營業活動相關之負債之淨變動合計
     total_changes_in_operating_liabilities = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 與營業活動相關之資產及負債之淨變動合計
@@ -641,3 +641,9 @@ class SeasonCashFlowStatement(models.Model):
     cash_and_cash_equivalents_at_end_of_period = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
     # 資產負債表帳列之現金及約當現金
     cash_and_cash_equivalents_in_the_statement_of_financial_position = models.DecimalField(max_digits=20 ,decimal_places=0, default=0)
+    # 自由現金流量
+    free_cash_flow = models.DecimalField(max_digits=20, decimal_places=0, default=0)
+
+
+
+

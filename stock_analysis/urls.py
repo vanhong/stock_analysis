@@ -72,6 +72,7 @@ urlpatterns += patterns('financial.views',
     (r'^show_season_balance_sheet/$', 'show_season_balance_sheet'),
     (r'^show_season_income_statement/$', 'show_season_income_statement'),
     (r'^show_statements_of_cashflows/$', 'show_statements_of_cashflows'),
+    (r'^update_season_cashflow_statement/$', 'update_season_cashflow_statement'),
 )
 
 urlpatterns += patterns('',
