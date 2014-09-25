@@ -53,10 +53,10 @@ def update_stock_id(request):
                 datas = datas.next_sibling
     
     updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
-                                        last_data_date = datetime.date.today(), note="There is " + str(cnt) + " stockIds")
+                                        last_data_date = datetime.date.today(), notes="There is " + str(cnt) + " stockIds")
     updateManagement.save()
     json_obj = simplejson.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.note})
+                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
     return HttpResponse(json_obj, content_type="application/json")
 
 def last_season(day):
@@ -81,7 +81,6 @@ def is_decimal(s):
     return True
 
 def update_month_revenue(request):
-    pdb.set_trace()
     today = datetime.date.today() 
     year = today.year
     month = today.month
@@ -136,10 +135,10 @@ def update_month_revenue(request):
                     revenue.save()
     cnt = MonthRevenue.objects.filter(year=year, month=month).count()
     updateManagement = UpdateManagement(name = "monthRevenue", last_update_date = datetime.date.today(), 
-                                        last_data_date = datetime.date(year, month, 1), note="There is " + str(cnt) + " stockIds")
+                                        last_data_date = datetime.date(year, month, 1), notes="There is " + str(cnt) + " stockIds")
     updateManagement.save()
     json_obj = simplejson.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.note})
+                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
     return HttpResponse(json_obj, content_type="application/json")
 
 def check_month_revenue(request):
@@ -372,7 +371,7 @@ def update(request):
         stockID['name'] = data.name
         stockID['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
         stockID['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        stockID['notes'] = data.note
+        stockID['notes'] = data.notes
     except:
         None
 
@@ -382,7 +381,7 @@ def update(request):
         monthRevenue['name'] = data.name
         monthRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
         monthRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        monthRevenue['notes'] = data.note
+        monthRevenue['notes'] = data.notes
     except:
         None
 

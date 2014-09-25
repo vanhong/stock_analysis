@@ -95,7 +95,7 @@ class UpdateManagement(models.Model):
     name = models.CharField(max_length=20, primary_key=True)
     last_update_date = models.DateField()
     last_data_date = models.DateField()
-    note = models.CharField(max_length=50, null=True)
+    notes = models.CharField(max_length=50, null=True)
 
     def __unicode__(self):
         return u"%s %s %s" % (self.name, self.last_update_date, self.last_data_date)
