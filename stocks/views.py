@@ -55,13 +55,8 @@ def update_stock_id(request):
     updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
                                         last_data_date = datetime.date.today(), note="There is " + str(cnt) + " stockIds")
     updateManagement.save()
-    stockID = {}
-    stockID['name'] = updateManagement.name
-    stockID['lastUpdateDate'] = updateManagement.last_update_date.strftime("%y-%m-%d")
-    stockID['lastDataDate'] = updateManagement.last_data_date.strftime("%y-%m-%d")
-    stockID['notes'] = updateManagement.note
-    
-    json_obj = simplejson.dumps({"list_of_json" : stockID})
+    json_obj = simplejson.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.note})
     return HttpResponse(json_obj, content_type="application/json")
 
 def last_season(day):
@@ -86,6 +81,7 @@ def is_decimal(s):
     return True
 
 def update_month_revenue(request):
+    pdb.set_trace()
     today = datetime.date.today() 
     year = today.year
     month = today.month
@@ -138,13 +134,13 @@ def update_month_revenue(request):
                         revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
                     print (revenue.symbol)
                     revenue.save()
-                    # revenue.revenue = datas1[0].strip().replace(',', '')
-                    # revenue.last_year_revenue = datas2[0].strip().replace(',', '')
-                    # revenue.year_growth_rate = datas2[1].strip().replace(',', '')
-                    # revenue.acc_revenue = datas1[2].strip().replace(',', '')
-                    # revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
-                    # revenue.save()
-    return HttpResponse('update month revenue year:' + str(year) + " month:" + str(month))
+    cnt = MonthRevenue.objects.filter(year=year, month=month).count()
+    updateManagement = UpdateManagement(name = "monthRevenue", last_update_date = datetime.date.today(), 
+                                        last_data_date = datetime.date(year, month, 1), note="There is " + str(cnt) + " stockIds")
+    updateManagement.save()
+    json_obj = simplejson.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.note})
+    return HttpResponse(json_obj, content_type="application/json")
 
 def check_month_revenue(request):
     if 'from' not in request.GET or 'to' not in request.GET:
@@ -370,12 +366,25 @@ def update_dividend(request):
     return HttpResponse("update dividend")
 
 def update(request):
-    data = UpdateManagement.objects.get(name='stockID')
-    print data.name
-    stockID = {}
-    stockID['name'] = data.name
-    stockID['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
-    stockID['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
-    stockID['notes'] = data.note
+    try:
+        stockID = {}
+        data = UpdateManagement.objects.get(name='stockID')
+        stockID['name'] = data.name
+        stockID['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        stockID['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        stockID['notes'] = data.note
+    except:
+        None
 
-    return render_to_response('analysis/update.html', {'stockid': stockID}, context_instance=RequestContext(request))
+    try:
+        monthRevenue = {}
+        data = UpdateManagement.objects.get(name='monthRevenue')
+        monthRevenue['name'] = data.name
+        monthRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        monthRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        monthRevenue['notes'] = data.note
+    except:
+        None
+
+    return render_to_response('analysis/update.html', 
+            {'stockid': stockID, 'monthrevenue': monthRevenue}, context_instance=RequestContext(request))

@@ -5,10 +5,18 @@
 				$("#update_stockid").click(function(){
 					//var data = GetData('/update_stockid/');
 					$.get('/update_stockid/', function(jData){
-						$('#stockid_lastUpdateDate').html(jData.list_of_json.lastUpdateDate);
-						$('#stockid_lastDataDate').html(jData.list_of_json.lastDataDate);
-						$('#stockid_notes').html(jData.list_of_json.notes);
+						$('#stockid_lastUpdateDate').html(jData.lastUpdateDate);
+						$('#stockid_lastDataDate').html(jData.lastDataDate);
+						$('#stockid_notes').html(jData.notes);
 					});
+				});
+
+				$("#month_revenue").click(function() {
+					$.get('/update_month_revenue/', function(jData) {
+						$('#monthrevenue_lastUpdateDate').html(jData.lastUpdateDate);
+						$('#monthrevenue_lastDataDate').html(jData.lastDataDate);
+						$('#monthrevenue_notes').html(jData.notes);
+					})
 				});
 			});
 		}
