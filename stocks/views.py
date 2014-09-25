@@ -9,7 +9,7 @@ from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
 import time
 from decimal import Decimal
-from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue
+from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue, UpdateManagement
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
 from django.utils import simplejson
@@ -25,7 +25,7 @@ class ObjStock:
 
 def update_stock_id(request):
     StockType = [2, 4]
-
+    cnt = 0
     for i in xrange(0, len(StockType)):
         url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(StockType[i])
         webcode = urllib.urlopen(url)
@@ -35,13 +35,12 @@ def update_stock_id(request):
         response = urllib2.urlopen(req)
         soup = BeautifulSoup(response, from_encoding="big-5")
         datas = soup.find('tr')
-        # print datas
-        cnt = 0
         while(datas.next_sibling):
             data = datas.next_sibling.td.next
             try:
                 if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR':
                     symbol,name = data.split()
+                    print symbol
                     listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
                     market_type = data.next.next_sibling.next_sibling.string.split()[0]
                     company_type = data.next.next_sibling.next_sibling.next_sibling.string.split()[0]
@@ -52,8 +51,18 @@ def update_stock_id(request):
                 datas = datas.next_sibling
             except:
                 datas = datas.next_sibling
-        
-    return HttpResponse("Update StockId")
+    
+    updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
+                                        last_data_date = datetime.date.today(), note="There is " + str(cnt) + " stockIds")
+    updateManagement.save()
+    stockID = {}
+    stockID['name'] = updateManagement.name
+    stockID['lastUpdateDate'] = updateManagement.last_update_date.strftime("%y-%m-%d")
+    stockID['lastDataDate'] = updateManagement.last_data_date.strftime("%y-%m-%d")
+    stockID['notes'] = updateManagement.note
+    
+    json_obj = simplejson.dumps({"list_of_json" : stockID})
+    return HttpResponse(json_obj, content_type="application/json")
 
 def last_season(day):
     year = day.year
@@ -361,4 +370,12 @@ def update_dividend(request):
     return HttpResponse("update dividend")
 
 def update(request):
-    return render_to_response('analysis/update.html', context_instance = RequestContext(request))
+    data = UpdateManagement.objects.get(name='stockID')
+    print data.name
+    stockID = {}
+    stockID['name'] = data.name
+    stockID['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+    stockID['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+    stockID['notes'] = data.note
+
+    return render_to_response('analysis/update.html', {'stockid': stockID}, context_instance=RequestContext(request))
