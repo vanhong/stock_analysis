@@ -14,29 +14,32 @@
     line-height: 1.5;
     border-radius: 3px;
   }
+  table {
+    table-layout: fixed;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
   <br>
-  <div class="container" style="width:85%">
+  <div class="container" style="width:70%">
     <div>
       <table class="table">
         <tbody>
           <tr class="active">
-            <td>項目</td>
-            <td>最近更新日</td>
-            <td>最新資料日期</td>
-            <td>日期設定</td>
-            <td>執行</td>
-            <td>資料庫檢查</td>
+            <td width='100px'>項目</td>
+            <td width='100px'>最近更新日</td>
+            <td width='100px'>最新資料日期</td>
+            <td width='100px'>執行</td>
+            <td width='100px'>資料庫檢查</td>
+            <td width='220px'>日期設定</td>
             <td>備註</td>
           </tr>
           <tr class="warning" id="stockid">
             <td>股票代號</td>
             <td id="stockid_lastUpdateDate">{{stockid.lastUpdateDate}}</td>
             <td id="stockid_lastDataDate">{{stockid.lastDataDate}}</td>
-            <td>日期設定</td>
+            
             <td>
               <button type="submit" class="btn btn-primary btn-xs" id="update_stockid">
                 更新 <span class="glyphicon glyphicon-refresh"></span>
@@ -46,18 +49,16 @@
               <button type="submit" class="btn btn-primary btn-xs">
                 檢查 <span class="glyphicon glyphicon-refresh"></span>
               </button></td>
+              <td></td>
             <td id="stockid_notes">{{stockid.notes}}</td>
           </tr>
           <tr class="success" id="month_revenue">
             <td>月營收</td>
             <td id="monthrevenue_lastUpdateDate">{{monthrevenue.lastUpdateDate}}</td>
             <td id="monthrevenue_lastDataDate">{{monthrevenue.lastDataDate}}</td>
+            
             <td>
-                  <label class="col-sm sr-only">From:Year-Month To:Year-Month</label>
-                  <input type="text" class="form-control input-xs" placeholder="From:Year-Month To:Year-Month">
-            </td>
-            <td>
-              <button type="submit" class="btn btn-primary btn-xs" id="update_stockid">
+              <button type="submit" class="btn btn-primary btn-xs" id="update_monthrevenue">
                 更新 <span class="glyphicon glyphicon-refresh"></span>
               </button>
             </td>
@@ -66,10 +67,14 @@
                 檢查 <span class="glyphicon glyphicon-refresh"></span>
               </button></td>
             </td>
+            <td>
+                  <label class="col-sm sr-only">From:Year-Month To:Year-Month</label>
+                  <input type="text" class="form-control input-xs" id="monthrevenue_date" placeholder="From:Year-Month To:Year-Month">
+            </td>
             <td id="monthrevenue_notes">{{monthrevenue.notes}}</td>
           </tr>
           <tr class="warning">
-            <td>Hello</td>
+            <td>季營收</td>
             <td></td>
             <td></td>
             <td></td>

@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import urllib, urllib2, datetime
+from urllib2 import URLError, HTTPError
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
-import time
+import time, json
 from decimal import Decimal
 from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue, UpdateManagement
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum
-from django.utils import simplejson
 from core.utils import st_to_decimal
 import pdb
 
@@ -38,7 +38,8 @@ def update_stock_id(request):
         while(datas.next_sibling):
             data = datas.next_sibling.td.next
             try:
-                if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR':
+                if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR' or\
+                   data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVTFR':
                     symbol,name = data.split()
                     print symbol
                     listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
@@ -55,7 +56,7 @@ def update_stock_id(request):
     updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
                                         last_data_date = datetime.date.today(), notes="There is " + str(cnt) + " stockIds")
     updateManagement.save()
-    json_obj = simplejson.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                                  "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
     return HttpResponse(json_obj, content_type="application/json")
 
@@ -89,16 +90,30 @@ def update_month_revenue(request):
         month = 12
     else:
         month = month - 1
-    if 'year' in request.GET:
-        year = int(request.GET['year'])
-    if 'month' in request.GET:
-        month = int(request.GET['month'])
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_year, str_month = date.split('-')
+                year = int(str_year)
+                month = int(str_month)
+            except:
+                json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm'"})
+                return HttpResponse(json_obj, content_type="application/json")
     market = ['otc', 'sii']
     for i in range(len(market)):
         # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
         url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
         req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
+        try:
+            response = urllib2.urlopen(req)
+        except URLError as e:
+            if hasattr(e, 'reason'):
+                json_obj = json.dumps({"notes": "Reason: " + e.reason})
+                return HttpResponse(json_obj, content_type="application/json")
+            elif hasattr(e, 'code'):
+                json_obj = json.dumps({"notes": "Error code:" + e.code})
+                return HttpResponse(json_obj, content_type="application/json")
         soup = BeautifulSoup(response, from_encoding="utf-8")
         datas = soup.find_all('td', {'align':'center'})
         for data in datas:
@@ -137,7 +152,7 @@ def update_month_revenue(request):
     updateManagement = UpdateManagement(name = "monthRevenue", last_update_date = datetime.date.today(), 
                                         last_data_date = datetime.date(year, month, 1), notes="There is " + str(cnt) + " stockIds")
     updateManagement.save()
-    json_obj = simplejson.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                                  "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
     return HttpResponse(json_obj, content_type="application/json")
 
@@ -174,7 +189,7 @@ def check_month_revenue(request):
             if (len(revenue) != monthNum):
                 errorStockId.append(stockId.symbol)
     if len(errorStockId) > 0:
-        json_obj = simplejson.dumps({"list_of_json" : errorStockId})
+        json_obj = json.dumps({"list_of_json" : errorStockId})
         return HttpResponse(json_obj, content_type="application/json")
 
 

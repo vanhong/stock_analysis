@@ -11,8 +11,8 @@
 					});
 				});
 
-				$("#month_revenue").click(function() {
-					$.get('/update_month_revenue/', function(jData) {
+				$("#update_monthrevenue").click(function() {
+					$.get('/update_month_revenue/', {'date':$('#monthrevenue_date').val()}).done(function(jData) {
 						$('#monthrevenue_lastUpdateDate').html(jData.lastUpdateDate);
 						$('#monthrevenue_lastDataDate').html(jData.lastDataDate);
 						$('#monthrevenue_notes').html(jData.notes);

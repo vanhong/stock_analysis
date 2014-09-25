@@ -11,9 +11,9 @@ from django.db.models import Count
 from django.db.models import Avg
 from django.db.models import Q, F
 from django.db import connection
-from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
+import json
 
 from exceptions import NotImplementedError
 from abc import ABCMeta, abstractmethod
@@ -76,7 +76,7 @@ class FilterClasses():
 def filter_start(request):
     print '%s, get json = %s' % ('Start to Filter (new version)', request.body)
     filter_list = [] #array
-    json_data = simplejson.loads(request.body)
+    json_data = json.loads(request.body)
     #pdb.set_trace()
     for item in json_data:
         #create filter object according to the class name
