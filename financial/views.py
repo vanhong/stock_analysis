@@ -9,7 +9,7 @@ import time
 from decimal import Decimal
 from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement, YearFinancialRatio, SeasonCashFlowStatement
-from stocks.models import SeasonRevenue
+from stocks.models import SeasonRevenue, UpdateManagement
 from bs4 import BeautifulSoup
 import html5lib
 import datetime
