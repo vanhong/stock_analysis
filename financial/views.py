@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 import html5lib
 import datetime
 import json
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from core.utils import st_to_decimal, season_to_date, last_season
 import pdb
 
