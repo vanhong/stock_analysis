@@ -13,6 +13,7 @@ from stocks.models import SeasonRevenue
 from bs4 import BeautifulSoup
 import html5lib
 import datetime
+import json
 from django.db.models import Sum
 from core.utils import st_to_decimal, season_to_date, last_season
 import pdb
@@ -84,12 +85,28 @@ def show_season_income_statement(request):
 
 #綜合損益表
 def update_season_income_statement(request):
-    if 'year' in request.GET and  'season' in request.GET:
-        year = int(request.GET['year'])
-        season = int(request.GET['season'])
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_year, str_season = date.split('-')
+                year = int(str_year)
+                season = int(str_season)
+            except:
+                json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+            return HttpResponse(json_obj, content_type="application/json")
     else:
-        today = datetime.datetime.now()
-        year, season = last_season(today)
+        json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+        return HttpResponse(json_obj, content_type="application/json")
+    # if 'year' in request.GET and  'season' in request.GET:
+    #     year = int(request.GET['year'])
+    #     season = int(request.GET['season'])
+    # else:
+    #     today = datetime.datetime.now()
+    #     year, season = last_season(today)
     stockIDs = get_updated_id(year, season)
     #stock_ids = StockId.objects.all()
     if season == 4:
@@ -525,8 +542,15 @@ def update_season_income_statement(request):
                 print stock_symbol + ' data updated'
             else:
                 print stock_symbol + 'has no data-----------'
-
-    return HttpResponse("update_season_income_statement")
+    cnt = SeasonIncomeStatement.objects.filter(year=year, season=season).count()
+    lastDate = SeasonIncomeStatement.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = SeasonIncomeStatement.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "seasonIncomeStatement", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " season_revenues")
+    updateManagement.save()
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                           "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
+    return HttpResponse(json_obj, content_type="application/json")
 
 #資產負債表
 def show_season_balance_sheet(request):
