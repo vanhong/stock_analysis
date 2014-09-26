@@ -546,7 +546,7 @@ def update_season_income_statement(request):
     lastDate = SeasonIncomeStatement.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = SeasonIncomeStatement.objects.filter(date=lastDate).count()
     updateManagement = UpdateManagement(name = "seasonIncomeStatement", last_update_date = datetime.date.today(), 
-                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " season_revenues")
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                            "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
