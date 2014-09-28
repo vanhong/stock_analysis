@@ -12,7 +12,7 @@ import time, json
 from decimal import Decimal
 from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue, UpdateManagement
 from financial.models import SeasonIncomeStatement
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from core.utils import st_to_decimal
 import pdb
 
@@ -80,6 +80,10 @@ def is_decimal(s):
     except:
         return False
     return True
+
+def test_month_revenue(request):
+    lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
+    return HttpResponse(lastDate['date__max'])
 
 def update_month_revenue(request):
     today = datetime.date.today() 
@@ -149,26 +153,41 @@ def update_month_revenue(request):
                     print (revenue.symbol)
                     revenue.save()
     cnt = MonthRevenue.objects.filter(year=year, month=month).count()
+    lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = MonthRevenue.objects.filter(date=lastDate).count()
     updateManagement = UpdateManagement(name = "monthRevenue", last_update_date = datetime.date.today(), 
-                                        last_data_date = datetime.date(year, month, 1), notes="There is " + str(cnt) + " stockIds")
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " month_revenues")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
+                                 "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " monthrevenue on " + str(year) + "-" + str(month)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def check_month_revenue(request):
-    if 'from' not in request.GET or 'to' not in request.GET:
-        return HttpResponse('please input date from Year-Month to Year-Month')
-    if 'from' in request.GET:
-        try:
-            dateFrom = datetime.datetime.strptime(request.GET['from'], '%Y-%m').date()
-        except:
-            return HttpResponse('please input correct "from" date type like Year-Month')
-    if 'to' in request.GET:
-        try:
-            dateTo = datetime.datetime.strptime(request.GET['to'], '%Y-%m').date()
-        except:
-            return HttpResponse('please input correct "to" date type like Year-Month')
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_from, str_to = date.split(':')
+                dateFrom = datetime.datetime.strptime(str_from, '%Y-%m').date()
+                dateTo = datetime.datetime.strptime(str_to, '%Y-%m').date()
+            except:
+                json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm:yyyy-mm'"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm:yyyy-mm'"})
+            return HttpResponse(json_obj, content_type="application/json")
+    # if 'from' not in request.GET or 'to' not in request.GET:
+    #     return HttpResponse('please input date from Year-Month to Year-Month')
+    # if 'from' in request.GET:
+    #     try:
+    #         dateFrom = datetime.datetime.strptime(request.GET['from'], '%Y-%m').date()
+    #     except:
+    #         return HttpResponse('please input correct "from" date type like Year-Month')
+    # if 'to' in request.GET:
+    #     try:
+    #         dateTo = datetime.datetime.strptime(request.GET['to'], '%Y-%m').date()
+    #     except:
+    #         return HttpResponse('please input correct "to" date type like Year-Month')
     stockIds = StockId.objects.all()
     revenues = MonthRevenue.objects.filter(date__gte=dateFrom, date__lte=dateTo)
     monthNum = month_between(dateFrom, dateTo) + 1
@@ -189,11 +208,12 @@ def check_month_revenue(request):
             if (len(revenue) != monthNum):
                 errorStockId.append(stockId.symbol)
     if len(errorStockId) > 0:
-        json_obj = json.dumps({"list_of_json" : errorStockId})
+        json_obj = json.dumps({"notes" : errorStockId})
         return HttpResponse(json_obj, content_type="application/json")
 
+    json_obj = json.dumps({"notes": "check month revenue ok"})
 
-    return HttpResponse('check month revenue ok')
+    return HttpResponse(json_obj, content_type="application/json")
 
 def month_between(startDate, endDate):
     return (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
@@ -202,14 +222,31 @@ def new_update_dividendupdate_season_revenue(request):
     return HttpResponse("update season revenue")
 
 def update_season_revenue(request):
-    if 'year' in request.GET:
-        year = int(request.GET['year'])
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_year, str_season = date.split('-')
+                year = int(str_year)
+                season = int(str_season)
+            except:
+                json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+            return HttpResponse(json_obj, content_type="application/json")
     else:
-        return HttpResponse('please input year')
-    if 'season' in request.GET:
-        season = int(request.GET['season'])
-    else:
-        return HttpResponse('please input season')
+        json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+        return HttpResponse(json_obj, content_type="application/json")
+
+    # if 'year' in request.GET:
+    #     year = int(request.GET['year'])
+    # else:
+    #     return HttpResponse('please input year')
+    # if 'season' in request.GET:
+    #     season = int(request.GET['season'])
+    # else:
+    #     return HttpResponse('please input season')
     if season == 1:
         startMonth = 1
     elif season == 2:
@@ -219,8 +256,8 @@ def update_season_revenue(request):
     elif season == 4:
         startMonth = 10
     else:
-        return HttpResponse('please input correct season')
-
+        json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+        return HttpResponse(json_obj, content_type="application/json")
     firtMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth).values_list('symbol', flat=True)
     secondMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+1).values_list('symbol', flat=True)
     thirdMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+2).values_list('symbol', flat=True)
@@ -257,8 +294,18 @@ def update_season_revenue(request):
             revenue.save()
         except:
             pass
-
-    return HttpResponse('update season revenue year:' + str(year) + " season:" + str(season))
+    cnt = SeasonRevenue.objects.filter(year=year, season=season).count()
+    lastDate = SeasonRevenue.objects.all().aggregate(Max('date'))['date__max']
+    if lastDate == None:
+        json_obj = json.dumps({"notes": "There is no data in SeasonRevenue"})
+        return HttpResponse(json_obj, content_type="application/json")
+    lastDateDataCnt = SeasonRevenue.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "seasonRevenue", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
+    updateManagement.save()
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
+    return HttpResponse(json_obj, content_type="application/json")
 
 def old_update_season_revenue(request):
     stock_ids = StockId.objects.all()
@@ -400,5 +447,29 @@ def update(request):
     except:
         None
 
+    try:
+        seasonRevenue = {}
+        data = UpdateManagement.objects.get(name='seasonRevenue')
+        seasonRevenue['name'] = data.name
+        seasonRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonRevenue['notes'] = data.notes
+    except:
+        None
+
+    try:
+        seasonIncomeStatement = {}
+        data = UpdateManagement.objects.get(name='seasonIncomeStatement')
+        seasonIncomeStatement['name'] = data.name
+        seasonIncomeStatement['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonIncomeStatement['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonIncomeStatement['notes'] = data.notes
+    except:
+        pass
+
     return render_to_response('analysis/update.html', 
-            {'stockid': stockID, 'monthrevenue': monthRevenue}, context_instance=RequestContext(request))
+            {'stockid': stockID, 'monthrevenue': monthRevenue, 'seasonrevenue': seasonRevenue,
+             'seasonincomestatement': seasonIncomeStatement}, context_instance=RequestContext(request))
+
+
+

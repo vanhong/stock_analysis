@@ -92,7 +92,7 @@ class Dividend(models.Model):
 
 
 class UpdateManagement(models.Model):
-    name = models.CharField(max_length=20, primary_key=True)
+    name = models.CharField(max_length=50, primary_key=True)
     last_update_date = models.DateField()
     last_data_date = models.DateField()
     notes = models.CharField(max_length=50, null=True)
