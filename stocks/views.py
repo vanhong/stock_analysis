@@ -457,5 +457,19 @@ def update(request):
     except:
         None
 
+    try:
+        seasonIncomeStatement = {}
+        data = UpdateManagement.objects.get(name='seasonIncomeStatement')
+        seasonIncomeStatement['name'] = data.name
+        seasonIncomeStatement['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonIncomeStatement['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonIncomeStatement['notes'] = data.notes
+    except:
+        pass
+
     return render_to_response('analysis/update.html', 
-            {'stockid': stockID, 'monthrevenue': monthRevenue, 'seasonrevenue': seasonRevenue}, context_instance=RequestContext(request))
+            {'stockid': stockID, 'monthrevenue': monthRevenue, 'seasonrevenue': seasonRevenue,
+             'seasonincomestatement': seasonIncomeStatement}, context_instance=RequestContext(request))
+
+
+

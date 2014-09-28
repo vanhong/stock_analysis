@@ -39,6 +39,14 @@
 						$('.seasonincomestatement_notes').html(jData.notes);
 					})
 				});
+
+				$(".update_seasonbalancesheet").click(function() {
+					$.get('/update_season_balance_sheet', {'date':$('.seasonbalancesheet_date').val()}).done(function(jData) {
+						$.get('.seasonbalancesheet_lastUpdate').html(jData.lastUpdateDate);
+						$('.seasonbalancesheet_lastDataDate').html(jData.lastDataDate);
+						$('.seasonbalancesheet_notes').html(jData.notes);
+					})
+				});
 			});
 		}
 	}

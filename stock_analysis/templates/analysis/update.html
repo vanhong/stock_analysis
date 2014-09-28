@@ -88,7 +88,7 @@
             </td>
             <td>
               <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
-              <input type="text" class="form-control input-xs seasonrevenue_date" placeholder="From:Year-Month To:Year-Month">
+              <input type="text" class="form-control input-xs seasonrevenue_date" placeholder="From:Year-Season To:Year-Season">
             </td>
             <td class="seasonrevenue_notes">{{seasonrevenue.notes}}</td>
           </tr>
@@ -113,24 +113,24 @@
             <td class="seasonincomestatement_notes">{{seasonincomestatement.notes}}</td>
           </tr>
           <tr class="warning">
-            <td>綜合損益表(年)</td>
-            <td class="yearincomestatement_lastUpdateDate">{{yearincomestatement.lastUpdateDate}}</td>
-            <td class="yearincomestatement_lastDataDate">{{yearincomestatement.lastDataDate}}</td>
+            <td>資產負債表(季)</td>
+            <td class="seasonbalancesheet_lastUpdateDate">{{seasonbalancesheet.lastUpdateDate}}</td>
+            <td class="seasonbalancesheet_lastDataDate">{{seasonbalancesheet.lastDataDate}}</td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs update_yearincomestatement">
+              <button type="submit" class="btn btn-primary btn-xs update_seasonbalancesheet">
                 更新 <span class="glyphicon glyphicon-refresh"></span>
               </button>
             </td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs check_yearincomestatement">
+              <button type="submit" class="btn btn-primary btn-xs check_seasonbalancesheet">
                 檢查 <span class="glyphicon glyphicon-refresh"></span>
               </button></td>
             </td>
             <td>
-              <label class="col-sm sr-only">From:Year To:Year</label>
-              <input type="text" class="form-control input-xs yearincomestatement_date" placeholder="From:Year To:Year">
+              <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
+              <input type="text" class="form-control input-xs seasonbalancesheet_date" placeholder="From:Year-Season To:Year-Season">
             </td>
-            <td class="yearincomestatement_notes">{{yearincomestatement.notes}}</td>
+            <td class="seasonbalancesheet_notes">{{seasonbalancesheet.notes}}</td>
           </tr>
         </tbody>
       </table>
