@@ -589,6 +589,7 @@ def show_season_balance_sheet(request):
 
 #資產負債表
 def update_season_balance_sheet(request):
+    print 'start update season income statement'
     if 'date' in request.GET:
         date = request.GET['date']
         if date != '':
