@@ -600,7 +600,7 @@ def filter(request):
     return render_to_response('filter/filter.html', context_instance = RequestContext(request))
 
 def filter_test(request):
-    return render_to_response('filter/filter_test2.html', context_instance = RequestContext(request))
+    return render_to_response('filter/filter.html', context_instance = RequestContext(request))
 
 
 def filter_index(request):

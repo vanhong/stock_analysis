@@ -467,9 +467,19 @@ def update(request):
     except:
         pass
 
+    try:
+        seasonBalanceSheet = {}
+        data = UpdateManagement.objects.get(name='seasonBalanceSheet')
+        seasonBalanceSheet['name'] = data.name
+        seasonBalanceSheet['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonBalanceSheet['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonBalanceSheet['notes'] = data.notes
+    except:
+        pass
+
     return render_to_response('analysis/update.html', 
             {'stockid': stockID, 'monthrevenue': monthRevenue, 'seasonrevenue': seasonRevenue,
-             'seasonincomestatement': seasonIncomeStatement}, context_instance=RequestContext(request))
+             'seasonincomestatement': seasonIncomeStatement, 'seasonbalancesheet' : seasonBalanceSheet}, context_instance=RequestContext(request))
 
 
 

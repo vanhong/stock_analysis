@@ -1,9 +1,69 @@
 <script type="text/javascript">
   //$('#fitler_menu_revenue').treetable({ expandable: true });
 </script>
-<table id="fitler_menu_revenue" class="table" rules="none" >
+<style type="text/css">
+  .add_button{ float:right; }
+  .filter_title{font-weight: bold;}
+</style>
+<table class="table">
   <tbody>
-    <tr data-tt-id="1">
+    <tr>
+      <td class="warning filter_title">月營收</td>
+    </tr>
+    <tr>
+      <td class="warning">
+        最近
+        <input type="text" style="width: 45px; padding: 1px; height: 22px"></input>
+          月內有
+        <input id="RevenueYoY-matchcnt" type="text" style="width: 45px; padding: 1px; height: 22px"> </input>
+        月營收年增率大於
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; height: 22px"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button">
+          <span class="glyphicon glyphicon-plus" ></span>
+        </button>
+      </td>
+    </tr>
+    <tr>
+      <td class="filter_input warning">
+        連續
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; padding: 1px; height: 22px"></input>
+        月
+        營收年增率大於
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; height: 22px"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button">
+          <span class="glyphicon glyphicon-plus"></span>
+        </button>
+      </td>
+    </tr>
+    <tr>
+      <td class="success filter_title">季營收</td>
+    </tr>
+    <tr>
+      <td class="filter_input success">
+        最近
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; padding: 1px; height: 22px"></input>
+          季內有
+        <input id="RevenueYoY-matchcnt" type="text" style="width: 45px; padding: 1px; height: 22px"> </input>
+        季營收年增率大於
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; height: 22px"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button">
+          <span class="glyphicon glyphicon-plus"></span>
+        </button>
+      </td>
+    </tr>
+    <tr>
+      <td class="filter_input success">
+        連續
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; padding: 1px; height: 22px"></input>
+        季
+        營收年增率大於
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; height: 22px"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button">
+          <span class="glyphicon glyphicon-plus"></span>
+        </button>
+      </td>
+    </tr>
+    <!-- <tr data-tt-id="1">
       <td class="filter_input">
         <input id="RevenueYoY-cnt" type="text" style="width: 45px; padding: 1px"></input>
         <select id="RevenueYoY-timetype">
@@ -33,7 +93,6 @@
       <td>
       	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
       </td>
-    </tr>
-    
+    </tr> -->
   </tbody>
 </table>
