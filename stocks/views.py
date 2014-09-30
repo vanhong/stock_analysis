@@ -2,14 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import urllib, urllib2, datetime
+from urllib2 import URLError, HTTPError
 from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from django.template.context import RequestContext
 from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
-import time
+import time, json
 from decimal import Decimal
-from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue
+from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue, UpdateManagement
 from financial.models import SeasonIncomeStatement
-from django.db.models import Sum
+from django.db.models import Sum, Max
+from core.utils import st_to_decimal
 import pdb
 
 class ObjStock:
@@ -20,162 +24,41 @@ class ObjStock:
         return u'%s %s' % (self.symbol, self.name)
 
 def update_stock_id(request):
-    url = "http://www.emega.com.tw/js/StockTable.htm"
-    webcode = urllib.urlopen(url)
-    if webcode.code != 200:
-        return HttpResponse("Update failed")
-    req = urllib2.Request(url)
-    response = urllib2.urlopen(req)
-    soup = BeautifulSoup(response, from_encoding="big-5")
-    datas = soup.find_all("table", {'class' : 'TableBorder'})
-
-    twod_list = []
-    tr_datas = datas[0].tr
-    # pdb.set_trace()
-    isSymbol = True
-    while(tr_datas):
-        stockNum = 0
-        for data in tr_datas:
-            if hasattr(data, 'b'):
-                if isSymbol:
-                    if data.b:
-                        symbol = data.b.string.replace(u'\xa0','').encode('utf-8')
-                        isSymbol = False
-                    elif data.string:
-                        symbol = data.string.replace(u'\xa0','').encode('utf-8')
-                        isSymbol = False
-                else:
-                    if data.b:
-                        name = data.b.string.replace(u'\xa0','').encode('utf-8')
-                        stock = ObjStock(symbol, name)
-                        isSymbol = True
-                    elif data.string:
-                        name = data.string.replace(u'\xa0','').encode('utf-8')
-                        stock = ObjStock(symbol, name)
-                        isSymbol = True
-                    elif data.font:
-                        name = data.next.string.replace(u'\xa0','').encode('utf-8')
-                        stock = ObjStock(symbol, name)
-                        isSymbol = True
-                    if isSymbol:
-                        if stock.symbol != '':
-                            if len(twod_list) > stockNum:
-                                twod_list[stockNum].append(stock)
-                            else:
-                                twod_list.append([])
-                                twod_list[stockNum].append(stock)
-                            stockNum = stockNum + 1
-        tr_datas = tr_datas.next_sibling.next_sibling
-    marketType = ''
-    company_type = ''
-    for stockList in twod_list:
-        for stock in stockList:
-            if stock.symbol == r'上市' or stock.symbol == r'上櫃':
-                marketType = stock.symbol
-                companyType = stock.name
-            else:
-                stockid = StockId(symbol = stock.symbol, name = stock.name.strip(),
-                                  market_type = marketType, company_type = companyType)
-                stockid.save()
-    # pdb.set_trace()
-
-    return HttpResponse(twod_list)
-
-    for data in datas:
-        tr_datas = data.tr
-        pdb.set_trace()
-    return HttpResponse(datas)
-    marketSignal = False
-    symbolSignal = False
-    nameSignal = False
-    twod_list = []
-    company_type = ""
-    for data in datas:
-        if marketSignal:
-            if data.b.string:
-                company_type = data.b.string.encode("utf-8")
-            marketSignal = False
-        elif data.b.string and data.b.string.encode("utf-8") == r'上市':
-            market_type == '上市'
-            marketSignal = True
-            symbolSignal = True
-        elif symbolSignal:
-            if data.b.string:
-                symbol = data.b.string.encode("utf-8")
-                symbolSignal = False
-                nameSignal = True
-        elif nameSignal:
-            if data.b.string:
-                name = data.b.string("utf-8")
-                nameSignal = False
-                symbolSignal = True
-
-    pdb.set_trace()
-    return HttpResponse(datas)
-
-def old_update_stock_id(request):
     StockType = [2, 4]
-
+    cnt = 0
     for i in xrange(0, len(StockType)):
-        url = "http://brk.twse.com.tw:8000/isin/C_public.jsp?strMode=" + str(StockType[i])
-
+        url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(StockType[i])
         webcode = urllib.urlopen(url)
-        stock = ParseStockId()
-        if webcode.code == 200:
-            stock.feed(webcode.read())
-            webcode.close()
-        else:
-            return HttpResponse("Update Failed")
-        for i in xrange(len(stock.totaldata)):
-            totaldata = stock.totaldata[i]
-            stockid = StockId(symbol = totaldata[0].decode("cp950").encode("utf-8"), name = totaldata[1].decode("cp950").encode("utf-8"),
-                              market_type = totaldata[2].decode("cp950").encode("utf-8"), company_type = totaldata[3].decode("cp950").encode("utf-8"))
-            stockid.save()
-            print (totaldata[0].decode("cp950").encode("utf-8") + " " + totaldata[1].decode("cp950").encode("utf-8") + " " +
-                   totaldata[2].decode("cp950").encode("utf-8") + " " + totaldata[3].decode("cp950").encode("utf-8"))
-    return HttpResponse("Update StockId")
-
-class ParseStockId(HTMLParser):
-    def reset(self):
-        HTMLParser.reset(self)
-        self.stockinfo = False
-        self.datainfo = False
-        self.stock_name = ''
-        self.stock_symbol = ''
-        self.market_type = ''
-        self.company_type = ''
-        self.cell = 0
-        self.stockdata = []
-        self.totaldata = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag == 'td':
-            if attrs[0][0] == 'bgcolor' and attrs[0][1] == '#FAFAD2':
-                self.stockinfo = True
-                self.cell += 1
-                self.cell %= 7
-
-    def handle_endtag(self, tag):
-        if tag == 'tr':
-            self.stockinfo = False
-            self.cell = 0
-
-    def handle_data(self, text):
-        if self.stockinfo:
-            if self.cell == 1:
-                data = text.strip().split("    ")
-                if data[0].isalnum() and len(data[0]) == 4:
-                    self.stockdata.append(data[0].strip())
-                    self.stockdata.append(data[1].strip())
-                    self.datainfo = True
-                else:
-                    self.datainfo = False
-            elif self.cell == 4 and self.datainfo == True:
-                self.stockdata.append(text.strip())
-            elif self.cell == 5 and self.datainfo == True:
-                self.stockdata.append(text.strip())
-                self.totaldata.append(self.stockdata)
-                self.stockdata = []
+        if webcode.code != 200:
+            return HttpResponse("Update failed")
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        soup = BeautifulSoup(response, from_encoding="big-5")
+        datas = soup.find('tr')
+        while(datas.next_sibling):
+            data = datas.next_sibling.td.next
+            try:
+                if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR' or\
+                   data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVTFR':
+                    symbol,name = data.split()
+                    print symbol
+                    listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
+                    market_type = data.next.next_sibling.next_sibling.string.split()[0]
+                    company_type = data.next.next_sibling.next_sibling.next_sibling.string.split()[0]
+                    stockid = StockId(symbol = symbol, name = name, market_type = market_type,
+                                      company_type = company_type, listing_date = listing_date)
+                    stockid.save()
+                    cnt += 1
+                datas = datas.next_sibling
+            except:
+                datas = datas.next_sibling
+    
+    updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
+                                        last_data_date = datetime.date.today(), notes="There is " + str(cnt) + " stockIds")
+    updateManagement.save()
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
+    return HttpResponse(json_obj, content_type="application/json")
 
 def last_season(day):
     year = day.year
@@ -191,64 +74,16 @@ def last_season(day):
         season = 3
     return year, season
 
-def update_season_profit(request):
-    stock_ids = StockId.objects.all()
-    today = datetime.date.today()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        (last_season_year, last_season_season) = last_season(today)
-        revenueInDb = SeasonProfit.objects.filter(symbol=stock_symbol, year=last_season_year, season=last_season_season)
-        if revenueInDb:
-            continue
-        else:
-            url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zcha_" + stock_symbol + ".djhtm"
-            webcode = urllib.urlopen(url)
-            soup = BeautifulSoup(webcode, from_encoding='utf-8')
-            seasons = soup.find_all('td', {'class':'t3n0'})
-            print 'stockid ' + stock_symbol + ' loaded'
-            for season_data in seasons:
-                year = int(season_data.string.split("Q")[0].split(".")[0]) + 1911
-                season = int(season_data.string.split("Q")[0].split(".")[1])
-                profit = SeasonProfit()
-                profit.surrogate_key = stock_symbol + "_" + str(year) + str(season).zfill(2)
-                profit.year = year
-                profit.season = season
-                if season == 1:
-                    profit.date = datetime.date(year, 1, 1)
-                elif season == 2:
-                    profit.date = datetime.date(year, 4, 1)
-                elif season == 3:
-                    profit.date = datetime.date(year, 7, 1)
-                elif season == 4:
-                    profit.date = datetime.date(year, 10, 1)
-                profit.symbol = stock_symbol
-                next = season_data.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.profit = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.season_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.last_year_profit = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.acc_profit = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string and next.string != 'N/A':
-                    profit.acc_year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                profit.save()
-    return HttpResponse("update revenue")
-
 def is_decimal(s):
     try:
         Decimal(s)
     except:
         return False
     return True
+
+def test_month_revenue(request):
+    lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
+    return HttpResponse(lastDate['date__max'])
 
 def update_month_revenue(request):
     today = datetime.date.today() 
@@ -259,15 +94,30 @@ def update_month_revenue(request):
         month = 12
     else:
         month = month - 1
-    if 'year' in request.GET:
-        year = int(request.GET['year'])
-    if 'month' in request.GET:
-        month = int(request.GET['month'])
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_year, str_month = date.split('-')
+                year = int(str_year)
+                month = int(str_month)
+            except:
+                json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm'"})
+                return HttpResponse(json_obj, content_type="application/json")
     market = ['otc', 'sii']
     for i in range(len(market)):
+        # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
         url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
         req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
+        try:
+            response = urllib2.urlopen(req)
+        except URLError as e:
+            if hasattr(e, 'reason'):
+                json_obj = json.dumps({"notes": "Reason: " + e.reason})
+                return HttpResponse(json_obj, content_type="application/json")
+            elif hasattr(e, 'code'):
+                json_obj = json.dumps({"notes": "Error code:" + e.code})
+                return HttpResponse(json_obj, content_type="application/json")
         soup = BeautifulSoup(response, from_encoding="utf-8")
         datas = soup.find_all('td', {'align':'center'})
         for data in datas:
@@ -280,7 +130,7 @@ def update_month_revenue(request):
                     revenue.date = datetime.date(year, month, 1)
                     revenue.symbol = data.string
                     revenue_data = data.next_sibling.next_sibling
-                    if is_decimal(revenue_data.string.strip().replace(',', '')):
+                    if is_decimal(st_to_decimal(revenue_data.string)):
                         revenue.revenue = revenue_data.string.strip().replace(',', '')
                     last_year_revenue_data = revenue_data.next_sibling.next_sibling
                     if is_decimal(last_year_revenue_data.string.strip().replace(',', '')):
@@ -302,73 +152,101 @@ def update_month_revenue(request):
                         revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
                     print (revenue.symbol)
                     revenue.save()
-                    # revenue.revenue = datas1[0].strip().replace(',', '')
-                    # revenue.last_year_revenue = datas2[0].strip().replace(',', '')
-                    # revenue.year_growth_rate = datas2[1].strip().replace(',', '')
-                    # revenue.acc_revenue = datas1[2].strip().replace(',', '')
-                    # revenue.acc_year_growth_rate = datas2[3].strip().replace(',', '')
-                    # revenue.save()
-    return HttpResponse('update month revenue year:' + str(year) + " month:" + str(month))
+    cnt = MonthRevenue.objects.filter(year=year, month=month).count()
+    lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = MonthRevenue.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "monthRevenue", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " month_revenues")
+    updateManagement.save()
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " monthrevenue on " + str(year) + "-" + str(month)})
+    return HttpResponse(json_obj, content_type="application/json")
 
-def old_update_month_revenue(request):
-    stock_ids = StockId.objects.all()
-    today = datetime.date.today()
-    for stock_id in stock_ids:
-        stock_symbol = stock_id.symbol
-        if today.month == 1:
-            revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year-1, month=12)
+def check_month_revenue(request):
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_from, str_to = date.split(':')
+                dateFrom = datetime.datetime.strptime(str_from, '%Y-%m').date()
+                dateTo = datetime.datetime.strptime(str_to, '%Y-%m').date()
+            except:
+                json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm:yyyy-mm'"})
+                return HttpResponse(json_obj, content_type="application/json")
         else:
-            revenueInDb = MonthRevenue.objects.filter(symbol=stock_symbol, year=today.year, month=today.month-1)
-        if revenueInDb:
-            continue
-        else:
-            url = "http://jsjustweb.jihsun.com.tw/z/zc/zch/zch_" + stock_symbol + ".djhtm"
-            webcode = urllib.urlopen(url)
-            soup = BeautifulSoup(webcode, from_encoding='utf-8')
-            months = soup.find_all('td', {'class':'t3n0'})
-            print 'stockid ' + stock_symbol + ' loaded'
-            for month_data in months:
-                year = int(month_data.string.split("/")[0]) + 1911
-                month = int(month_data.string.split("/")[1])
-                revenue = MonthRevenue()
-                revenue.surrogate_key = stock_symbol + "_" + str(year) + str(month).zfill(2)
-                revenue.year = year
-                revenue.month = month
-                revenue.date = datetime.date(year, month, 1)
-                revenue.symbol = stock_symbol
-                next = month_data.next_sibling
-                if next.string:
-                    revenue.revenue = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.month_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.last_year_revenue = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.acc_revenue = Decimal(next.string.replace(",", ""))
-                next = next.next_sibling
-                if next.string:
-                    revenue.acc_year_growth_rate = Decimal(next.string.replace("%", "").replace(",", ""))
-                revenue.save()
-    return HttpResponse("update revenue")
+            json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm:yyyy-mm'"})
+            return HttpResponse(json_obj, content_type="application/json")
+    # if 'from' not in request.GET or 'to' not in request.GET:
+    #     return HttpResponse('please input date from Year-Month to Year-Month')
+    # if 'from' in request.GET:
+    #     try:
+    #         dateFrom = datetime.datetime.strptime(request.GET['from'], '%Y-%m').date()
+    #     except:
+    #         return HttpResponse('please input correct "from" date type like Year-Month')
+    # if 'to' in request.GET:
+    #     try:
+    #         dateTo = datetime.datetime.strptime(request.GET['to'], '%Y-%m').date()
+    #     except:
+    #         return HttpResponse('please input correct "to" date type like Year-Month')
+    stockIds = StockId.objects.all()
+    revenues = MonthRevenue.objects.filter(date__gte=dateFrom, date__lte=dateTo)
+    monthNum = month_between(dateFrom, dateTo) + 1
+    errorStockId = []
+    for stockId in stockIds:
+        revenue = revenues.filter(symbol=stockId.symbol)
+        if stockId.listing_date >= dateFrom and stockId.listing_date <= dateTo:
+            if len(revenue) == 0:
+                errorStockId.append(stockId.symbol)
+            else:
+                minMonth = revenue.order_by('date')[0].date
+                if minMonth > stockId.listing_date:
+                    minMonth = stockId.listing_date
+                newMonthNum = month_between(minMonth, dateTo) + 1
+                if (len(revenue) != newMonthNum):
+                    errorStockId.append(stockId.symbol)
+        elif stockId.listing_date < dateFrom:
+            if (len(revenue) != monthNum):
+                errorStockId.append(stockId.symbol)
+    if len(errorStockId) > 0:
+        json_obj = json.dumps({"notes" : errorStockId})
+        return HttpResponse(json_obj, content_type="application/json")
+
+    json_obj = json.dumps({"notes": "check month revenue ok"})
+
+    return HttpResponse(json_obj, content_type="application/json")
+
+def month_between(startDate, endDate):
+    return (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
 
 def new_update_dividendupdate_season_revenue(request):
     return HttpResponse("update season revenue")
 
 def update_season_revenue(request):
-    if 'year' in request.GET:
-        year = int(request.GET['year'])
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_year, str_season = date.split('-')
+                year = int(str_year)
+                season = int(str_season)
+            except:
+                json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+            return HttpResponse(json_obj, content_type="application/json")
     else:
-        return HttpResponse('please input year')
-    if 'season' in request.GET:
-        season = int(request.GET['season'])
-    else:
-        return HttpResponse('please input season')
+        json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+        return HttpResponse(json_obj, content_type="application/json")
+
+    # if 'year' in request.GET:
+    #     year = int(request.GET['year'])
+    # else:
+    #     return HttpResponse('please input year')
+    # if 'season' in request.GET:
+    #     season = int(request.GET['season'])
+    # else:
+    #     return HttpResponse('please input season')
     if season == 1:
         startMonth = 1
     elif season == 2:
@@ -378,8 +256,8 @@ def update_season_revenue(request):
     elif season == 4:
         startMonth = 10
     else:
-        return HttpResponse('please input correct season')
-
+        json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+        return HttpResponse(json_obj, content_type="application/json")
     firtMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth).values_list('symbol', flat=True)
     secondMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+1).values_list('symbol', flat=True)
     thirdMonthStockIds = MonthRevenue.objects.filter(year=year, month=startMonth+2).values_list('symbol', flat=True)
@@ -391,30 +269,43 @@ def update_season_revenue(request):
     lastSeasonRevenues = SeasonRevenue.objects.filter(year=lastYear, season=lastSeason)
     symbols = list(set(firtMonthStockIds).intersection(set(secondMonthStockIds)).intersection(set(thirdMonthStockIds)))
     for symbol in symbols:
+        print symbol
         revenue = SeasonRevenue()
         revenue.surrogate_key = symbol + '_' + str(year) + str(season).zfill(2)
         revenue.year = year
         revenue.season = season
         revenue.date = date
         revenue.symbol = symbol
-        revenue.revenue = firstMonthRevenues.get(symbol=symbol).revenue +\
-                          secondMonthRevenues.get(symbol=symbol).revenue +\
-                          thirdMonthRevenues.get(symbol=symbol).revenue
-        revenue.last_year_revenue = firstMonthRevenues.get(symbol=symbol).last_year_revenue +\
-                                    secondMonthRevenues.get(symbol=symbol).last_year_revenue +\
-                                    thirdMonthRevenues.get(symbol=symbol).last_year_revenue
-        if revenue.last_year_revenue > 0:
-            revenue.year_growth_rate = revenue.revenue / revenue.last_year_revenue * 100 - 100
-        if lastSeasonRevenues.filter(symbol=symbol):
-            last_season_revenue = lastSeasonRevenues.get(symbol=symbol).revenue
-            if last_season_revenue > 0:
-                revenue.season_growth_rate = revenue.revenue / last_season_revenue * 100 - 100
-        revenue.acc_revenue = thirdMonthRevenues.get(symbol=symbol).acc_revenue
-        revenue.acc_year_growth_rate = thirdMonthRevenues.get(symbol=symbol).acc_year_growth_rate
-        revenue.save()
-        print symbol
-
-    return HttpResponse('update season revenue year:' + str(year) + " season:" + str(season))
+        try:
+            revenue.revenue = firstMonthRevenues.get(symbol=symbol).revenue +\
+                              secondMonthRevenues.get(symbol=symbol).revenue +\
+                              thirdMonthRevenues.get(symbol=symbol).revenue
+            revenue.last_year_revenue = firstMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                        secondMonthRevenues.get(symbol=symbol).last_year_revenue +\
+                                        thirdMonthRevenues.get(symbol=symbol).last_year_revenue
+            if revenue.last_year_revenue > 0:
+                revenue.year_growth_rate = revenue.revenue / revenue.last_year_revenue * 100 - 100
+            if lastSeasonRevenues.filter(symbol=symbol):
+                last_season_revenue = lastSeasonRevenues.get(symbol=symbol).revenue
+                if last_season_revenue > 0:
+                    revenue.season_growth_rate = revenue.revenue / last_season_revenue * 100 - 100
+            revenue.acc_revenue = thirdMonthRevenues.get(symbol=symbol).acc_revenue
+            revenue.acc_year_growth_rate = thirdMonthRevenues.get(symbol=symbol).acc_year_growth_rate
+            revenue.save()
+        except:
+            pass
+    cnt = SeasonRevenue.objects.filter(year=year, season=season).count()
+    lastDate = SeasonRevenue.objects.all().aggregate(Max('date'))['date__max']
+    if lastDate == None:
+        json_obj = json.dumps({"notes": "There is no data in SeasonRevenue"})
+        return HttpResponse(json_obj, content_type="application/json")
+    lastDateDataCnt = SeasonRevenue.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "seasonRevenue", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
+    updateManagement.save()
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
+    return HttpResponse(json_obj, content_type="application/json")
 
 def old_update_season_revenue(request):
     stock_ids = StockId.objects.all()
@@ -473,7 +364,7 @@ def old_update_season_revenue(request):
 
     return HttpResponse('update season revenue')
 
-def update_dividend(request):
+def old_update_dividend(request):
     print 'hello'
     today = datetime.date.today() 
     year = today.year
@@ -491,7 +382,7 @@ def update_dividend(request):
     # print response.read()
     return HttpResponse(response.read())
 
-def new_update_dividend(request):
+def update_dividend(request):
     if 'year' in request.GET:
         input_year = int(request.GET['year'])
     else:
@@ -534,3 +425,61 @@ def new_update_dividend(request):
             print 'update ' + stock_symbol + ' dividend'
 
     return HttpResponse("update dividend")
+
+def update(request):
+    try:
+        stockID = {}
+        data = UpdateManagement.objects.get(name='stockID')
+        stockID['name'] = data.name
+        stockID['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        stockID['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        stockID['notes'] = data.notes
+    except:
+        None
+
+    try:
+        monthRevenue = {}
+        data = UpdateManagement.objects.get(name='monthRevenue')
+        monthRevenue['name'] = data.name
+        monthRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        monthRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        monthRevenue['notes'] = data.notes
+    except:
+        None
+
+    try:
+        seasonRevenue = {}
+        data = UpdateManagement.objects.get(name='seasonRevenue')
+        seasonRevenue['name'] = data.name
+        seasonRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonRevenue['notes'] = data.notes
+    except:
+        None
+
+    try:
+        seasonIncomeStatement = {}
+        data = UpdateManagement.objects.get(name='seasonIncomeStatement')
+        seasonIncomeStatement['name'] = data.name
+        seasonIncomeStatement['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonIncomeStatement['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonIncomeStatement['notes'] = data.notes
+    except:
+        pass
+
+    try:
+        seasonBalanceSheet = {}
+        data = UpdateManagement.objects.get(name='seasonBalanceSheet')
+        seasonBalanceSheet['name'] = data.name
+        seasonBalanceSheet['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonBalanceSheet['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonBalanceSheet['notes'] = data.notes
+    except:
+        pass
+
+    return render_to_response('analysis/update.html', 
+            {'stockid': stockID, 'monthrevenue': monthRevenue, 'seasonrevenue': seasonRevenue,
+             'seasonincomestatement': seasonIncomeStatement, 'seasonbalancesheet' : seasonBalanceSheet}, context_instance=RequestContext(request))
+
+
+

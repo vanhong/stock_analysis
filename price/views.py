@@ -15,15 +15,6 @@ from bs4 import BeautifulSoup
 import pdb
 
 
-# q(quit)：離開
-# p [some variable](print)：秀某個變數的值
-# n(next line)：下一行
-# c(continue)：繼續下去
-# s(step into)：進入函式
-# r(return): 到本函式的return敘述式
-# l(list)：秀出目前所在行號
-# !： 改變變數的值
-
 def update_price(request):
 	begin = request.GET['begin']
 	end = request.GET['end']
@@ -60,7 +51,7 @@ def update_price(request):
 				if dataArr[0] == 'Date':
 					continue
 				priceObj = Price()
-				priceObj.surrogate_key = dataArr[0].replace('-','') + '_' + no
+				priceObj.surrogate_key = no + '_' + dataArr[0].replace('-','')
 				priceObj.trade_date = dataArr[0].replace('-','')
 				priceObj.symbol = no
 				priceObj.openp = dataArr[1]
@@ -76,3 +67,11 @@ def update_price(request):
 				continue
 
 		#print the_page
+		# q(quit)：離開
+		# p [some variable](print)：秀某個變數的值
+		# n(next line)：下一行
+		# c(continue)：繼續下去
+		# s(step into)：進入函式
+		# r(return): 到本函式的return敘述式
+		# l(list)：秀出目前所在行號
+		# !： 改變變數的值

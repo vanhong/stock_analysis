@@ -59,8 +59,10 @@ urlpatterns += patterns('stocks.views',
     (r'^update_stockid/$', 'update_stock_id'),
     (r'^update_dividend/$', 'update_dividend'),
     (r'^update_month_revenue/$', 'update_month_revenue'),
-    (r'^update_season_profit/$', 'update_season_profit'),
+    (r'^check_month_revenue/$', 'check_month_revenue'),
     (r'^update_season_revenue/$', 'update_season_revenue'),
+    (r'^test_month_revenue/$', 'test_month_revenue'),   
+    (r'^update/$', 'update'),
 )
 
 urlpatterns += patterns('financial.views',
@@ -70,6 +72,8 @@ urlpatterns += patterns('financial.views',
     (r'^update_season_balance_sheet/$', 'update_season_balance_sheet'),
     (r'^show_season_balance_sheet/$', 'show_season_balance_sheet'),
     (r'^show_season_income_statement/$', 'show_season_income_statement'),
+    (r'^show_statements_of_cashflows/$', 'show_statements_of_cashflows'),
+    (r'^update_season_cashflow_statement/$', 'update_season_cashflow_statement'),
 )
 
 urlpatterns += patterns('',
@@ -94,11 +98,11 @@ urlpatterns += patterns('filter.views',
     url(r'^filter/start2/$', 'filter_start2', name= 'filter_start2'),
     url(r'^filter/$', 'filter'),
     url(r'^filter/test/$', 'filter_test'),
-    url(r'^filter_menu/$', 'filter_menu'),
+    url(r'^filter_option/$', 'filter_option'),
+    url(r'^filter_choice/$', 'filter_choice'),
     url(r'^tree_table/$', 'tree_table'),
     url(r'^test3/$', 'test3'),
     url(r'^test/$', 'test'),
-
 )
 
 urlpatterns += patterns('chip.views',

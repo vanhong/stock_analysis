@@ -13,7 +13,7 @@ user-select: none;
 }
 
 input[type=checkbox].css-checkbox {
-	  position: absolute; 
+	position: absolute; 
     overflow: hidden; 
     clip: rect(0 0 0 0); 
     height:1px; 

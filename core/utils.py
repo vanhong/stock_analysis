@@ -27,3 +27,4 @@ def last_season(day):
     elif month >= 10:
         season = 3
     return year, season
+

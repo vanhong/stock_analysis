@@ -3,7 +3,7 @@
 {% block extra_js %}
 <script type="text/css" href="{{ STATIC_URL }}css/jquery.treetable.css" rel="stylesheet"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.treetable.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/StockFilter.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/filter.js"></script>
 <script type="text/javascript">
   var filter_menu = new filter_menu.menu();
   filter_menu.Init();
@@ -67,15 +67,15 @@ td.filter_button{width:50px;}
           <li><a href="#">  籌碼分析</a></li>
         </ul>
       </div>
-      <div class="container" style="width:100%">
-        <dir class="col-md-4">
-          <div id="filter_menu">
-          </div>
+      <div class="container">
+        <dir class="filter_option col-md-5">
+        </dir>
+        <dir class="filter_choice col-md-5">
         </dir>
       </div>
-      <div id="filter_content" class="filter_div" width="30em" >
-       <button id="start_filter" class="btn btn-link" style="font-size:1.2em;">GO!</button>
+      <div class="filter_div filter_content" width="30em" >
+       <button class="btn btn-link start_filter" style="font-size:1.2em;">GO!</button>
       </div>
-      <div id="filter_result" class="filter_div" ></div>
+      <div class="filter_div filter_result" ></div>
   </div>
 {% endblock %}

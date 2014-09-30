@@ -11,9 +11,9 @@ from django.db.models import Count
 from django.db.models import Avg
 from django.db.models import Q, F
 from django.db import connection
-from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.db.models import Avg
+import json
 
 from exceptions import NotImplementedError
 from abc import ABCMeta, abstractmethod
@@ -76,7 +76,7 @@ class FilterClasses():
 def filter_start(request):
     print '%s, get json = %s' % ('Start to Filter (new version)', request.body)
     filter_list = [] #array
-    json_data = simplejson.loads(request.body)
+    json_data = json.loads(request.body)
     #pdb.set_trace()
     for item in json_data:
         #create filter object according to the class name
@@ -85,9 +85,9 @@ def filter_start(request):
             instance = targetClass(item)
             results = instance.filter(item)
             filter_list.append(results)
-
+    new_list = sorted(filter_list)
     results_dic = {}
-    for item in filter_list:
+    for item in new_list:
         for symbol in item:
             results_dic[symbol] = StockId.objects.get(symbol=symbol).name
     #print results_dic
@@ -206,14 +206,14 @@ def filter_start2(request):
 
     print 'Print filterIntersection'
     print filterIntersection
+    new_list = sorted(filterIntersection)    
     results_dic = {}
-    for item in filterIntersection:
+    for item in new_list:
         if StockId.objects.filter(symbol=item):
             results_dic[item] = StockId.objects.get(symbol=item).name
-
     return render_to_response(
                 'filter/filter_result.html', {
-                "results": results_dic},
+                "results": sorted(results_dic.iteritems())},
                 context_instance = RequestContext(request))
 
 #not used
@@ -578,15 +578,18 @@ def daterange(start_date, end_date):
 
 
 @csrf_exempt
-def filter_menu(request):
-    print 'start'
+def filter_option(request):
     if 'kind' in request.POST:
         kind = request.POST['kind']
         print kind
     else:
         print 'nothing'
-    return render_to_response('filter/' + 'filter_menu_' + kind + '.html',
+    return render_to_response('filter/' + 'filter_option_' + kind + '.html',
                               context_instance = RequestContext(request))
+
+def filter_choice(request):
+    return render_to_response('filter/filter_choice.html', context_instance = RequestContext(request))
+
 def test(request):
     return render_to_response('test.html', context_instance = RequestContext(request))
 
@@ -600,7 +603,7 @@ def filter(request):
     return render_to_response('filter/filter.html', context_instance = RequestContext(request))
 
 def filter_test(request):
-    return render_to_response('filter/filter_test2.html', context_instance = RequestContext(request))
+    return render_to_response('filter/filter.html', context_instance = RequestContext(request))
 
 
 def filter_index(request):

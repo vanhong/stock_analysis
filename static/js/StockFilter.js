@@ -2,18 +2,18 @@
     function menu() {
         this.Init = function () {
             $(window).load(function(){
-                $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'}, function(){
+                $('.filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'}, function(){
                     bind_button_event();
                 });
 
-                $('#filter_menu_revenue').click(function(){
-                    alert('hello');
-                    $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'});
+                $('.filter_menu_revenue').click(function(){
+                    //alert('hello');
+                    $('.filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'});
                     $('button[id^="filter_menu"]').attr('class', 'btn btn-primary');
                     
                 });
 
-                $('#start_filter').click(function(){
+                $('.start_filter').click(function(){
                     start_filter();
                 });
             });
