@@ -98,11 +98,11 @@ urlpatterns += patterns('filter.views',
     url(r'^filter/start2/$', 'filter_start2', name= 'filter_start2'),
     url(r'^filter/$', 'filter'),
     url(r'^filter/test/$', 'filter_test'),
-    url(r'^filter_menu/$', 'filter_menu'),
+    url(r'^filter_option/$', 'filter_option'),
+    url(r'^filter_choice/$', 'filter_choice'),
     url(r'^tree_table/$', 'tree_table'),
     url(r'^test3/$', 'test3'),
     url(r'^test/$', 'test'),
-
 )
 
 urlpatterns += patterns('chip.views',

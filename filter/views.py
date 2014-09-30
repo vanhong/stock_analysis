@@ -578,15 +578,18 @@ def daterange(start_date, end_date):
 
 
 @csrf_exempt
-def filter_menu(request):
-    print 'start'
+def filter_option(request):
     if 'kind' in request.POST:
         kind = request.POST['kind']
         print kind
     else:
         print 'nothing'
-    return render_to_response('filter/' + 'filter_menu_' + kind + '.html',
+    return render_to_response('filter/' + 'filter_option_' + kind + '.html',
                               context_instance = RequestContext(request))
+
+def filter_choice(request):
+    return render_to_response('filter/filter_choice.html', context_instance = RequestContext(request))
+
 def test(request):
     return render_to_response('test.html', context_instance = RequestContext(request))
 
