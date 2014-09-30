@@ -1,0 +1,99 @@
+<style type="text/css">
+  .add_button{ float:right; }
+  .filter_title{font-weight: bold;}
+  .filter_input{
+    width: 45px;
+    height: 22px;
+  }
+</style>
+<table class="table">
+  <tbody>
+    <tr>
+      <td class="warning filter_title">月營收</td>
+    </tr>
+    <tr>
+      <td class="warning m_revenue_yoy">
+        最近
+        <input class="filter_input m_revenue_yoy_cnt" type="text"></input>
+          月內有
+        <input class="filter_input m_revenue_yoy_match_cnt" type="text" > </input>
+        月營收年增率大於
+        <input class="filter_input m_revenue_yoy_percent" type="text"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button m_revenue_yoy_button">
+          <span class="glyphicon glyphicon-plus"></span>
+        </button>
+      </td>
+    </tr>
+    <tr>
+      <td class="filter_input warning">
+        連續
+        <input class="filter_input" id="RevenueYoY-cnt" type="text"></input>
+        月
+        營收年增率大於
+        <input class="filter_input" id="RevenueYoY-cnt" type="text"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button">
+          <span class="glyphicon glyphicon-plus"></span>
+        </button>
+      </td>
+    </tr>
+    <tr>
+      <td class="success filter_title">季營收</td>
+    </tr>
+    <tr>
+      <td class="filter_input success">
+        最近
+        <input class="filter_input" id="RevenueYoY-cnt" type="text"></input>
+          季內有
+        <input id="RevenueYoY-matchcnt" type="text" style="width: 45px; padding: 1px; height: 22px"> </input>
+        季營收年增率大於
+        <input class="filter_input" id="RevenueYoY-cnt" type="text"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button">
+          <span class="glyphicon glyphicon-plus"></span>
+        </button>
+      </td>
+    </tr>
+    <tr>
+      <td class="success">
+        連續
+        <input class="filter_input" id="RevenueYoY-cnt" type="text"></input>
+        季
+        營收年增率大於
+        <input class="filter_input" id="RevenueYoY-cnt" type="text"></input> %
+        <button type="submit" class="btn btn-primary btn-xs add_button">
+          <span class="glyphicon glyphicon-plus"></span>
+        </button>
+      </td>
+    </tr>
+    <!-- <tr data-tt-id="1">
+      <td class="filter_input">
+        <input id="RevenueYoY-cnt" type="text" style="width: 45px; padding: 1px"></input>
+        <select id="RevenueYoY-timetype">
+          <option value="month">月</option>
+          <option value="season">季</option>
+        </select>
+        內有
+        <input id="RevenueYoY-matchcnt" type="text" style="width: 45px; padding: 1px"> 月(季)</input>
+        營收年增率
+        <select id="RevenueYoY-overunder">
+          <option value="gte">大於</option>
+          <option value="lte">小於</option>
+        </select>
+        <input id="RevenueYoY-value" type="text" style="width: 45px; padding: 1px"> %</input> 
+      </td>
+      <td class="filter_button">
+    	  <button id="add-RevenueYoY" title="營收年增率" class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
+      </td>
+    </tr>
+    <tr data-tt-id="2" data-tt-parent-id="1">
+      <td>連續
+        <input type="" style="width: 45px; padding: 1px"> 季</input>
+        營收年增率大於
+      
+        <input type="" style="width: 45px; padding: 1px"> %</input> 
+      
+      <td>
+      	<button class="btn btn-primary" style="width: 45px; padding: 1px">Add</button>
+      </td>
+    </tr> -->
+  </tbody>
+</table>
