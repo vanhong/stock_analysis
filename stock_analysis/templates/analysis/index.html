@@ -7,21 +7,27 @@
 $( document ).ready( function() {
   //$( '#analysis').attr('class', 'active');
   
-  $(".dropdown-menu > li > a.trigger").on("click",function(e){
+  $(".dropdown-menu > li > a.trigger").on("click",function(){
       var current=$(this).next();
       var grandparent=$(this).parent().parent();
-      if($(this).hasClass('left-caret')||$(this).hasClass('right-caret'))
-        $(this).toggleClass('right-caret left-caret');
-      grandparent.find('.left-caret').not(this).toggleClass('right-caret left-caret');
+      if ($(this).children(":first").hasClass('glyphicon-chevron-right')){
+        $(this).children(":first").removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-left')
+      } else if ($(this).children(":first").hasClass('glyphicon-chevron-left')){
+        $(this).children(":first").addClass('glyphicon-chevron-right').removeClass('glyphicon-chevron-left')
+      }
+      // if($(this).hasClass('left-caret')||$(this).hasClass('right-caret'))
+      //   $(this).toggleClass('right-caret left-caret');
+      // grandparent.find('.glyphicon-chevron-left').not(current).removeClass('.glyphicon-chevron-left').add('.glyphicon-chevron-right');
+      grandparent.find('.glyphicon-chevron-left').not(this.children).removeClass('glyphicon-chevron-left').addClass('glyphicon-chevron-right');
       grandparent.find(".sub-menu:visible").not(current).hide();
       current.toggle();
-      e.stopPropagation();
+      //e.stopPropagation();
   });
-  $(".dropdown-menu > li > a:not(.trigger)").on("click",function(){
-    var root=$(this).closest('.dropdown');
-    root.find('.left-caret').toggleClass('right-caret left-caret');
-    root.find('.sub-menu:visible').hide();
-  });
+  // $(".dropdown-menu > li > a:not(.trigger)").on("click",function(){
+  //   var root=$(this).closest('.dropdown');
+  //   root.find('.left-caret').toggleClass('right-caret left-caret');
+  //   root.find('.sub-menu:visible').hide();
+  // });
   $( '#searchSubmit' ).click( function() {
     q = $( '#q' ).val();
     //stockid
@@ -39,6 +45,10 @@ $( document ).ready( function() {
 });
 
 </script>
+<style type="text/css">
+  .dropdown-menu li a span{ float:right; }
+</style>
+
 {% endblock %}
 
 {% block content %}
@@ -56,8 +66,8 @@ $( document ).ready( function() {
     <div class="row">
       <div class="col-md-2">
         <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel" style="display: block; position: static; ">
-          <li>
-            <a class="trigger right-caret" href="#">  基本分析</a>
+          <li class="dropdown-submenu">
+            <a class="trigger" href="#">  基本分析<span class="glyphicon glyphicon-chevron-right"></span></a>
             <ul class="dropdown-menu sub-menu">
               <li><a href="/revenue/">營收盈餘</a></li>
               <li><a href="/dividend/">股利政策</a></li>
@@ -65,9 +75,9 @@ $( document ).ready( function() {
               <li><a href="/performance_per_share/">每股盈餘</a></li>
             </ul>
           </li>
-          <li class="dropdown-submenu">
-            <a href="#">  財務分析</a>
-            <ul class="dropdown-menu">
+          <li>
+            <a class="trigger"  href="#">  財務分析<span class="glyphicon glyphicon-chevron-right"></span></a>
+            <ul class="dropdown-menu sub-menu">
               <li><a href="/roe/">ROE/ROA</a></li>
               <li><a href="/current_ratio/">流動比/速動比</a></li>
               <li><a href="/debt_ratio/">負債比率</a></li>
@@ -76,8 +86,8 @@ $( document ).ready( function() {
             </ul>
           </li>
           <li class="dropdown-submenu">
-            <a href="#">  成長力分析</a>
-            <ul class="dropdown-menu">
+            <a class="trigger" href="#">  成長力分析<span class="glyphicon glyphicon-chevron-right"></span></a>
+            <ul class="dropdown-menu sub-menu">
               <li><a href="/revenue_growth_rate/">營收成長率</a></li>
               <li><a href="/operating_profit_growth_rate/">營業利益成長率</a></li>
               <li><a href="/net_before_tax_profit_growth_rate/">稅前淨利成長率</a></li>

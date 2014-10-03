@@ -12,8 +12,6 @@ function isInt(value)
                     bind_button_event();
                 });
 
-                
-
                 $('.filter_menu_revenue').click(function(){
                     $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'});
                     $('button[id^="filter_menu"]').attr('class', 'btn btn-primary');
