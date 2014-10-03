@@ -41,10 +41,26 @@
 				});
 
 				$(".update_seasonbalancesheet").click(function() {
-					$.get('/update_season_balance_sheet', {'date':$('.seasonbalancesheet_date').val()}).done(function(jData) {
-						$.get('.seasonbalancesheet_lastUpdate').html(jData.lastUpdateDate);
+					$.get('/update_season_balance_sheet/', {'date':$('.seasonbalancesheet_date').val()}).done(function(jData) {
+						$('.seasonbalancesheet_lastUpdate').html(jData.lastUpdateDate);
 						$('.seasonbalancesheet_lastDataDate').html(jData.lastDataDate);
 						$('.seasonbalancesheet_notes').html(jData.notes);
+					})
+				});
+
+				$(".update_seasoncashflow").click(function () {
+					$.get('/update_season_cashflow_statement/', {'date':$('.seasoncashflow_date').val()}).done(function(jData) {
+						$('.seasoncashflow_lastUpdate').html(jData.lastUpdateDate);
+						$('.seasoncashflow_lastDataDate').html(jData.lastDataDate);
+						$('.seasoncashflow_notes').html(jData.notes);
+					})
+				});
+
+				$(".update_yearincomestatement").click(function () {
+					$.get('/update_year_income_statement/', {'date':$('.yearincomestatement_date').val()}).done(function(jData) {
+						$('.yearincomestatement_lastUpdate').html(jData.lastUpdateDate);
+						$('.yearincomestatement_lastDataDate').html(jData.lastDataDate);
+						$('.yearincomestatement_notes').html(jData.notes);
 					})
 				});
 			});

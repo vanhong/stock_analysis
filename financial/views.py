@@ -3,19 +3,17 @@
 import urllib2
 import urllib
 from urllib2 import URLError
-from django.http import HttpResponse, Http404
-from HTMLParser import HTMLParser
+from django.http import HttpResponse
 import time
-from decimal import Decimal
 from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement, YearFinancialRatio, SeasonCashFlowStatement
-from stocks.models import SeasonRevenue, UpdateManagement
+from financial.models import YearIncomeStatement
+from stocks.models import UpdateManagement
 from bs4 import BeautifulSoup
-import html5lib
 import datetime
 import json
 from django.db.models import Sum, Max
-from core.utils import st_to_decimal, season_to_date, last_season
+from core.utils import st_to_decimal, season_to_date, year_to_date
 import pdb
 
 #already got certification's financial report
@@ -553,6 +551,274 @@ def update_season_income_statement(request):
                            "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
 
+def update_year_income_statement(request):
+    print 'start update year income statement'
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                year = int(date)
+            except:
+                json_obj = json.dumps({"notes": "please input correct year"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct year"})
+            return HttpResponse(json_obj, content_type="application/json")
+    else:
+        json_obj = json.dumps({"notes": "please input correct season year"})
+        return HttpResponse(json_obj, content_type="application/json")
+    stockIDs = get_updated_id(year, 4)
+    for stockID in stockIDs:
+        stock_symbol = stockID
+        if not (YearIncomeStatement.objects.filter(symbol=stock_symbol, year=year)):
+            url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
+            # values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
+            # 'keyword4' : '','code1' : '','TYPEK2' : '','checkbtn' : '',
+            # 'queryName':'co_id', 'TYPEK':'all', 'isnew':'false', 'co_id' : stock_symbol, 'year' : year, 'season' : str(season).zfill(2) }
+            values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'sii', 'step' : '2',
+                      'year' : str(year-1911), 'season' : '04', 'co_id' : stock_symbol, 'firstin' : '1'}
+            url_data = urllib.urlencode(values)
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            req = urllib2.Request(url, url_data, headers)
+            try:
+                response = urllib2.urlopen(req)
+                soup = BeautifulSoup(response,from_encoding="utf-8")
+                season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
+            except URLError, e:
+                time.sleep(20)
+                busy_msg = True
+                if hasattr(e, "reason"):
+                    print(stock_symbol + " Reason:"), e.reason
+                    print stock_symbol + 'time sleep' 
+                elif hasattr(e, "code"):
+                    print(stock_symbol + " Error code:"), e.code
+                    print stock_symbol + 'time sleep' 
+            # 如果連線正常，還得再確認是否因查詢頻繁而給空表格；若有，則先sleep再重新連線
+            while busy_msg:
+                response.close()
+                headers = {'User-Agent': 'Mozilla/4.0'}
+                req = urllib2.Request(url, url_data, headers)
+                try:
+                    response = urllib2.urlopen(req)
+                    soup = BeautifulSoup(response,from_encoding="utf-8")
+                    season_income_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+                    busy_msg = soup.find('table', attrs = {'width':'80%', 'border':'0','cellspacing':'8'})
+                except URLError, e:
+                    busy_msg = True
+                    if hasattr(e, "reason"):
+                        print(stock_symbol + " Reason:"), e.reason
+                        print stock_symbol + 'time sleep' 
+                    elif hasattr(e, "code"):
+                        print(stock_symbol + " Error code:"), e.code
+                        print stock_symbol + 'time sleep' 
+                if busy_msg:
+                    print stock_symbol + 'time sleep' 
+                    time.sleep(20)
+
+            income_statement = YearIncomeStatement()
+            income_statement.symbol = stock_symbol
+            income_statement.year = year
+            income_statement.surrogate_key = stock_symbol + '_' + str(year)
+
+            income_statement.date = year_to_date(year)
+            owners_of_parent = 0
+            print stock_symbol + ' loaded'
+            for data in season_income_datas:
+                if r'營業收入合計' in data.string.encode('utf-8') or r'收入合計' == data.string.encode('utf-8') or r'淨收益' == data.string.encode('utf-8') or r'收益合計' == data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_operating_revenue = st_to_decimal(next_data.string)
+                elif r'營業成本合計' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_operating_cost = st_to_decimal(next_data.string)
+                elif r'營業毛利（毛損）' == data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.gross_profit_loss_from_operations = st_to_decimal(next_data.string)
+                elif r'未實現銷貨（損）益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.unrealized_profit_loss_from_sales = st_to_decimal(next_data.string)
+                elif r'已實現銷貨（損）益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.realized_profit_loss_from_sales = st_to_decimal(next_data.string)
+                elif r'營業毛利（毛損）淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_gross_profit_from_operations = st_to_decimal(next_data.string)
+                elif r'推銷費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_selling_expenses = st_to_decimal(next_data.string)
+                elif r'管理費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.administrative_expenses = st_to_decimal(next_data.string)
+                elif r'研究發展費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.research_and_development_expenses = st_to_decimal(next_data.string)
+                elif r'營業費用合計' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_operating_expenses = st_to_decimal(next_data.string)
+                elif r'其他收益及費損淨額' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.net_other_income_expenses = st_to_decimal(next_data.string)
+                elif r'營業利益（損失）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_operating_income_loss = st_to_decimal(next_data.string)
+                elif r'其他收入' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.other_income = st_to_decimal(next_data.string)
+                elif r'其他利益及損失淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.other_gains_and_losses = st_to_decimal(next_data.string)
+                elif r'財務成本淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_finance_costs = st_to_decimal(next_data.string)
+                elif r'採用權益法認列之關聯企業及合資損益之份額淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.share_of_profit_loss_of_associates_using_equity_method = st_to_decimal(next_data.string)
+                elif r'營業外收入及支出合計' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_non_operating_income_and_expenses = st_to_decimal(next_data.string)
+                elif r'稅前淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位稅前淨利（淨損）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_loss_from_continuing_operations_before_tax = st_to_decimal(next_data.string)
+                elif r'所得稅費用（利益）合計' in data.string.encode('utf-8') or r'所得稅（費用）利益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_tax_expense = st_to_decimal(next_data.string)
+                elif r'繼續營業單位本期淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位本期稅後淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位淨利（淨損）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_loss_from_continuing_operations = st_to_decimal(next_data.string)
+                elif r'本期淨利（淨損）' in data.string.encode('utf-8') or r'本期稅後淨利（淨損）' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.profit_loss = st_to_decimal(next_data.string)
+                elif r'國外營運機構財務報表換算之兌換差額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.exchange_differences_on_translation = st_to_decimal(next_data.string)
+                elif r'備供出售金融資產未實現評價損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.unrealised_gains_losses_for_sale_financial_assets = st_to_decimal(next_data.string)
+                elif r'採用權益法認列之關聯企業及合資之其他綜合損益之份額合計' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_share_of_other_income_of_associates_using_equity_method = st_to_decimal(next_data.string)
+                elif r'與其他綜合損益組成部分相關之所得稅' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.income_tax_related_of_other_comprehensive_income = st_to_decimal(next_data.string)
+                elif r'其他綜合損益（淨額）' in data.string.encode('utf-8') or r'其他綜合損益（稅後）淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_other_comprehensive_income = st_to_decimal(next_data.string)
+                elif r'其他綜合損益' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.other_comprehensive_income = st_to_decimal(next_data.string)
+                elif r'本期綜合損益總額' in data.string.encode('utf-8') or r'本期綜合損益總額（稅後）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_comprehensive_income = st_to_decimal(next_data.string)
+                elif r'母公司業主（淨利／損）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_loss_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                elif r'非控制權益（淨利／損）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.profit_loss_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                elif r'母公司業主（綜合損益）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                elif r'母公司業主' in data.string.encode('utf-8'):
+                    if owners_of_parent == 0:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                        owners_of_parent = 1
+                    else:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.comprehensive_income_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
+                elif r'非控制權益（綜合損益）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.comprehensive_income_attributable_to_non_controlling_interests = st_to_decimal(next_data.string)
+                elif r'基本每股盈餘' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.total_basic_earnings_per_share = st_to_decimal(next_data.string)
+                elif r'稀釋每股盈餘' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.total_diluted_earnings_per_share = st_to_decimal(next_data.string)
+                elif r'利息收入' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.interest_income = st_to_decimal(next_data.string)
+                elif r'減：利息費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.interest_expenses = st_to_decimal(next_data.string)
+                elif r'利息淨收益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_interest_income_expense = st_to_decimal(next_data.string)
+                elif r'手續費淨收益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_service_fee_charge_and_commisions_income_loss = st_to_decimal(next_data.string)
+                elif r'透過損益按公允價值衡量之金融資產及負債損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.gain_loss_on_financial_assets_liabilities_at_fair_value = st_to_decimal(next_data.string)
+                elif r'保險業務淨收益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_income_loss_of_insurance_operations = st_to_decimal(next_data.string)
+                elif r'投資性不動產損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.gain_loss_on_investment_property = st_to_decimal(next_data.string)
+                elif r'備供出售金融資產之已實現損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.realized_gains_on_available_for_sale_financial_assets = st_to_decimal(next_data.string)
+                elif r'持有至到期日金融資產之已實現損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.realized_gains_on_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
+                elif r'兌換損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.foreign_exchange_gains_losses = st_to_decimal(next_data.string)
+                elif r'資產減損（損失）迴轉利益淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.impairment_loss_or_reversal_of_impairment_loss_on_assets = st_to_decimal(next_data.string)
+                elif r'其他利息以外淨損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_other_non_interest_incomes_losses = st_to_decimal(next_data.string)
+                elif r'利息以外淨損益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_income_loss_except_interest = st_to_decimal(next_data.string)
+                elif r'淨收益' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.net_income_loss = st_to_decimal(next_data.string)
+                elif r'呆帳費用及保證責任準備提存（各項提存）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_bad_debts_expense_and_guarantee_liability_provisions = st_to_decimal(next_data.string)
+                elif r'保險負債準備淨變動' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.total_net_change_in_provisions_for_insurance_liabilities = st_to_decimal(next_data.string)
+                elif r'員工福利費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.employee_benefits_expenses = st_to_decimal(next_data.string)
+                elif r'折舊及攤銷費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.employee_benefits_expenses = st_to_decimal(next_data.string)
+                elif r'其他業務及管理費用' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.other_general_and_administrative_expenses = st_to_decimal(next_data.string)
+                elif r'現金流量避險中屬有效避險不分之避險工具利益（損失）' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    income_statement.gain_loss_on_effective_portion_of_cash_flow_hedges = st_to_decimal(next_data.string)
+                elif r'停業單位損益' in data.string.encode('utf-8') or r'停業單位損益合計' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        income_statement.income_from_discontinued_operations = st_to_decimal(next_data.string)
+            if income_statement.total_basic_earnings_per_share is not None:
+                income_statement.save()
+                print stock_symbol + ' data updated'
+            else:
+                print stock_symbol + 'has no data-----------'
+    cnt = YearIncomeStatement.objects.filter(year=year).count()
+    lastDate = YearIncomeStatement.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = YearIncomeStatement.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "yearIncomeStatement", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
+    updateManagement.save()
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                           "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " datas on " + str(year)})
+    return HttpResponse(json_obj, content_type="application/json")
+
 #資產負債表
 def show_season_balance_sheet(request):
     stock_symbol = '8114'
@@ -961,7 +1227,7 @@ def show_statements_of_cashflows(reqquest):
     detail_button = soup.find_all("input", {'type': 'button', 'value': r'詳細資訊'})
     print detail_button
 
-    balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
+    # balance_sheet_datas = soup.find_all("td", {'style' : 'text-align:left;white-space:nowrap;'})
     # for data in balance_sheet_datas:
     #     if r'現金及約當現金' in data.string.encode('utf-8'):
     #         next_data = data.next_sibling.next_sibling
@@ -973,14 +1239,25 @@ def show_statements_of_cashflows(reqquest):
     return HttpResponse(response.read())
 
 def update_season_cashflow_statement(request):
-    if 'year' in request.GET and  'season' in request.GET:
-        year = int(request.GET['year'])
-        season = int(request.GET['season'])
+    print 'start update season cashflow statement'
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_year, str_season = date.split('-')
+                year = int(str_year)
+                season = int(str_season)
+            except:
+                json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+            return HttpResponse(json_obj, content_type="application/json")
     else:
-        today = datetime.datetime.now()
-        year, season = last_season(today)
+        json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+        return HttpResponse(json_obj, content_type="application/json")
+    
     stockIDs = get_updated_id(year, season)
-    # stockIDs = ['2330', '8114']
     for stock_id in stockIDs:
         stock_symbol = stock_id
         if not SeasonCashFlowStatement.objects.filter(symbol=stock_symbol, year=year, season=season):
@@ -1350,8 +1627,15 @@ def update_season_cashflow_statement(request):
             response.close()
             if cashflow.profit_loss_from_continuing_operations_before_tax:
                 cashflow.save()
-
-    return HttpResponse('cashflow statement updated')
+    cnt = SeasonCashFlowStatement.objects.filter(year=year, season=season).count()
+    lastDate = SeasonCashFlowStatement.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = SeasonCashFlowStatement.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "seasonCashflow", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
+    updateManagement.save()
+    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                           "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonbalancesheet on " + str(year) + "-" + str(season)})
+    return HttpResponse(json_obj, content_type="application/json")
 
 def update_year_financial_ratio(request):
     stock_ids = StockId.objects.all()

@@ -154,6 +154,26 @@
             </td>
             <td class="seasoncashflow_notes">{{seasoncashflow_notes.notes}}</td>
           </tr>
+          <tr class="warning">
+            <td>綜合損益表(年)</td>
+            <td class="yearincomestatement_lastUpdateDate">{{yearincomestatement.lastUpdateDate}}</td>
+            <td class="yearincomestatement_lastDataDate">{{yearincomestatement.lastDataDate}}</td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs update_yearincomestatement">
+                更新 <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+            </td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs check_yearincomestatement">
+                檢查 <span class="glyphicon glyphicon-refresh"></span>
+              </button></td>
+            </td>
+            <td>
+              <label class="col-sm sr-only">From:Year To:Year</label>
+              <input type="text" class="form-control input-xs yearincomestatement_date" placeholder="From:Year To:Year">
+            </td>
+            <td class="yearincomestatement_notes">{{yearincomestatement.notes}}</td>
+          </tr>
         </tbody>
       </table>
     </div>

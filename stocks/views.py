@@ -368,7 +368,6 @@ def old_update_dividend(request):
     print 'hello'
     today = datetime.date.today() 
     year = today.year
-    year = 2013
     pdb.set_trace()
     url = "http://mops.twse.com.tw/server-java/t05st09sub"
     values = {'step' : '1', 'TYPEK' : 'otc',
@@ -427,59 +426,59 @@ def update_dividend(request):
     return HttpResponse("update dividend")
 
 def update(request):
-    try:
-        stockID = {}
+    all_data = UpdateManagement.objects.all()
+    stockID = {}
+    monthRevenue = {}
+    seasonRevenue = {}
+    seasonIncomeStatement = {}
+    seasonBalanceSheet = {}
+    seasonCashflow = {}
+    if all_data.filter(name='stockID').count() > 0:
         data = UpdateManagement.objects.get(name='stockID')
         stockID['name'] = data.name
         stockID['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
         stockID['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
         stockID['notes'] = data.notes
-    except:
-        None
 
-    try:
-        monthRevenue = {}
+    if all_data.filter(name='monthRevenue').count() > 0:
         data = UpdateManagement.objects.get(name='monthRevenue')
         monthRevenue['name'] = data.name
         monthRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
         monthRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
         monthRevenue['notes'] = data.notes
-    except:
-        None
 
-    try:
-        seasonRevenue = {}
+    if all_data.filter(name='seasonRevenue').count() > 0:
         data = UpdateManagement.objects.get(name='seasonRevenue')
         seasonRevenue['name'] = data.name
         seasonRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
         seasonRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonRevenue['notes'] = data.notes
-    except:
-        None
 
-    try:
-        seasonIncomeStatement = {}
+    if all_data.filter(name='seasonIncomeStatement').count() > 0:
         data = UpdateManagement.objects.get(name='seasonIncomeStatement')
         seasonIncomeStatement['name'] = data.name
         seasonIncomeStatement['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
         seasonIncomeStatement['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonIncomeStatement['notes'] = data.notes
-    except:
-        pass
 
-    try:
-        seasonBalanceSheet = {}
+    if all_data.filter(name='seasonBalanceSheet').count() > 0:
         data = UpdateManagement.objects.get(name='seasonBalanceSheet')
         seasonBalanceSheet['name'] = data.name
         seasonBalanceSheet['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
         seasonBalanceSheet['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonBalanceSheet['notes'] = data.notes
-    except:
-        pass
+
+    if all_data.filter(name='seasonCashFlow').count() > 0:
+        data = UpdateManagement.objects.get(name='seasonCashFlow')
+        seasonCashflow['name'] = data.name
+        seasonCashflow['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonCashflow['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonCashflow['notes'] = data.notes        
 
     return render_to_response('analysis/update.html', 
             {'stockid': stockID, 'monthrevenue': monthRevenue, 'seasonrevenue': seasonRevenue,
-             'seasonincomestatement': seasonIncomeStatement, 'seasonbalancesheet' : seasonBalanceSheet}, context_instance=RequestContext(request))
+             'seasonincomestatement': seasonIncomeStatement, 'seasonbalancesheet' : seasonBalanceSheet,
+             'seasoncashflow': seasonCashflow}, context_instance=RequestContext(request))
 
 
 
