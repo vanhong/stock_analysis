@@ -134,6 +134,26 @@
             </td>
             <td class="seasonbalancesheet_notes">{{seasonbalancesheet.notes}}</td>
           </tr>
+          <tr class="success">
+            <td>現金流量表(季)</td>
+            <td class="seasoncashflow_lastUpdateDate">{{seasoncashflow.lastUpdateDate}}</td>
+            <td class="seasoncashflow_lastDataDate">{{seasoncashflow.lastDataDate}}</td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs update_seasoncashflow">
+                更新 <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+            </td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs check_seasoncashflow">
+                檢查 <span class="glyphicon glyphicon-refresh"></span>
+              </button></td>
+            </td>
+            <td>
+              <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
+              <input type="text" class="form-control input-xs seasoncashflow_date" placeholder="From:Year-Season To:Year-Season">
+            </td>
+            <td class="seasoncashflow_notes">{{seasoncashflow_notes.notes}}</td>
+          </tr>
         </tbody>
       </table>
     </div>

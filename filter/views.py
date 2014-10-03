@@ -17,7 +17,6 @@ import json
 
 from exceptions import NotImplementedError
 from abc import ABCMeta, abstractmethod
-
 from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from financial.models import SeasonFinancialRatio
