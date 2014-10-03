@@ -47,9 +47,14 @@ function isInt(value)
         });
         $('.m_revenue_yoy_button').click(function() {
             if (isInt($('.m_revenue_yoy_cnt').val()) && isInt($('.m_revenue_yoy_match_cnt').val()) &&isInt($('.m_revenue_yoy_percent').val())){
-                var str = '<tr class="danger"><td>最近' + $('.m_revenue_yoy_cnt').val() + '個月內有' + $('.m_revenue_yoy_match_cnt').val() + '個月營收年增率大於' + $('.m_revenue_yoy_percent').val() + '%'
-                str = str + '<button type="submit" class="btn btn-primary btn-xs add_button"><span class="glyphicon glyphicon-minus"></span></button></td></tr>'
+                var conditionText = '最近' + $('.m_revenue_yoy_cnt').val() + '個月內有' + $('.m_revenue_yoy_match_cnt').val() + '個月營收年增率大於' + $('.m_revenue_yoy_percent').val() + '%';
+                var choiceID = 'choice_' + conditionText ;
+                var str = '<tr class="danger"><td>' + conditionText;
+                str = str + '<button type="submit" id="' + choiceID + '" class="btn btn-primary btn-xs add_button"><span class="glyphicon glyphicon-minus"></span></button></td></tr>';
                 $('.filter_choice_table').append(str);
+                $('$' + choiceID).click(function(){
+
+                });
             } else {
                 console.log("error input");
             }
