@@ -56,8 +56,8 @@ def update_stock_id(request):
     updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
                                         last_data_date = datetime.date.today(), notes="There is " + str(cnt) + " stockIds")
     updateManagement.save()
-    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "lastDataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
+    json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                           "dataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
     return HttpResponse(json_obj, content_type="application/json")
 
 def last_season(day):
@@ -155,11 +155,11 @@ def update_month_revenue(request):
     cnt = MonthRevenue.objects.filter(year=year, month=month).count()
     lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = MonthRevenue.objects.filter(date=lastDate).count()
-    updateManagement = UpdateManagement(name = "monthRevenue", last_update_date = datetime.date.today(), 
+    updateManagement = UpdateManagement(name = "mr", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " month_revenues")
     updateManagement.save()
-    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " monthrevenue on " + str(year) + "-" + str(month)})
+    json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " monthrevenue on " + str(year) + "-" + str(month)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def check_month_revenue(request):
@@ -300,11 +300,11 @@ def update_season_revenue(request):
         json_obj = json.dumps({"notes": "There is no data in SeasonRevenue"})
         return HttpResponse(json_obj, content_type="application/json")
     lastDateDataCnt = SeasonRevenue.objects.filter(date=lastDate).count()
-    updateManagement = UpdateManagement(name = "seasonRevenue", last_update_date = datetime.date.today(), 
+    updateManagement = UpdateManagement(name = "sr", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
-    json_obj = json.dumps({"name": updateManagement.name, "lastUpdateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "lastDataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
+    json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def old_update_season_revenue(request):
@@ -436,49 +436,44 @@ def update(request):
     if all_data.filter(name='stockID').count() > 0:
         data = UpdateManagement.objects.get(name='stockID')
         stockID['name'] = data.name
-        stockID['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        stockID['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        stockID['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        stockID['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
         stockID['notes'] = data.notes
 
-    if all_data.filter(name='monthRevenue').count() > 0:
-        data = UpdateManagement.objects.get(name='monthRevenue')
-        monthRevenue['name'] = data.name
-        monthRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        monthRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+    if all_data.filter(name='mr').count() > 0:
+        data = UpdateManagement.objects.get(name='mr')
+        monthRevenue['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        monthRevenue['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
         monthRevenue['notes'] = data.notes
 
-    if all_data.filter(name='seasonRevenue').count() > 0:
-        data = UpdateManagement.objects.get(name='seasonRevenue')
-        seasonRevenue['name'] = data.name
-        seasonRevenue['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonRevenue['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+    if all_data.filter(name='sr').count() > 0:
+        data = UpdateManagement.objects.get(name='sr')
+        seasonRevenue['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonRevenue['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonRevenue['notes'] = data.notes
 
-    if all_data.filter(name='seasonIncomeStatement').count() > 0:
-        data = UpdateManagement.objects.get(name='seasonIncomeStatement')
-        seasonIncomeStatement['name'] = data.name
-        seasonIncomeStatement['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonIncomeStatement['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+    if all_data.filter(name='sis').count() > 0:
+        data = UpdateManagement.objects.get(name='sis')
+        seasonIncomeStatement['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonIncomeStatement['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonIncomeStatement['notes'] = data.notes
 
-    if all_data.filter(name='seasonBalanceSheet').count() > 0:
-        data = UpdateManagement.objects.get(name='seasonBalanceSheet')
-        seasonBalanceSheet['name'] = data.name
-        seasonBalanceSheet['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonBalanceSheet['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
+    if all_data.filter(name='sbs').count() > 0:
+        data = UpdateManagement.objects.get(name='sbs')
+        seasonBalanceSheet['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonBalanceSheet['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonBalanceSheet['notes'] = data.notes
 
-    if all_data.filter(name='seasonCashFlow').count() > 0:
-        data = UpdateManagement.objects.get(name='seasonCashFlow')
-        seasonCashflow['name'] = data.name
-        seasonCashflow['lastUpdateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonCashflow['lastDataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        seasonCashflow['notes'] = data.notes        
+    if all_data.filter(name='scf').count() > 0:
+        data = UpdateManagement.objects.get(name='scf')
+        seasonCashflow['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonCashflow['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonCashflow['notes'] = data.notes
 
     return render_to_response('analysis/update.html', 
-            {'stockid': stockID, 'monthrevenue': monthRevenue, 'seasonrevenue': seasonRevenue,
-             'seasonincomestatement': seasonIncomeStatement, 'seasonbalancesheet' : seasonBalanceSheet,
-             'seasoncashflow': seasonCashflow}, context_instance=RequestContext(request))
+            {'stockid': stockID, 'mr': monthRevenue, 'sr': seasonRevenue,
+             'sis': seasonIncomeStatement, 'sbs' : seasonBalanceSheet,
+             'scf': seasonCashflow}, context_instance=RequestContext(request))
 
 
 

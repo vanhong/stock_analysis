@@ -31,3 +31,9 @@ def last_season(day):
         season = 3
     return year, season
 
+def next_month(day):
+    if day.month == 12:
+        return datetime.date(day.year+1, 1, 1)
+    else:
+        return datetime.date(day.year, day.month+1, 1)
+
