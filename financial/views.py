@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import time
 from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement, YearFinancialRatio
-from financial.models import SeasonCashFlowStatement, YearCashFlowStatement
+from financial.models import SeasonCashflowStatement, YearCashflowStatement, NewSeasonFinancialRatio
 from financial.models import YearIncomeStatement
 from stocks.models import UpdateManagement
 from bs4 import BeautifulSoup
@@ -1263,7 +1263,7 @@ def update_season_cashflow_statement(request):
     stockIDs = get_updated_id(year, season)
     for stock_id in stockIDs:
         stock_symbol = stock_id
-        if not SeasonCashFlowStatement.objects.filter(symbol=stock_symbol, year=year, season=season):
+        if not SeasonCashflowStatement.objects.filter(symbol=stock_symbol, year=year, season=season):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb05'
             values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
@@ -1303,7 +1303,7 @@ def update_season_cashflow_statement(request):
                 if busy_msg:
                     print stock_symbol + ' time sleep' 
                     time.sleep(20)
-            cashflow = SeasonCashFlowStatement()
+            cashflow = SeasonCashflowStatement()
             cashflow.symbol = stock_symbol
             cashflow.year = str(year)
             cashflow.season = season
@@ -1312,11 +1312,11 @@ def update_season_cashflow_statement(request):
             if season == 1:
                 prevSeasonData = None
             elif season == 2:
-                prevSeasonData = SeasonCashFlowStatement.objects.filter(symbol=stock_symbol, year=year, season__lte=1)
+                prevSeasonData = SeasonCashflowStatement.objects.filter(symbol=stock_symbol, year=year, season__lte=1)
             elif season == 3:
-                prevSeasonData = SeasonCashFlowStatement.objects.filter(symbol=stock_symbol, year=year, season__lte=2)
+                prevSeasonData = SeasonCashflowStatement.objects.filter(symbol=stock_symbol, year=year, season__lte=2)
             elif season == 4:
-                prevSeasonData = SeasonCashFlowStatement.objects.filter(symbol=stock_symbol, year=year, season__lte=3)
+                prevSeasonData = SeasonCashflowStatement.objects.filter(symbol=stock_symbol, year=year, season__lte=3)
             for data in cashflos_datas:
                 if data.string != None and (r'繼續營業單位稅前淨利（淨損）' in data.string.encode('utf-8') or r'繼續營業單位稅前（淨利）淨損' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
@@ -1630,10 +1630,10 @@ def update_season_cashflow_statement(request):
             response.close()
             if cashflow.profit_loss_from_continuing_operations_before_tax:
                 cashflow.save()
-    cnt = SeasonCashFlowStatement.objects.filter(year=year, season=season).count()
-    lastDate = SeasonCashFlowStatement.objects.all().aggregate(Max('date'))['date__max']
-    lastDateDataCnt = SeasonCashFlowStatement.objects.filter(date=lastDate).count()
-    updateManagement = UpdateManagement(name = "ycf", last_update_date = datetime.date.today(), 
+    cnt = SeasonCashflowStatement.objects.filter(year=year, season=season).count()
+    lastDate = SeasonCashflowStatement.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = SeasonCashflowStatement.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "scf", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
@@ -1661,7 +1661,7 @@ def update_year_cashflow_statement(request):
     stockIDs = get_updated_id(year, 4)
     for stock_id in stockIDs:
         stock_symbol = stock_id
-        if not YearCashFlowStatement.objects.filter(symbol=stock_symbol):
+        if not YearCashflowStatement.objects.filter(symbol=stock_symbol):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb05'
             values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
@@ -1701,7 +1701,7 @@ def update_year_cashflow_statement(request):
                 if busy_msg:
                     print stock_symbol + ' time sleep' 
                     time.sleep(20)
-            cashflow = SeasonCashFlowStatement()
+            cashflow = YearCashflowStatement()
             cashflow.symbol = stock_symbol
             cashflow.year = str(year)
             cashflow.date = year_to_date(year)
@@ -2019,9 +2019,9 @@ def update_year_cashflow_statement(request):
             response.close()
             if cashflow.profit_loss_from_continuing_operations_before_tax:
                 cashflow.save()
-    cnt = SeasonCashFlowStatement.objects.filter(year=year, season=season).count()
-    lastDate = SeasonCashFlowStatement.objects.all().aggregate(Max('date'))['date__max']
-    lastDateDataCnt = SeasonCashFlowStatement.objects.filter(date=lastDate).count()
+    cnt = YearCashflowStatement.objects.filter(year=year, season=season).count()
+    lastDate = YearCashflowStatement.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = YearCashflowStatement.objects.filter(date=lastDate).count()
     updateManagement = UpdateManagement(name = "scf", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
@@ -2418,3 +2418,143 @@ def update_season_financial_ratio(request):
         print ('update ' + stock_symbol + ' season financial ratio')
 
     return HttpResponse('update season financial ratio')
+
+def new_update_season_financial_ratio(request):
+    print 'start update season financial ratio'
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                str_year, str_season = date.split('-')
+                year = int(str_year)
+                season = int(str_season)
+            except:
+                json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+            return HttpResponse(json_obj, content_type="application/json")
+    else:
+        json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
+        return HttpResponse(json_obj, content_type="application/json")
+    sisSymbol = SeasonIncomeStatement.objects.filter(year=year, season=season).values_list('symbol', flat=True)
+    sbsSymbol = SeasonBalanceSheet.objects.filter(year=year, season=season).values_list('symbol', flat=True)
+    scfSymbol = SeasonCashflowStatement.objects.filter(year=year, season=season).values_list('symbol', flat=True)
+    union = set(sisSymbol).union(set(sbsSymbol)).union(set(scfSymbol))
+    intersection = set(sisSymbol).intersection(set(sbsSymbol)).intersection(set(scfSymbol))
+    diff = union.difference(intersection)
+    print diff
+    intersection = ['8114']
+    for stockID in intersection:
+        try:
+            sis = SeasonIncomeStatement.objects.get(year=year, season=season, symbol=stockID)
+            sbs = SeasonBalanceSheet.objects.get(year=year, season=season, symbol=stockID)
+            scf = SeasonCashflowStatement.objects.get(year=year, season=season, symbol=stockID)
+        except:
+            print ("load " + stockID + "'s data error")
+            continue
+        ratio = NewSeasonFinancialRatio()
+        ratio.year = year
+        ratio.season = season
+        ratio.symbol = stockID
+        ratio.date = season_to_date(year, season)
+        ratio.surrogate_key = stockID + '_' + str(year) + str(season).zfill(2)
+        # 毛利率 = 營業毛利（毛損）淨額 / 營業收入合計（單位：％）
+        if sis.total_operating_revenue and sis.total_operating_revenue > 0:
+            if sis.gross_profit_loss_from_operations:
+                ratio.gross_profit_margin = sis.gross_profit_loss_from_operations / sis.total_operating_revenue * 100
+            # 有的公司使用舊式報表，沒有營業毛利這一項，就改用繼續營業單位稅前淨利代替
+            elif sis.profit_loss_from_continuing_operations:
+                ratio.gross_profit_margin = sis.profit_loss_from_continuing_operations / sis.total_operating_revenue * 100
+        elif sis.total_operating_revenue and sis.total_operating_revenue == 0:
+            ratio.gross_profit_margin = 0
+        # 營業利益率 = 營業利益（損失） / 營業收入合計（單位：％）
+        if sis.total_operating_revenue and sis.total_operating_revenue > 0:
+            if sis.net_operating_income_loss:
+                ratio.operating_profit_margin = sis.net_operating_income_loss / sis.total_operating_revenue * 100
+            # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替
+            elif sis.profit_loss_from_continuing_operations:
+                ratio.operating_profit_margin = sis.profit_loss_from_continuing_operations / sis.total_operating_revenue * 100
+        elif sis.total_operating_revenue and sis.total_operating_revenue == 0:
+            ratio.operating_profit_margin = 0
+        # 稅前淨利率 = 稅前純益 / 營業收入
+        if sis.total_operating_revenue and sis.total_operating_revenue > 0:
+            if sis.profit_loss_from_continuing_operations_before_tax > 0:
+                ratio.net_profit_margin_before_tax = sis.profit_loss_from_continuing_operations_before_tax / sis.total_operating_revenue * 100
+            elif sis.profit_loss_from_continuing_operations:
+                ratio.net_profit_margin_before_tax = sis.profit_loss_from_continuing_operations / sis.total_operating_revenue * 100
+        elif sis.total_operating_revenue and sis.total_operating_revenue == 0:
+            ratio.net_profit_margin_before_tax = 0
+        # 稅後淨利率 = 稅後純益 / 營業收入
+        if sis.total_operating_revenue and sis.total_operating_revenue > 0:
+            if sis.profit_loss:
+                ratio.net_profit_margin = sis.profit_loss / sis.total_operating_revenue * 100
+        elif sis.total_operating_revenue and sis.total_operating_revenue == 0:
+            ratio.net_profit_margin = 0
+        # 每股淨值(元)
+        #net_value_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+        # 每股營業額(元)
+        if sbs.total_capital_stock and sbs.total_capital_stock > 0:
+            if sis.total_operating_revenue:
+                ratio.revenue_per_share = sis.total_operating_revenue / sbs.total_capital_stock * 10
+        elif sbs.total_capital_stock and sbs.total_capital_stock == 0:
+            ratio.revenue_per_share = 0
+        # 每股營業利益(元)
+        pdb.set_trace()
+        if sbs.total_capital_stock and sbs.total_capital_stock > 0:
+            if sis.net_operating_income_loss:
+                ratio.operating_profit_per_share = sis.net_operating_income_loss / sbs.total_capital_stock * 10
+            # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替    
+            elif sis.profit_loss_from_continuing_operations:
+                ratio.operating_profit_per_share = sis.profit_loss_from_continuing_operations / sbs.total_capital_stock * 10
+        elif sbs.total_capital_stock and sbs.total_capital_stock == 0:
+            ratio.operating_profit_per_share = 0
+        #operating_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+        ratio.save()
+        # 每股稅前淨利(元)
+        #net_before_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+        # 每股盈餘(EPS)
+        #earnings_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+        # 總資產報酬率(ROA)
+        #return_on_assets = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
+        #return_on_equity = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # ---償債能力---
+        # 流動比率
+        #current_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 速動比率
+        #quick_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 金融負債比率
+        #financial_debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 負債比率
+        #debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 利息保障倍數
+        #interest_cover = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+        # ---經營能力---
+        # 應收帳款週轉率
+        #accounts_receivable_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 存貨週轉率
+        #inventory_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 固定資產週轉率
+        #fixed_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 總資產週轉率
+        #total_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # ---黃國華指標---
+        # 存貨營收比
+        #inventory_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 備供出售比率
+        #available_for_sale_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 無形資產比率
+        #intangible_asset_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 未折舊比率
+        #undepreciation_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 折舊負擔比率
+        #depreciation_to_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 營業利益佔稅前淨利比率
+        #operating_profit_to_net_profit_before_tax_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 現金股息配發率
+        #payout_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 營業稅率
+        #tax_rate = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    return HttpResponse('hello')
+    
