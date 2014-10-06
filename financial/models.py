@@ -366,9 +366,9 @@ class SeasonFinancialRatio(models.Model):
     operating_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
     # 每股稅前淨利(元)
     net_before_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
-    # 股東權益報酬率 = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
+    # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
     return_on_equity = models.DecimalField(max_digits=20, decimal_places=4, null=True)
-    # 資產報酬率 = 
+    # 資產報酬率(ROA) = 
     return_on_assets = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     # 每股稅後淨利(元)
     net_after_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
@@ -424,6 +424,92 @@ class SeasonFinancialRatio(models.Model):
     def chinese(self, source):
         chinese_name = self.chinese_map[source]
         return chinese_name
+
+# 財務比率表(季)
+class NewSeasonFinancialRatio(models.Model):
+    surrogate_key = models.CharField(max_length=20, primary_key=True)
+    year = models.IntegerField(db_index=True)
+    season = models.CharField(max_length=20, db_index=True)
+    symbol = models.CharField(max_length=20, db_index=True)
+    date = models.DateField(db_index=True)
+    # ---獲利能力---
+    # 營業毛利率 = 營業毛利 / 營業收入
+    gross_profit_margin = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 營業利益率 = 營業利益 / 營業收入
+    operating_profit_margin = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 稅前淨利率 = 稅前純益 / 營業收入
+    net_profit_margin_before_tax = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 稅後淨利率 = 稅後純益 / 營業收入
+    net_profit_margin = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 每股淨值(元)
+    net_value_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股營業額(元)
+    revenue_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股營業利益(元)
+    operating_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股稅前淨利(元)
+    net_before_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股盈餘(EPS)
+    earnings_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 總資產報酬率(ROA)
+    return_on_assets = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
+    return_on_equity = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # ---償債能力---
+    # 流動比率
+    current_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 速動比率
+    quick_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 金融負債比率
+    financial_debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 負債比率
+    debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 利息保障倍數
+    interest_cover = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # ---經營能力---
+    # 應收帳款週轉率
+    accounts_receivable_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 存貨週轉率
+    inventory_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 固定資產週轉率
+    fixed_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 總資產週轉率
+    total_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # ---黃國華指標---
+    # 存貨營收比
+    inventory_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 備供出售比率
+    available_for_sale_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 無形資產比率
+    intangible_asset_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 未折舊比率
+    undepreciation_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 折舊負擔比率
+    depreciation_to_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 營業利益佔稅前淨利比率
+    operating_profit_to_net_profit_before_tax_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 現金股息配發率
+    payout_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 營業稅率
+    tax_rate = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+
+    modified_date = models.DateField(auto_now=True)
+
+    def __unicode__(self):
+        return u'%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % (self.ID, self.symbol, self.date, 
+            self.gross_profit_margin, self.operating_profit_margin, self.net_profit_margin,
+            self.earnings_per_share, self.return_on_assets, self.return_on_equity,
+            self.current_ratio, self.quick_ratio, self.financial_debt_ratio, self.debt_ratio,
+            self.accounts_receivable_turnover_ratio, self.inventory_turnover_ratio,
+            self.fixed_asset_turnover_ratio, self.total_asset_turnover_ratio,
+            self.inventory_sales_ratio,self.available_for_sale_to_equity_ratio,
+            self.intangible_asset_to_equity_ratio,self.undepreciation_ratio,
+            self.depreciation_to_sales_ratio,self.operating_profit_to_net_profit_before_tax_ratio,
+            self.payout_ratio , self.tax_rate ,self.modified_date)
+    class Meta:
+        ordering = ['symbol', 'date']
+    class Admin:
+        pass
 
 # 資產負債表
 class SeasonBalanceSheet(models.Model):
@@ -601,7 +687,7 @@ class SeasonBalanceSheet(models.Model):
     treasury_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
 
 # 現金流量表(季)
-class SeasonCashFlowStatement(models.Model):
+class SeasonCashflowStatement(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     season = models.IntegerField(db_index=True)
@@ -765,7 +851,7 @@ class SeasonCashFlowStatement(models.Model):
     # 自由現金流量
     free_cash_flow = models.DecimalField(max_digits=20, decimal_places=0, default=0)
 
-class YearCashFlowStatement(models.Model):
+class YearCashflowStatement(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
