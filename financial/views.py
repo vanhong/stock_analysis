@@ -15,7 +15,14 @@ import datetime
 import json
 from django.db.models import Sum, Max
 from core.utils import st_to_decimal, season_to_date, year_to_date
+from decimal import Decimal
 import pdb
+
+def prev_season(year, season):
+    if season == 1:
+        return year-1, 4
+    else:
+        return year, season-1
 
 #already got certification's financial report
 def test_financial_company(request):
@@ -2446,6 +2453,7 @@ def new_update_season_financial_ratio(request):
     print diff
     intersection = ['8114']
     for stockID in intersection:
+        has_sbs_prev = False
         try:
             sis = SeasonIncomeStatement.objects.get(year=year, season=season, symbol=stockID)
             sbs = SeasonBalanceSheet.objects.get(year=year, season=season, symbol=stockID)
@@ -2453,6 +2461,10 @@ def new_update_season_financial_ratio(request):
         except:
             print ("load " + stockID + "'s data error")
             continue
+        prevSeasonYear, prevSeasonSeason = prev_season(year, season)
+        if SeasonBalanceSheet.objects.filter(year=prevSeasonYear, season=prevSeasonSeason, symbol=stockID):
+            has_sbs_prev = True
+            prev_sbs = SeasonBalanceSheet.objects.get(year=prevSeasonYear, season=prevSeasonSeason, symbol=stockID)
         ratio = NewSeasonFinancialRatio()
         ratio.year = year
         ratio.season = season
@@ -2522,23 +2534,58 @@ def new_update_season_financial_ratio(request):
                 ratio.earnings_per_share = sis.profit_loss / sbs.total_capital_stock * 10
         elif sbs.total_capital_stock and sbs.total_capital_stock == 0:
             ratio.earnings_per_share = 0
-        # 總資產報酬率(ROA)
-        
-        #return_on_assets = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 總資產報酬率(ROA) = 本期淨利（淨損） / 期初期末平均之資產總額（單位：％）
+        if sis.profit_loss:
+            if scf.interest_expense:
+                profitLoss = sis.profit_loss + scf.interest_expense
+            else:
+                profitLoss = sis.profit_loss
+            if sbs.total_assets:
+                if has_sbs_prev:
+                    ratio.return_on_assets = profitLoss / ((sbs.total_assets + prev_sbs.total_assets) / 2) * 100
+                else:
+                    ratio.return_on_assets = profitLoss / (sbs.total_assets / 2) * 100
+            else:
+                ratio.return_on_assets = 0
         # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
-        #return_on_equity = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        ratio.save()
+        if sis.profit_loss:
+            if sbs.total_equity:
+                if has_sbs_prev:
+                    ratio.return_on_equity = sis.profit_loss / ((sbs.total_equity + prev_sbs.total_equity) / 2) * 100
+                else:
+                    ratio.return_on_equity = sis.profit_loss / (sbs.total_equity / 2) * 100
+            else:
+                ratio.return_on_equity = 0
         # ---償債能力---
-        # 流動比率
-        #current_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 速動比率
-        #quick_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 金融負債比率
-        #financial_debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 流動比率 = 流動資產合計 / 流動負債合計
+        if sbs.total_current_liabilities and sbs.total_current_liabilities != 0:
+            if sbs.total_current_assets:
+                ratio.current_ratio = sbs.total_current_assets / sbs.total_current_liabilities * 100
+        # 速動比率 = 速動資產合計 / 流動負債合計（速動資產 = 流動資產 - 存貨 - 預付款項 - 其他流動資產）
+        if sbs.total_current_liabilities and sbs.total_current_liabilities != 0:
+            numerator = Decimal(0)
+            if sbs.total_current_assets:
+                numerator += sbs.total_current_assets
+            if sbs.total_inventories:
+                numerator -= sbs.total_inventories
+            if sbs.total_prepayments:
+                numerator -= sbs.total_prepayments
+            if sbs.total_other_current_assets:
+                numerator -= sbs.total_other_current_assets
+            ratio.quick_ratio = numerator / sbs.total_current_liabilities * 100
+        #?? 金融負債比率 = 金融負債總額 / 資產總額（金融負債 = 短期借款 + 應付短期票券 + 應付公司債 + 長期借款，要付息的，單位：％）
+        #未完成
+        if sbs.total_assets and sbs.total_assets != 0:
+            if sbs.total_short_term_borrowings:
+                ratio.financial_debt_ratio = sbs.total_short_term_borrowings / sbs.total_assets * 100
         # 負債比率
-        #debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        if sbs.total_assets and sbs.total_assets != 0:
+            if sbs.total_liabilities:
+                ratio.debt_ratio = sbs.total_liabilities / sbs.total_assets * 100
         # 利息保障倍數
-        #interest_cover = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+        if scf.interest_expense and scf.interest_expense != 0:
+            if sis.profit_loss_from_continuing_operations_before_tax:
+                ratio.interest_cover = (scf.interest_expense + sis.profit_loss_from_continuing_operations_before_tax) / scf.interest_expense
         # ---經營能力---
         # 應收帳款週轉率
         #accounts_receivable_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
@@ -2565,5 +2612,6 @@ def new_update_season_financial_ratio(request):
         #payout_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
         # 營業稅率
         #tax_rate = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        ratio.save()
     return HttpResponse('hello')
     
