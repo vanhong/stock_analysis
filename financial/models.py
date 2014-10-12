@@ -530,6 +530,8 @@ class SeasonBalanceSheet(models.Model):
     current_held_to_maturity_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 應收票據淨額
     notes_receivable = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 應收票據－關係人淨額
+    notes_receivable_due_from_related_parties = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 應收帳款淨額
     accounts_receivable = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 應收帳款－關係人淨額
@@ -542,6 +544,8 @@ class SeasonBalanceSheet(models.Model):
     total_current_tax_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 存貨
     total_inventories = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 生物資產流動淨額
+    current_biological_asset = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 預付款項
     total_prepayments = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 其他流動資產
@@ -550,6 +554,10 @@ class SeasonBalanceSheet(models.Model):
     total_current_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 備供出售金融資產－非流動淨額
     non_current_available_for_sale_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 持有至到期日金融資產－非流動淨額
+    non_current_held_to_maturity_financial_assets_net = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 避險之衍生金融資產－非流動
+    derivative_non_current_financial_assets_for_hedging = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 以成本衡量之金融資產－非流動淨額
     non_current_financial_assets_at_cost = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 採用權益法之投資淨額
@@ -568,10 +576,15 @@ class SeasonBalanceSheet(models.Model):
     total_non_current_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 資產總額
     total_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    
     # 短期借款
     total_short_term_borrowings = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 應付短期票券
+    short_term_notes_and_bills_payable = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 透過損益按公允價值衡量之金融負債－流動
-    current_financial_liabilities_fair_value_through_profit_or_loss = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    current_financial_liabilities_fair_value = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 透過損益按公允價值衡量之金融負債－非流動
+    non_current_financial_liabilities_fair_value = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 避險之衍生金融負債－流動
     current_derivative_financial_liabilities_for_hedging = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 應付票據
@@ -598,6 +611,8 @@ class SeasonBalanceSheet(models.Model):
     total_current_liabilities = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 避險之衍生金融負債－非流動
     non_current_derivative_financial_liabilities_for_hedeging = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 應付公司債
+    total_bonds_payable = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 長期借款
     total_long_term_borrowings = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 負債準備－非流動
@@ -610,16 +625,27 @@ class SeasonBalanceSheet(models.Model):
     total_non_current_liabilities = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 負債總額
     total_liabilities = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+
     # 普通股股本
     ordinary_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 預收股本
+    advance_receipts_for_share_capital = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 股本合計 or 股本
     total_capital_stock = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 資本公積－發行溢價
     additional_paid_in_capital = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 資本公積－取得或處分子公司股權價格與帳面價值差額
+    capital_surplus_difference_between_consideration = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 資本公積－受贈資產
+    total_capital_surplus_donated_assets_received = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 資本公積－採用權益法認列關聯企業及合資股權淨值之變動數
+    capital_surplus_changes_in_equity_of_associates = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 資本公積－庫藏股票交易
     treasury_share_transactions = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 資本公積－合併溢額
     net_assets_from_merger = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 資本公積－其他
+    other_capital_surplus = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 基本公積合計 or 基本公積
     total_capital_surplus = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 法定盈餘公積
@@ -630,12 +656,14 @@ class SeasonBalanceSheet(models.Model):
     total_unappropriated_retained_earnings_or_accumulated_deficit = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 保留盈餘合計 or 保留盈餘
     total_retained_earnings = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 其他權益合計
+    total_other_equity_interest = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 國外營運機構財務報表換算之兌換差額
     exchange_differences_of_foreign_financial_statements = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 備供出售金融資產未實現損益
     unrealised_gains_for_sale_financial_assets = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-    # 其他權益合計 or 其他權益
-    other_equity_interest = models.DecimalField(max_digits=20, decimal_places=0, null=True)
+    # 庫藏股票
+    treasury_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 歸屬於母公司業主之權益合計 or 
     total_equity_attributable_to_owners_of_parent = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 共同控制下前手權益
@@ -683,8 +711,6 @@ class SeasonBalanceSheet(models.Model):
     total_other_financial_liabilities = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     # 其他負債
     total_other_liabilities = models.DecimalField(max_digits=20, decimal_places=0, null=True)
-    # 庫藏股票
-    treasury_share = models.DecimalField(max_digits=20, decimal_places=0, null=True)
 
 # 現金流量表(季)
 class SeasonCashflowStatement(models.Model):

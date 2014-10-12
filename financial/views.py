@@ -964,6 +964,9 @@ def update_season_balance_sheet(request):
                 elif r'應收票據淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.notes_receivable = st_to_decimal(next_data.string)
+                elif r'應收票據－關係人淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.notes_receivable_due_from_related_parties = st_to_decimal(next_data.string)
                 elif r'應收帳款淨額' in data.string.encode('utf-8') or r'應收款項淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.accounts_receivable = st_to_decimal(next_data.string)
@@ -982,6 +985,9 @@ def update_season_balance_sheet(request):
                 elif r'存貨' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_inventories = st_to_decimal(next_data.string)
+                elif r'生物資產－流動淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.current_biological_asset = st_to_decimal(next_data.string)
                 elif r'預付款項' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_prepayments = st_to_decimal(next_data.string)
@@ -994,6 +1000,12 @@ def update_season_balance_sheet(request):
                 elif r'備供出售金融資產－非流動淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.non_current_available_for_sale_financial_assets = st_to_decimal(next_data.string)
+                elif r'持有至到期日金融資產－非流動淨額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.non_current_held_to_maturity_financial_assets_net = st_to_decimal(next_data.string)
+                elif r'避險之衍生金融資產－非流動' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.derivative_non_current_financial_assets_for_hedging = st_to_decimal(next_data.string)
                 elif r'以成本衡量之金融資產－非流動淨額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.non_current_financial_assets_at_cost = st_to_decimal(next_data.string)
@@ -1026,34 +1038,40 @@ def update_season_balance_sheet(request):
                 elif r'短期借款' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_short_term_borrowings = st_to_decimal(next_data.string)
+                elif r'應付短期票券' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.short_term_notes_and_bills_payable = st_to_decimal(next_data.string)
                 elif r'透過損益按公允價值衡量之金融負債－流動' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.current_financial_liabilities_fair_value_through_profit_or_loss = st_to_decimal(next_data.string)
+                    balance_sheet.current_financial_liabilities_fair_value = st_to_decimal(next_data.string)
+                elif r'透過損益按公允價值衡量之金融負債－非流動' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.non_current_financial_liabilities_fair_value = st_to_decimal(next_data.string)
                 elif r'避險之衍生金融負債－流動' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.current_derivative_financial_liabilities_for_hedging = st_to_decimal(next_data.string)
                 elif r'應付票據' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_notes_payable = st_to_decimal(next_data.string)
-                elif r'應付帳款－關係人' in data.string.encode('utf-8'):
-                    next_data = data.next_sibling.next_sibling
-                    balance_sheet.total_accounts_payable_to_related_parties = st_to_decimal(next_data.string)
-                elif r'其他應付款項－關係人' in data.string.encode('utf-8'):
-                    next_data = data.next_sibling.next_sibling
-                    balance_sheet.other_payables_to_related_parties = st_to_decimal(next_data.string)
-                elif r'其他應付款' in data.string.encode('utf-8'):
-                    next_data = data.next_sibling.next_sibling
-                    balance_sheet.total_other_payables = st_to_decimal(next_data.string)
-                elif r'應付帳款' in data.string.encode('utf-8') or r'應付款項' in data.string.encode('utf-8'):
+                elif r'應付帳款' in data.string.encode('utf-8') or r'應付款項' in data.string.encode('utf-8') and len(data.string.strip()) == 4:
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         balance_sheet.total_accounts_payable = st_to_decimal(next_data.string)
-                elif r'應付建造合約款－關係人' in data.string.encode('utf-8'):
+                elif r'應付帳款－關係人' in data.string.encode('utf-8') and len(data.string.strip()) == 8:
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.construction_contracts_payable_to_related_parties = st_to_decimal(next_data.string)
-                elif r'應付建造合約款' in data.string.encode('utf-8'):
+                    balance_sheet.total_accounts_payable_to_related_parties = st_to_decimal(next_data.string)
+                elif r'應付建造合約款' in data.string.encode('utf-8') and len(data.string.strip())==7:
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.construction_contracts_payable = st_to_decimal(next_data.string)
+                elif r'應付建造合約款－關係人' in data.string.encode('utf-8') and len(data.string.strip()) == 11:
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.other_payables_to_related_parties = st_to_decimal(next_data.string)
+                elif r'其他應付款' in data.string.encode('utf-8') and len(data.string.strip()) == 5:
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_other_payables = st_to_decimal(next_data.string)
+                elif r'其他應付款項－關係人' in data.string.encode('utf-8') and len(data.string.strip()) == 10:
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.other_payables_to_related_parties = st_to_decimal(next_data.string)
                 elif r'當期所得稅負債' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.current_tax_liabilities = st_to_decimal(next_data.string)
@@ -1069,6 +1087,9 @@ def update_season_balance_sheet(request):
                 elif r'避險之衍生金融負債－非流動' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.non_current_derivative_financial_liabilities_for_hedeging = st_to_decimal(next_data.string)
+                elif r'應付公司債' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_bonds_payable = st_to_decimal(next_data.string)
                 elif r'長期借款' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_long_term_borrowings = st_to_decimal(next_data.string)
@@ -1090,18 +1111,33 @@ def update_season_balance_sheet(request):
                 elif r'普通股股本' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.ordinary_share = st_to_decimal(next_data.string)
+                elif r'預收股本' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.advance_receipts_for_share_capital = st_to_decimal(next_data.string)
                 elif r'股本合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_capital_stock = st_to_decimal(next_data.string)
                 elif r'資本公積－發行溢價' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.additional_paid_in_capital = st_to_decimal(next_data.string)
+                elif r'資本公積－取得或處分子公司股權價格與帳面價值差額' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.capital_surplus_difference_between_consideration = st_to_decimal(next_data.string)
+                elif r'資本公積－受贈資產' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_capital_surplus_donated_assets_received = st_to_decimal(next_data.string)
+                elif r'資本公積－採用權益法認列關聯企業及合資股權淨值之變動數' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.capital_surplus_changes_in_equity_of_associates = st_to_decimal(next_data.string)
                 elif r'資本公積－庫藏股票交易' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.treasury_share_transactions = st_to_decimal(next_data.string)
                 elif r'資本公積－合併溢額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.net_assets_from_merger = st_to_decimal(next_data.string)
+                elif r'資本公積－其他' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.other_capital_surplus = st_to_decimal(next_data.string)
                 elif r'資本公積合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_capital_surplus = st_to_decimal(next_data.string)
@@ -1117,15 +1153,18 @@ def update_season_balance_sheet(request):
                 elif r'保留盈餘合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_retained_earnings = st_to_decimal(next_data.string)
+                elif r'其他權益合計' in data.string.encode('utf-8'):
+                    next_data = data.next_sibling.next_sibling
+                    balance_sheet.total_other_equity_interest = st_to_decimal(next_data.string)
                 elif r'國外營運機構財務報表換算之兌換差額' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.exchange_differences_of_foreign_financial_statements = st_to_decimal(next_data.string)
                 elif r'備供出售金融資產未實現損益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.unrealised_gains_for_sale_financial_assets = st_to_decimal(next_data.string)
-                elif r'其他權益合計' in data.string.encode('utf-8'):
+                elif r'庫藏股票' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
-                    balance_sheet.other_equity_interest = st_to_decimal(next_data.string)
+                    balance_sheet.treasury_share = st_to_decimal(next_data.string)
                 elif r'歸屬於母公司業主之權益合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_equity_attributable_to_owners_of_parent = st_to_decimal(next_data.string)
@@ -1197,9 +1236,10 @@ def update_season_balance_sheet(request):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         balance_sheet.total_other_liabilities = st_to_decimal(next_data.string)
-                elif r'庫藏股票' in data.string.encode('utf-8'):
-                    next_data = data.next_sibling.next_sibling
-                    balance_sheet.treasury_share = st_to_decimal(next_data.string)
+                else:
+                    if data.next_sibling.next_sibling.string is not None:
+                        pass
+                        # pdb.set_trace()
             if balance_sheet.total_cash_and_cash_equivalents:
                 balance_sheet.save()
             else:
@@ -1417,7 +1457,7 @@ def update_season_cashflow_statement(request):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         cashflow.decrease_increase_in_inventories = st_to_decimal(next_data.string) if (prevSeasonData is None or prevSeasonData.count() == 0) else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_inventories'))['sum']
-                if data.string != None and (r'其他流動資產（增加）減少' in data.string.encode('utf-8') or r'其他流動資產增加（減少）' in data.string.encode('utf-8')):
+                if data.string != None and (r'其他產（增加）減少' in data.string.encode('utf-8') or r'其他流動資產增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
                         cashflow.decrease_increase_in_other_current_assets = st_to_decimal(next_data.string) if (prevSeasonData is None or prevSeasonData.count() == 0) else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_other_current_assets'))['sum']
@@ -1721,319 +1761,319 @@ def update_year_cashflow_statement(request):
                 if data.string != None and r'本期稅前淨利' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.profit_loss_before_tax = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('profit_loss_before_tax'))['sum']
+                        cashflow.profit_loss_before_tax = st_to_decimal(next_data.string)
                 if data.string != None and r'折舊費用' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.depreciation_expense = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('depreciation_expense'))['sum']
+                        cashflow.depreciation_expense = st_to_decimal(next_data.string)
                 if data.string != None and r'攤銷費用' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.amortization_expense = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('amortization_expense'))['sum']
+                        cashflow.amortization_expense = st_to_decimal(next_data.string)
                 if data.string != None and r'利息費用' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.interest_expense = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('interest_expense'))['sum']
+                        cashflow.interest_expense = st_to_decimal(next_data.string)
                 if data.string != None and r'利息收入' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.interest_income = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('interest_income'))['sum']
+                        cashflow.interest_income = st_to_decimal(next_data.string)
                 if data.string != None and r'股份基礎給付酬勞成本' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.share_based_payments = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('share_based_payments'))['sum']
+                        cashflow.share_based_payments = st_to_decimal(next_data.string)
                 if data.string != None and (r'採用權益法認列之關聯企業及合資損失（利益）之份額' in data.string.encode('utf-8') or r'採用權益法認列之關聯企業及合資（損失）利益之份額' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.share_of_profit_loss_of_associates_using_equity_method = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('share_of_profit_loss_of_associates_using_equity_method'))['sum']
+                        cashflow.share_of_profit_loss_of_associates_using_equity_method = st_to_decimal(next_data.string)
                 if data.string != None and (r'處分及報廢不動產、廠房及設備損失（利益）' in data.string.encode('utf-8') or r'處分及報廢不動產、廠房及設備（損失）利益' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.loss_gain_on_disposal_of_property_plan_and_equipment = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('loss_gain_on_disposal_of_property_plan_and_equipment'))['sum']
+                        cashflow.loss_gain_on_disposal_of_property_plan_and_equipment = st_to_decimal(next_data.string)
                 if data.string != None and (r'處分投資損失（利益）' in data.string.encode('utf-8') or r'處分投資（損失）利益' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.loss_gain_on_disposal_of_investments = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('loss_gain_on_disposal_of_investments'))['sum']
+                        cashflow.loss_gain_on_disposal_of_investments = st_to_decimal(next_data.string)
                 if data.string != None and (r'處分採用權益法之投資損失（利益）' in data.string.encode('utf-8') or r'處分採用權益法之投資（損失）利益' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.loss_gain_on_disposal_of_investments_using_equity_method = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('loss_gain_on_disposal_of_investments_using_equity_method'))['sum']
+                        cashflow.loss_gain_on_disposal_of_investments_using_equity_method = st_to_decimal(next_data.string)
                 if data.string != None and r'金融資產減損損失' in data.string.encode('utf-8') and r'非' not in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.impairment_loss_on_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('impairment_loss_on_financial_assets'))['sum']
+                        cashflow.impairment_loss_on_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'非金融資產減損損失' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.impairment_loss_on_non_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('impairment_loss_on_non_financial_assets'))['sum']
+                        cashflow.impairment_loss_on_non_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and (r'已實現銷貨損失（利益）' in data.string.encode('utf-8') or r'已實現銷貨（損失）利益' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.realized_loss_profit_on_from_sales = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('realized_loss_profit_on_from_sales'))['sum']
+                        cashflow.realized_loss_profit_on_from_sales = st_to_decimal(next_data.string)
                 if data.string != None and (r'未實現外幣兌換損失（利益）' in data.string.encode('utf-8') or r'未實現外幣兌換（損失）利益' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.unrealized_foreign_exchange_loss_gain = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('unrealized_foreign_exchange_loss_gain'))['sum']
+                        cashflow.unrealized_foreign_exchange_loss_gain = st_to_decimal(next_data.string)
                 if data.string != None and r'其他項目' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.other_adjustments_to_reconcile_profit_loss = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('other_adjustments_to_reconcile_profit_loss'))['sum']
+                        cashflow.other_adjustments_to_reconcile_profit_loss = st_to_decimal(next_data.string)
                 if data.string != None and r'不影響現金流量之收益費損項目合計' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.total_adjustments_to_reconcile_profit_loss = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('total_adjustments_to_reconcile_profit_loss'))['sum']
+                        cashflow.total_adjustments_to_reconcile_profit_loss = st_to_decimal(next_data.string)
                 if data.string != None and (r'持有供交易之金融資產（增加）減少' in data.string.encode('utf-8') or r'持有供交易之金融資產增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_financial_assets_held_for_trading = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_financial_assets_held_for_trading'))['sum']
+                        cashflow.decrease_increase_in_financial_assets_held_for_trading = st_to_decimal(next_data.string)
                 if data.string != None and (r'避險之衍生金融資產（增加）減少' in data.string.encode('utf-8') or r'避險之衍生金融資產增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_derivative_financial_assets_for_hedging = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_derivative_financial_assets_for_hedging'))['sum']
+                        cashflow.decrease_increase_in_derivative_financial_assets_for_hedging = st_to_decimal(next_data.string)
                 if data.string != None and (r'應收帳款（增加）減少' in data.string.encode('utf-8') or r'應收帳款增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_accounts_receivable = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_accounts_receivable'))['sum']
+                        cashflow.decrease_increase_in_accounts_receivable = st_to_decimal(next_data.string)
                 if data.string != None and (r'應收帳款－關係人（增加）減少' in data.string.encode('utf-8') or r'應收帳款－關係人增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_accounts_receivable_from_related_parties = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_accounts_receivable_from_related_parties'))['sum']
+                        cashflow.decrease_increase_in_accounts_receivable_from_related_parties = st_to_decimal(next_data.string)
                 if data.string != None and (r'其他應收款－關係人（增加）減少' in data.string.encode('utf-8') or r'其他應收款－關係人增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_other_receivable_due_from_related_parties = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_other_receivable_due_from_related_parties'))['sum']
+                        cashflow.decrease_increase_in_other_receivable_due_from_related_parties = st_to_decimal(next_data.string)
                 if data.string != None and (r'存貨（增加）減少' in data.string.encode('utf-8') or r'存貨增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_inventories = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_inventories'))['sum']
+                        cashflow.decrease_increase_in_inventories = st_to_decimal(next_data.string)
                 if data.string != None and (r'其他流動資產（增加）減少' in data.string.encode('utf-8') or r'其他流動資產增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_other_current_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_other_current_assets'))['sum']
+                        cashflow.decrease_increase_in_other_current_assets = st_to_decimal(next_data.string)
                 if data.string != None and (r'其他金融資產（增加）減少' in data.string.encode('utf-8') or r'其他金融資產增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_increase_in_other_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_increase_in_other_financial_assets'))['sum']
+                        cashflow.decrease_increase_in_other_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'與營業活動相關之資產之淨變動合計' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.total_changes_in_operating_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('total_changes_in_operating_assets'))['sum']
+                        cashflow.total_changes_in_operating_assets = st_to_decimal(next_data.string)
                 if data.string != None and (r'應付帳款增加（減少）' in data.string.encode('utf-8') or r'應付帳款（增加）減少' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_decrease_in_accounts_payable = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_decrease_in_accounts_payable'))['sum']
+                        cashflow.increase_decrease_in_accounts_payable = st_to_decimal(next_data.string)
                 if data.string != None and (r'應付帳款－關係人（增加）減少' in data.string.encode('utf-8') or r'應付帳款－關係人增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_decrease_in_accounts_payable_to_related_parties = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_decrease_in_accounts_payable_to_related_parties'))['sum']
+                        cashflow.increase_decrease_in_accounts_payable_to_related_parties = st_to_decimal(next_data.string)
                 if data.string != None and (r'負債準備增加（減少）' in data.string.encode('utf-8') or r'負債準備（增加）減少' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_decrease_in_provisions = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_decrease_in_provisions'))['sum']
+                        cashflow.increase_decrease_in_provisions = st_to_decimal(next_data.string)
                 if data.string != None and (r'其他流動負債增加（減少）' in data.string.encode('utf-8') or r'其他流動負債（增加）減少' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_decrease_in_other_current_liabilities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_decrease_in_other_current_liabilities'))['sum']
+                        cashflow.increase_decrease_in_other_current_liabilities = st_to_decimal(next_data.string)
                 if data.string != None and (r'應計退休金負債增加（減少）' in data.string.encode('utf-8') or r'應計退休金負債（增加）減少' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_decrease_in_accrued_pension_liabilities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_decrease_in_accrued_pension_liabilities'))['sum']
+                        cashflow.increase_decrease_in_accrued_pension_liabilities = st_to_decimal(next_data.string)
                 if data.string != None and (r'其他營業負債增加（減少）' in data.string.encode('utf-8') or r'其他營業負債（增加）減少' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_decrease_in_other_operating_liabilities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_decrease_in_other_operating_liabilities'))['sum']
+                        cashflow.increase_decrease_in_other_operating_liabilities = st_to_decimal(next_data.string)
                 if data.string != None and r'與營業活動相關之負債之淨變動合計' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.total_changes_in_operating_liabilities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('total_changes_in_operating_liabilities'))['sum']
+                        cashflow.total_changes_in_operating_liabilities = st_to_decimal(next_data.string)
                 if data.string != None and r'與營業活動相關之資產及負債之淨變動合計' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.total_changes_in_operating_assets_and_liabilities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('total_changes_in_operating_assets_and_liabilities'))['sum']
+                        cashflow.total_changes_in_operating_assets_and_liabilities = st_to_decimal(next_data.string)
                 if data.string != None and r'調整項目合計' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.total_adjustments = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('total_adjustments'))['sum']
+                        cashflow.total_adjustments = st_to_decimal(next_data.string)
                 if data.string != None and (r'營運產生之現金流入（流出）' in data.string.encode('utf-8') or r'營運產生之現金（流入）流出' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.cash_inflow_outflow_generated_from_operations = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('cash_inflow_outflow_generated_from_operations'))['sum']
+                        cashflow.cash_inflow_outflow_generated_from_operations = st_to_decimal(next_data.string)
                 if data.string != None and (r'退還（支付）之所得稅' in data.string.encode('utf-8') or r'（退還）支付之所得稅' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.income_taxes_refund_paid = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('income_taxes_refund_paid'))['sum']
+                        cashflow.income_taxes_refund_paid = st_to_decimal(next_data.string)
                 if data.string != None and (r'營業活動之淨現金流入（流出）' in data.string.encode('utf-8') or r'營業活動之淨現金（流入）流出' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.net_cash_flows_from_used_in_operating_activities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('net_cash_flows_from_used_in_operating_activities'))['sum']
+                        cashflow.net_cash_flows_from_used_in_operating_activities = st_to_decimal(next_data.string)
                 if data.string != None and r'取得備供出售金融資產' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.acquisition_of_available_for_sale_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('acquisition_of_available_for_sale_financial_assets'))['sum']
+                        cashflow.acquisition_of_available_for_sale_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'處分備供出售金融資產' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_disposal_of_available_for_sale_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_disposal_of_available_for_sale_financial_assets'))['sum']
+                        cashflow.proceeds_from_disposal_of_available_for_sale_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'取得持有至到期日金融資產' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.acquisition_of_held_to_maturity_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('acquisition_of_held_to_maturity_financial_assets'))['sum']
+                        cashflow.acquisition_of_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'持有至到期日金融資產到期還本' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_repayments_of_held_to_maturity_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_repayments_of_held_to_maturity_financial_assets'))['sum']
+                        cashflow.proceeds_from_repayments_of_held_to_maturity_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'取得以成本衡量之金融資產' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.acquisition_of_financial_assets_at_cost = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('acquisition_of_financial_assets_at_cost'))['sum']
+                        cashflow.acquisition_of_financial_assets_at_cost = st_to_decimal(next_data.string)
                 if data.string != None and r'處分以成本衡量之金融資產' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_disposal_of_financial_assets_at_cost = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_disposal_of_financial_assets_at_cost'))['sum']
+                        cashflow.proceeds_from_disposal_of_financial_assets_at_cost = st_to_decimal(next_data.string)
                 if data.string != None and r'處分採用權益法之投資' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_disposal_of_investments_using_equity_method = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_disposal_of_investments_using_equity_method'))['sum']
+                        cashflow.proceeds_from_disposal_of_investments_using_equity_method = st_to_decimal(next_data.string)
                 if data.string != None and r'處分子公司' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_disposal_of_subsidiaries = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_disposal_of_subsidiaries'))['sum']
+                        cashflow.proceeds_from_disposal_of_subsidiaries = st_to_decimal(next_data.string)
                 if data.string != None and r'取得不動產、廠房及設備' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.acquisition_of_property_plant_and_equipment = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('acquisition_of_property_plant_and_equipment'))['sum']
+                        cashflow.acquisition_of_property_plant_and_equipment = st_to_decimal(next_data.string)
                 if data.string != None and r'處分不動產、廠房及設備' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_disposal_of_property_plant_and_equipment = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_disposal_of_property_plant_and_equipment'))['sum']
+                        cashflow.proceeds_from_disposal_of_property_plant_and_equipment = st_to_decimal(next_data.string)
                 if data.string != None and r'存出保證金增加' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_in_refundable_deposits = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_in_refundable_deposits'))['sum']
+                        cashflow.increase_in_refundable_deposits = st_to_decimal(next_data.string)
                 if data.string != None and r'存出保證金減少' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_in_refundable_deposits = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_in_refundable_deposits'))['sum']
+                        cashflow.decrease_in_refundable_deposits = st_to_decimal(next_data.string)
                 if data.string != None and r'取得無形資產' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.acquisition_of_intangible_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('acquisition_of_intangible_assets'))['sum']
+                        cashflow.acquisition_of_intangible_assets = st_to_decimal(next_data.string)
                 if data.string != None and (r'長期應收租賃款減少' in data.string.encode('utf-8') or r'應收租賃款減少' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_in_long_term_lease_and_installment_receivables = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_in_long_term_lease_and_installment_receivables'))['sum']
+                        cashflow.decrease_in_long_term_lease_and_installment_receivables = st_to_decimal(next_data.string)
                 if data.string != None and (r'其他金融資產增加' in data.string.encode('utf-8') or r'其他金融資產（增加）減少' in data.string.encode('utf-8') or r'其他金融資產增加（減少）' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_in_other_financial_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_in_other_financial_assets'))['sum']
+                        cashflow.increase_in_other_financial_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'其他非流動資產增加' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_in_other_non_current_assets = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_in_other_non_current_assets'))['sum']
+                        cashflow.increase_in_other_non_current_assets = st_to_decimal(next_data.string)
                 if data.string != None and r'收取之利息' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.interest_received = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('interest_received'))['sum']
+                        cashflow.interest_received = st_to_decimal(next_data.string)
                 if data.string != None and r'收取之股利' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.dividends_received = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('dividends_received'))['sum']
+                        cashflow.dividends_received = st_to_decimal(next_data.string)
                 if data.string != None and r'其他投資活動' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.other_investing_activities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('other_investing_activities'))['sum']
+                        cashflow.other_investing_activities = st_to_decimal(next_data.string)
                 if data.string != None and (r'投資活動之淨現金流入（流出）' in data.string.encode('utf-8') or r'投資活動之淨現金（流入）流出' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.net_cash_flows_from_used_in_investing_activities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('net_cash_flows_from_used_in_investing_activities'))['sum']
+                        cashflow.net_cash_flows_from_used_in_investing_activities = st_to_decimal(next_data.string)
                 if data.string != None and r'短期借款增加' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_in_short_term_loans = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_in_short_term_loans'))['sum']
+                        cashflow.increase_in_short_term_loans = st_to_decimal(next_data.string)
                 if data.string != None and r'發行公司債' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_issuing_bonds = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_issuing_bonds'))['sum']
+                        cashflow.proceeds_from_issuing_bonds = st_to_decimal(next_data.string)
                 if data.string != None and r'償還公司債' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.repayments_of_bonds = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('repayments_of_bonds'))['sum']
+                        cashflow.repayments_of_bonds = st_to_decimal(next_data.string)
                 if data.string != None and r'舉借長期借款' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.proceeds_from_long_term_debt = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('proceeds_from_long_term_debt'))['sum']
+                        cashflow.proceeds_from_long_term_debt = st_to_decimal(next_data.string)
                 if data.string != None and r'償還長期借款' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.repayments_of_long_term_debt = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('repayments_of_long_term_debt'))['sum']
+                        cashflow.repayments_of_long_term_debt = st_to_decimal(next_data.string)
                 if data.string != None and r'存入保證金增加' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.increase_in_guarantee_deposits_received = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('increase_in_guarantee_deposits_received'))['sum']
+                        cashflow.increase_in_guarantee_deposits_received = st_to_decimal(next_data.string)
                 if data.string != None and r'存入保證金減少' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_in_guarantee_deposits_received = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_in_guarantee_deposits_received'))['sum']
+                        cashflow.decrease_in_guarantee_deposits_received = st_to_decimal(next_data.string)
                 if data.string != None and r'應付租賃款減少' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.decrease_in_lease_payable = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('decrease_in_lease_payable'))['sum']
+                        cashflow.decrease_in_lease_payable = st_to_decimal(next_data.string)
                 if data.string != None and r'員工執行認股權' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.exercise_of_employee_share_options = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('exercise_of_employee_share_options'))['sum']
+                        cashflow.exercise_of_employee_share_options = st_to_decimal(next_data.string)
                 if data.string != None and r'支付之利息' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.interest_paid = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('interest_paid'))['sum']
+                        cashflow.interest_paid = st_to_decimal(next_data.string)
                 if data.string != None and r'非控制權益變動' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.change_in_non_controlling_interests = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('interest_income'))['sum']
+                        cashflow.change_in_non_controlling_interests = st_to_decimal(next_data.string)
                 if data.string != None and r'其他籌資活動' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.other_financing_activities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('other_financing_activities'))['sum']
+                        cashflow.other_financing_activities = st_to_decimal(next_data.string)
                 if data.string != None and (r'籌資活動之淨現金流入（流出）' in data.string.encode('utf-8') or r'籌資活動之淨現金（流入）流出' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.net_cash_flows_from_used_in_financing_activities = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('net_cash_flows_from_used_in_financing_activities'))['sum']
+                        cashflow.net_cash_flows_from_used_in_financing_activities = st_to_decimal(next_data.string)
                 if data.string != None and r'匯率變動對現金及約當現金之影響' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.effect_of_exchange_rate_changes_on_cash_and_cash_equivalents = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('effect_of_exchange_rate_changes_on_cash_and_cash_equivalents'))['sum']
+                        cashflow.effect_of_exchange_rate_changes_on_cash_and_cash_equivalents = st_to_decimal(next_data.string)
                 if data.string != None and (r'本期現金及約當現金增加（減少）數' in data.string.encode('utf-8') or r'本期現金及約當現金（增加）減少數' in data.string.encode('utf-8')):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.net_increase_decrease_in_cash_and_cash_equivalents = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('interest_income'))['sum']
+                        cashflow.net_increase_decrease_in_cash_and_cash_equivalents = st_to_decimal(next_data.string)
                 if data.string != None and r'期初現金及約當現金餘額' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.cash_and_cash_equivalents_at_beginning_of_period = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('cash_and_cash_equivalents_at_beginning_of_period'))['sum']
+                        cashflow.cash_and_cash_equivalents_at_beginning_of_period = st_to_decimal(next_data.string)
                 if data.string != None and r'期末現金及約當現金餘額' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.cash_and_cash_equivalents_at_end_of_period = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('cash_and_cash_equivalents_at_end_of_period'))['sum']
+                        cashflow.cash_and_cash_equivalents_at_end_of_period = st_to_decimal(next_data.string)
                 if data.string != None and r'資產負債表帳列之現金及約當現金' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.cash_and_cash_equivalents_in_the_statement_of_financial_position = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('cash_and_cash_equivalents_in_the_statement_of_financial_position'))['sum']
+                        cashflow.cash_and_cash_equivalents_in_the_statement_of_financial_position = st_to_decimal(next_data.string)
                 cashflow.free_cash_flow = cashflow.net_cash_flows_from_used_in_operating_activities + cashflow.net_cash_flows_from_used_in_investing_activities
                 if data.string != None and r'利息收入' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling
-                        cashflow.interest_income = st_to_decimal(next_data.string) if prevSeasonData is None else st_to_decimal(next_data.string) - prevSeasonData.aggregate(sum=Sum('interest_income'))['sum']
+                        cashflow.interest_income = st_to_decimal(next_data.string)
             response.close()
             if cashflow.profit_loss_from_continuing_operations_before_tax:
                 cashflow.save()
-    cnt = YearCashflowStatement.objects.filter(year=year, season=season).count()
+    cnt = YearCashflowStatement.objects.filter(year=year).count()
     lastDate = YearCashflowStatement.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = YearCashflowStatement.objects.filter(date=lastDate).count()
     updateManagement = UpdateManagement(name = "scf", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonbalancesheet on " + str(year) + "-" + str(season)})
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonbalancesheet on " + str(year)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def update_year_financial_ratio(request):
