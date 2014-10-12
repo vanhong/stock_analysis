@@ -176,39 +176,30 @@ def check_month_revenue(request):
         else:
             json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm:yyyy-mm'"})
             return HttpResponse(json_obj, content_type="application/json")
-    # if 'from' not in request.GET or 'to' not in request.GET:
-    #     return HttpResponse('please input date from Year-Month to Year-Month')
-    # if 'from' in request.GET:
-    #     try:
-    #         dateFrom = datetime.datetime.strptime(request.GET['from'], '%Y-%m').date()
-    #     except:
-    #         return HttpResponse('please input correct "from" date type like Year-Month')
-    # if 'to' in request.GET:
-    #     try:
-    #         dateTo = datetime.datetime.strptime(request.GET['to'], '%Y-%m').date()
-    #     except:
-    #         return HttpResponse('please input correct "to" date type like Year-Month')
     stockIds = StockId.objects.all()
     revenues = MonthRevenue.objects.filter(date__gte=dateFrom, date__lte=dateTo)
     monthNum = month_between(dateFrom, dateTo) + 1
-    errorStockId = []
+    errorStockIDs = []
     for stockId in stockIds:
         revenue = revenues.filter(symbol=stockId.symbol)
         if stockId.listing_date >= dateFrom and stockId.listing_date <= dateTo:
             if len(revenue) == 0:
-                errorStockId.append(stockId.symbol)
+                errorStockIDs.append(stockId.symbol)
             else:
                 minMonth = revenue.order_by('date')[0].date
                 if minMonth > stockId.listing_date:
                     minMonth = stockId.listing_date
                 newMonthNum = month_between(minMonth, dateTo) + 1
                 if (len(revenue) != newMonthNum):
-                    errorStockId.append(stockId.symbol)
+                    errorStockIDs.append(stockId.symbol)
         elif stockId.listing_date < dateFrom:
             if (len(revenue) != monthNum):
-                errorStockId.append(stockId.symbol)
-    if len(errorStockId) > 0:
-        json_obj = json.dumps({"notes" : errorStockId})
+                errorStockIDs.append(stockId.symbol)
+    if len(errorStockIDs) > 0:
+        strError = ""
+        for stockID in errorStockIDs:
+            strError = strError + stockID + ","
+        json_obj = json.dumps({"notes" : strError})
         return HttpResponse(json_obj, content_type="application/json")
 
     json_obj = json.dumps({"notes": "check month revenue ok"})
@@ -239,14 +230,6 @@ def update_season_revenue(request):
         json_obj = json.dumps({"notes": "please input correct season 'year-season'"})
         return HttpResponse(json_obj, content_type="application/json")
 
-    # if 'year' in request.GET:
-    #     year = int(request.GET['year'])
-    # else:
-    #     return HttpResponse('please input year')
-    # if 'season' in request.GET:
-    #     season = int(request.GET['season'])
-    # else:
-    #     return HttpResponse('please input season')
     if season == 1:
         startMonth = 1
     elif season == 2:

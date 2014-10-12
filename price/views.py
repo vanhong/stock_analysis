@@ -14,7 +14,6 @@ from price.models import *
 from bs4 import BeautifulSoup
 import pdb
 
-
 def update_price(request):
 	begin = request.GET['begin']
 	end = request.GET['end']

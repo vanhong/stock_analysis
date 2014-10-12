@@ -19,8 +19,8 @@
 				});
 
 				$(".check_mr").click(function() {
-					$.get('/check_month_revenue', {'date':$('.monthrevenue_date').val()}).done(function(jData) {
-						$('.monthrevenue_notes').html(jData.notes);
+					$.get('/check_month_revenue', {'date':$('.mr_date').val()}).done(function(jData) {
+						$('.mr_notes').html(jData.notes);
 					});
 				});
 
