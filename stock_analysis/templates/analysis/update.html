@@ -35,10 +35,10 @@
             <td width='220px'>日期設定</td>
             <td>備註</td>
           </tr>
-          <tr class="warning">
+          <tr class="info">
             <td>股票代號</td>
-            <td class="stockid_lastUpdateDate">{{stockid.lastUpdateDate}}</td>
-            <td class="stockid_lastDataDate">{{stockid.lastDataDate}}</td>
+            <td class="stockid_updateDate">{{stockid.updateDate}}</td>
+            <td class="stockid_dataDate">{{stockid.dataDate}}</td>
             
             <td>
               <button type="submit" class="btn btn-primary btn-xs update_stockid">
@@ -56,83 +56,143 @@
           </tr>
           <tr class="success">
             <td>月營收</td>
-            <td class="monthrevenue_lastUpdateDate">{{monthrevenue.lastUpdateDate}}</td>
-            <td class="monthrevenue_lastDataDate">{{monthrevenue.lastDataDate}}</td>
+            <td class="mr_updateDate">{{mr.updateDate}}</td>
+            <td class="mr_dataDate">{{mr.dataDate}}</td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs update_monthrevenue">
+              <button type="submit" class="btn btn-primary btn-xs update_mr">
                 更新 <span class="glyphicon glyphicon-refresh"></span>
               </button>
             </td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs check_monthrevenue">
+              <button type="submit" class="btn btn-primary btn-xs check_mr">
                 檢查 <span class="glyphicon glyphicon-refresh"></span>
               </button></td>
             </td>
             <td>
               <label class="col-sm sr-only">From:Year-Month To:Year-Month</label>
-              <input type="text" class="form-control input-xs monthrevenue_date" placeholder="From:Year-Month To:Year-Month">
+              <input type="text" class="form-control input-xs mr_date" placeholder="From:Year-Month To:Year-Month">
             </td>
-            <td class="monthrevenue_notes">{{monthrevenue.notes}}</td>
-          </tr>
-          <tr class="warning">
-            <td>季營收</td>
-            <td class="seasonrevenue_lastUpdateDate">{{seasonrevenue.lastUpdateDate}}</td>
-            <td class="seasonrevenue_lastDataDate">{{seasonrevenue.lastDataDate}}</td>
-            <td>
-              <button type="submit" class="btn btn-primary btn-xs update_seasonrevenue">
-                更新 <span class="glyphicon glyphicon-refresh"></span>
-              </button>
-            </td>
-            <td>
-              <button type="submit" class="btn btn-primary btn-xs check_seasonrevenue">
-                檢查 <span class="glyphicon glyphicon-refresh"></span>
-              </button></td>
-            </td>
-            <td>
-              <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
-              <input type="text" class="form-control input-xs seasonrevenue_date" placeholder="From:Year-Season To:Year-Season">
-            </td>
-            <td class="seasonrevenue_notes">{{seasonrevenue.notes}}</td>
+            <td class="mr_notes">{{mr.notes}}</td>
           </tr>
           <tr class="success">
-            <td>綜合損益表(季)</td>
-            <td class="seasonincomestatement_lastUpdateDate">{{seasonincomestatement.lastUpdateDate}}</td>
-            <td class="seasonincomestatement_lastDataDate">{{seasonincomestatement.lastDataDate}}</td>
+            <td>季營收</td>
+            <td class="sr_updateDate">{{sr.updateDate}}</td>
+            <td class="sr_dataDate">{{sr.dataDate}}</td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs update_seasonincomestatement">
+              <button type="submit" class="btn btn-primary btn-xs update_sr">
                 更新 <span class="glyphicon glyphicon-refresh"></span>
               </button>
             </td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs check_seasonincomestatement">
+              <button type="submit" class="btn btn-primary btn-xs check_sr">
                 檢查 <span class="glyphicon glyphicon-refresh"></span>
               </button></td>
             </td>
             <td>
               <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
-              <input type="text" class="form-control input-xs seasonincomestatement_date" placeholder="From:Year-Season To:Year-Season">
+              <input type="text" class="form-control input-xs sr_date" placeholder="From:Year-Season To:Year-Season">
             </td>
-            <td class="seasonincomestatement_notes">{{seasonincomestatement.notes}}</td>
+            <td class="sr_notes">{{sr.notes}}</td>
+          </tr>
+          <tr class="warning">
+            <td>綜合損益表(季)</td>
+            <td class="sis_updateDate">{{sis.updateDate}}</td>
+            <td class="sis_dataDate">{{sis.dataDate}}</td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs update_sis">
+                更新 <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+            </td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs check_sis">
+                檢查 <span class="glyphicon glyphicon-refresh"></span>
+              </button></td>
+            </td>
+            <td>
+              <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
+              <input type="text" class="form-control input-xs sis_date" placeholder="From:Year-Season To:Year-Season">
+            </td>
+            <td class="sis_notes">{{sis.notes}}</td>
           </tr>
           <tr class="warning">
             <td>資產負債表(季)</td>
-            <td class="seasonbalancesheet_lastUpdateDate">{{seasonbalancesheet.lastUpdateDate}}</td>
-            <td class="seasonbalancesheet_lastDataDate">{{seasonbalancesheet.lastDataDate}}</td>
+            <td class="sbs_updateDate">{{sbs.updateDate}}</td>
+            <td class="sbs_dataDate">{{sbs.dataDate}}</td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs update_seasonbalancesheet">
+              <button type="submit" class="btn btn-primary btn-xs update_sbs">
                 更新 <span class="glyphicon glyphicon-refresh"></span>
               </button>
             </td>
             <td>
-              <button type="submit" class="btn btn-primary btn-xs check_seasonbalancesheet">
+              <button type="submit" class="btn btn-primary btn-xs check_sbs">
                 檢查 <span class="glyphicon glyphicon-refresh"></span>
               </button></td>
             </td>
             <td>
               <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
-              <input type="text" class="form-control input-xs seasonbalancesheet_date" placeholder="From:Year-Season To:Year-Season">
+              <input type="text" class="form-control input-xs sbs_date" placeholder="From:Year-Season To:Year-Season">
             </td>
-            <td class="seasonbalancesheet_notes">{{seasonbalancesheet.notes}}</td>
+            <td class="sbs_notes">{{sbs.notes}}</td>
+          </tr>
+          <tr class="warning">
+            <td>現金流量表(季)</td>
+            <td class="scf_updateDate">{{scf.updateDate}}</td>
+            <td class="scf_dataDate">{{scf.dataDate}}</td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs update_scf">
+                更新 <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+            </td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs check_scf">
+                檢查 <span class="glyphicon glyphicon-refresh"></span>
+              </button></td>
+            </td>
+            <td>
+              <label class="col-sm sr-only">From:Year-Season To:Year-Season</label>
+              <input type="text" class="form-control input-xs scf_date" placeholder="From:Year-Season To:Year-Season">
+            </td>
+            <td class="scf_notes">{{scf.notes}}</td>
+          </tr>
+          <tr class="danger">
+            <td>綜合損益表(年)</td>
+            <td class="yis_updateDate">{{yis.updateDate}}</td>
+            <td class="yis_dataDate">{{yis.dataDate}}</td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs update_yis">
+                更新 <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+            </td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs check_yis">
+                檢查 <span class="glyphicon glyphicon-refresh"></span>
+              </button></td>
+            </td>
+            <td>
+              <label class="col-sm sr-only">From:Year To:Year</label>
+              <input type="text" class="form-control input-xs yis_date" placeholder="From:Year To:Year">
+            </td>
+            <td class="yis_notes">{{yis.notes}}</td>
+          </tr>
+          <tr class="danger">
+            <td>現金流量表(年)</td>
+            <td class="ycf_updateDate">{{ycf.updateDate}}</td>
+            <td class="ycf_dataDate">{{ycf.dataDate}}</td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs update_ycf">
+                更新 <span class="glyphicon glyphicon-refresh"></span>
+              </button>
+            </td>
+            <td>
+              <button type="submit" class="btn btn-primary btn-xs check_ycf">
+                檢查 <span class="glyphicon glyphicon-refresh"></span>
+              </button></td>
+            </td>
+            <td>
+              <label class="col-sm sr-only">From:Year To:Year</label>
+              <input type="text" class="form-control input-xs ycf_date" placeholder="From:Year To:Year">
+            </td>
+            <td class="ycf_notes">{{ycf.notes}}</td>
           </tr>
         </tbody>
       </table>

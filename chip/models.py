@@ -47,14 +47,3 @@ class ShareholderStructure(models.Model):
     value800_1000 = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     value1000 = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     value_sum = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-
-# class BranchTrade(models.Model):
-#     surrogate_key = models.CharField(max_length=20, primary_key=True)
-#     date = models.IntegerField(db_index=True)
-#     symbol = models.CharField(max_length=10, db_index=True)
-#     seqno = models.DecimalField(max_digits=5, decimal_places=0, null=False)
-#     branch = models.DecimalField(max_length=20, null=False)
-#     value_sum = models.DecimalField(max_digits=20, decimal_places=2, null=False)
-#     value_sum = models.DecimalField(max_digits=20, decimal_places=0, null=False)
-#     value_sum = models.DecimalField(max_digits=20, decimal_places=0, null=False)
-

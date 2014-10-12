@@ -7,7 +7,7 @@
                 });
 
                 $('.filter_menu_revenue').click(function(){
-                    alert('hello');
+                    //alert('hello');
                     $('.filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'});
                     $('button[id^="filter_menu"]').attr('class', 'btn btn-primary');
                     

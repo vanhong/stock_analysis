@@ -1,13 +1,27 @@
+function isInt(value)
+{
+    var er = /^-?[0-9]+$/;
+    return er.test(value);
+}
+
+String.prototype.format = function() {
+    var formatted = this;
+    for (var i = 0; i < arguments.length; i++) {
+        var regexp = new RegExp('\\{'+i+'\\}', 'gi');
+        formatted = formatted.replace(regexp, arguments[i]);
+    }
+    return formatted;
+};
+
 (function(filter_menu){
     function menu() {
         this.Init = function () {
             $(window).load(function(){
-                $('.filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'}, function(){
+                $('.filter_option').html('&nbsp;').load('/filter_option/', {'kind':'revenue'}, function(){
                     bind_button_event();
                 });
 
                 $('.filter_menu_revenue').click(function(){
-                    alert('hello');
                     $('#filter_menu').html('&nbsp;').load('/filter_menu/', {'kind':'revenue'});
                     $('button[id^="filter_menu"]').attr('class', 'btn btn-primary');
                     
@@ -36,7 +50,23 @@
 
     ConditionArray = [];
     function bind_button_event(){
-
+        $('.filter_choice').html('&nbsp;').load('/filter_choice/', function(){
+        });
+        $('.m_revenue_yoy_button').click(function() {
+            if (isInt($('.m_revenue_yoy_cnt').val()) && isInt($('.m_revenue_yoy_match_cnt').val()) &&isInt($('.m_revenue_yoy_percent').val())){
+                var conditionText = '最近' + $('.m_revenue_yoy_cnt').val() + '個月內有' + $('.m_revenue_yoy_match_cnt').val() + '個月營收年增率大於' + $('.m_revenue_yoy_percent').val() + '%';
+                var choiceID = "{0}_{1}_{2}_{3}".format($(this).attr('class'),$('.m_revenue_yoy_cnt').val(),$('.m_revenue_yoy_match_cnt').val(),$('.m_revenue_yoy_percent').val());
+                var str = '<tr class="danger"><td>' + conditionText;
+                str = str + '<button type="submit" id="' + choiceID + '" class="btn btn-primary btn-xs add_button"><span class="glyphicon glyphicon-minus"></span></button></td></tr>';
+                var $obj = $(str);
+                $('.filter_choice_table').append($obj);
+                $obj.click(function(){
+                    $(this).remove();
+                });
+            } else {
+                console.log("error input");
+            }
+        });
         $('button[id^=add-]').click(function(){
             var condition = $(this).attr('id').split('-')[1];
             var title = $(this).attr('title');
@@ -66,9 +96,10 @@
             var cloneObj = $(this).clone();
             var newID = $(this).attr('id') + '-select';
             cloneObj.attr('id', newID).attr('class','btn btn-success').css({'width':'20em', 'margin':'0.5em'}).text(conditionStr).appendTo('#filter_content');
-
         });
     }
+
+    
 
     function start_filter() {
         if (ConditionArray.length > 0){

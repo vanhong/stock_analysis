@@ -14,6 +14,9 @@ def season_to_date(year, season):
 	elif season == 4:
 		return datetime.date(year, 10, 1)
 
+def year_to_date(year):
+    return datetime.date(year, 1, 1)
+
 def last_season(day):
     year = day.year
     month = day.month
@@ -27,4 +30,10 @@ def last_season(day):
     elif month >= 10:
         season = 3
     return year, season
+
+def next_month(day):
+    if day.month == 12:
+        return datetime.date(day.year+1, 1, 1)
+    else:
+        return datetime.date(day.year, day.month+1, 1)
 

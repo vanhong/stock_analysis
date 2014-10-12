@@ -109,43 +109,39 @@ def get_performance_per_share_table(request):
 
 
 def get_dividend_table(request):
-    symbol = get_symbol(request)
-    stockname = StockId.objects.get(symbol=symbol)
-    heads = []
-    heads.append(r'年度')
-    heads.append(r'現金股利')
-    heads.append(r'盈餘配股')
-    heads.append(r'公積配股')
-    heads.append(r'股票股利')
-    heads.append(r'合計')
-    heads.append(r'員工配股率%')
-    bodys = []
-    if StockId.objects.filter(symbol=symbol):
-        dividends = Dividend.objects.filter(symbol=symbol).order_by('-date')
-        if dividends:
-            for dividend in dividends:
-                if dividend.cash_dividends:
-                    if dividend.cash_dividends is not None and dividend.stock_dividends is not None:
-                        item = []
-                        item.append(dividend.year)
-                        item.append(round(dividend.cash_dividends, 2))
-                        item.append(
-                            round(dividend.stock_dividends_from_retained_earnings, 2))
-                        item.append(
-                            round(dividend.stock_dividends_from_capital_reserve, 2))
-                        item.append(round(dividend.stock_dividends, 2))
-                        item.append(round(dividend.total_dividends, 2))
-                        item.append(round(dividend.employee_stock_rate, 2))
-                        bodys.append(item)
-            name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
-            return render_to_response(
-                'analysis/analysis_table.html', {"stock_id": name, "heads": heads,
-                                                 "bodys": bodys},
-                context_instance=RequestContext(request))
-    return render_to_response(
-        'analysis/analysis_table.html', {"stock_id": get_symbol(request)},
-        context_instance=RequestContext(request))
-
+	symbol = get_symbol(request)
+	stockname = StockId.objects.get(symbol=symbol)
+	heads = []
+	heads.append(r'年度')
+	heads.append(r'現金股利')
+	heads.append(r'盈餘配股')
+	heads.append(r'公積配股')
+	heads.append(r'股票股利')
+	heads.append(r'合計')
+	heads.append(r'員工配股率%')
+	bodys = []
+	if StockId.objects.filter(symbol=symbol):
+		dividends = Dividend.objects.filter(symbol=symbol).order_by('-date')
+		if dividends:
+			for dividend in dividends:
+				if dividend.cash_dividends:
+					if dividend.cash_dividends is not None and dividend.stock_dividends is not None:
+						item = []
+						item.append(dividend.year)
+						item.append(round(dividend.cash_dividends, 2))
+						item.append(round(dividend.stock_dividends_from_retained_earnings, 2))
+						item.append(round(dividend.stock_dividends_from_capital_reserve, 2))
+						item.append(round(dividend.stock_dividends, 2))
+						item.append(round(dividend.total_dividends, 2))
+						item.append(round(dividend.employee_stock_rate, 2))
+						bodys.append(item)
+			name = stockname.name.encode('utf-8') + '(' + str(symbol) + ')'
+			return render_to_response(
+				'analysis/analysis_table.html', {"stock_id": name, "heads": heads, "bodys": bodys},
+				context_instance = RequestContext(request))
+	return render_to_response(
+		'analysis/analysis_table.html',{"stock_id": get_symbol(request)},
+		context_instance = RequestContext(request))
 
 @csrf_exempt
 def get_profitability_table(request):
