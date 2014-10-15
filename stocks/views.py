@@ -159,7 +159,7 @@ def update_month_revenue(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " month_revenues")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " monthrevenue on " + str(year) + "-" + str(month)})
+                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " month revenue on " + str(year) + "-" + str(month)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def check_month_revenue(request):
@@ -287,7 +287,7 @@ def update_season_revenue(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
+                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season revenue on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def old_update_season_revenue(request):

@@ -441,8 +441,6 @@ class NewSeasonFinancialRatio(models.Model):
     net_profit_margin_before_tax = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 稅後淨利率 = 稅後純益 / 營業收入
     net_profit_margin = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-    # 每股淨值(元)
-    net_value_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
     # 每股營業額(元)
     revenue_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
     # 每股營業利益(元)
@@ -482,8 +480,6 @@ class NewSeasonFinancialRatio(models.Model):
     available_for_sale_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 無形資產比率
     intangible_asset_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-    # 未折舊比率
-    undepreciation_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 折舊負擔比率
     depreciation_to_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 營業利益佔稅前淨利比率

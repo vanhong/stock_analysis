@@ -56,6 +56,13 @@
 					});
 				});
 
+				$(".update_sfr").click(function () {
+					$.get('/update_season_financial_ratio/', {'date':$('.sfr_date').val()}).done(function(jData){
+						$('.sfr_lastUpdate').html(jData.updateDate);
+						
+					});
+				});
+
 				$(".update_yis").click(function () {
 					$.get('/update_year_income_statement/', {'date':$('.yis_date').val()}).done(function(jData) {
 						$('.yis_lastUpdate').html(jData.updateDate);
