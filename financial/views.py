@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import time
 from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement, YearFinancialRatio
-from financial.models import SeasonCashflowStatement, YearCashflowStatement, NewSeasonFinancialRatio
+from financial.models import SeasonCashflowStatement, YearCashflowStatement, OldSeasonFinancialRatio
 from financial.models import YearIncomeStatement
 from stocks.models import UpdateManagement
 from bs4 import BeautifulSoup
@@ -2264,7 +2264,7 @@ def update_year_financial_ratio(request):
 
     return HttpResponse('update year financial ratio')
 
-def update_season_financial_ratio(request):
+def old_update_season_financial_ratio(request):
     stock_ids = StockId.objects.all()
     if 'year' in request.GET and  'season' in request.GET:
         input_year = int(request.GET['year'])
@@ -2273,7 +2273,7 @@ def update_season_financial_ratio(request):
         return HttpResponse('please input year or season')
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=input_year, season=input_season)
+        ratioInDb = OldSeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=input_year, season=input_season)
         if ratioInDb:
             ratioInDb = None
             continue
@@ -2289,7 +2289,7 @@ def update_season_financial_ratio(request):
                 try:
                     year = int(stage_data.string.split('Q')[0].split('.')[0]) + int(1911)
                     season = int(stage_data.string.split('Q')[0].split('.')[1])
-                    season_ratio = SeasonFinancialRatio()
+                    season_ratio = OldSeasonFinancialRatio()
                     season_ratio.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
                     season_ratio.year = year
                     season_ratio.season = season
@@ -2466,7 +2466,7 @@ def update_season_financial_ratio(request):
 
     return HttpResponse('update season financial ratio')
 
-def new_update_season_financial_ratio(request):
+def update_season_financial_ratio(request):
     print 'start update season financial ratio'
     if 'date' in request.GET:
         date = request.GET['date']
@@ -2491,7 +2491,6 @@ def new_update_season_financial_ratio(request):
     intersection = set(sisSymbol).intersection(set(sbsSymbol)).intersection(set(scfSymbol))
     diff = union.difference(intersection)
     print diff
-    intersection = ['8114']
     for stockID in intersection:
         has_sbs_prev = False
         try:
@@ -2505,7 +2504,7 @@ def new_update_season_financial_ratio(request):
         if SeasonBalanceSheet.objects.filter(year=prevSeasonYear, season=prevSeasonSeason, symbol=stockID):
             has_sbs_prev = True
             prev_sbs = SeasonBalanceSheet.objects.get(year=prevSeasonYear, season=prevSeasonSeason, symbol=stockID)
-        ratio = NewSeasonFinancialRatio()
+        ratio = SeasonFinancialRatio()
         ratio.year = year
         ratio.season = season
         ratio.symbol = stockID
@@ -2760,6 +2759,14 @@ def new_update_season_financial_ratio(request):
             else:
                 ratio.tax_rate = 0
         ratio.save()
-        print (ratio.symbol + " season financial ratio saved")
-    return HttpResponse('hello')
+        # print (ratio.symbol + " season financial ratio saved")
+    cnt = SeasonFinancialRatio.objects.filter(year=year, season=season).count()
+    lastDate = SeasonFinancialRatio.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = SeasonFinancialRatio.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "sfr", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
+    updateManagement.save()
+    json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season cashflow statements on " + str(year) + "-" + str(season)})
+    return HttpResponse(json_obj, content_type="application/json")
     

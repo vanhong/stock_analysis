@@ -59,7 +59,8 @@
 				$(".update_sfr").click(function () {
 					$.get('/update_season_financial_ratio/', {'date':$('.sfr_date').val()}).done(function(jData){
 						$('.sfr_lastUpdate').html(jData.updateDate);
-						
+						$('.sfr_dataDate').html(jData.dataDate);
+						$('.sfr_notes').html(jData.notes);
 					});
 				});
 

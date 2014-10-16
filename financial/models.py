@@ -344,7 +344,7 @@ class YearFinancialRatio(models.Model):
         chinese_name = self.chinese_map[source]
         return chinese_name
 
-class SeasonFinancialRatio(models.Model):
+class OldSeasonFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     season = models.IntegerField(db_index=True)
@@ -426,7 +426,7 @@ class SeasonFinancialRatio(models.Model):
         return chinese_name
 
 # 財務比率表(季)
-class NewSeasonFinancialRatio(models.Model):
+class SeasonFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     season = models.CharField(max_length=20, db_index=True)

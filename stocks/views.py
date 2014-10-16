@@ -416,6 +416,7 @@ def update(request):
     seasonIncomeStatement = {}
     seasonBalanceSheet = {}
     seasonCashflow = {}
+    seasonFinancialRatio = {}
     if all_data.filter(name='stockID').count() > 0:
         data = UpdateManagement.objects.get(name='stockID')
         stockID['name'] = data.name
@@ -453,10 +454,17 @@ def update(request):
         seasonCashflow['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonCashflow['notes'] = data.notes
 
+    if all_data.filter(name='sfr').count() > 0:
+        data = UpdateManagement.objects.get(name='sfr')
+        seasonFinancialRatio['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonFinancialRatio['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonFinancialRatio['notes'] = data.notes
+
+
     return render_to_response('analysis/update.html', 
             {'stockid': stockID, 'mr': monthRevenue, 'sr': seasonRevenue,
              'sis': seasonIncomeStatement, 'sbs' : seasonBalanceSheet,
-             'scf': seasonCashflow}, context_instance=RequestContext(request))
+             'scf': seasonCashflow, 'sfr' : seasonFinancialRatio}, context_instance=RequestContext(request))
 
 
 
