@@ -58,8 +58,8 @@ class FilterClasses():
 
         def filter(self, params):
             print params
-            print 'cnt=%s, matchcnt=%s, time_type=%s, overunder=%s, value=%s' % (self.cnt, self.matchcnt, self.time_type, self.overunder, self.value)
-            results = query_revenue_ann_growth_rate(self.cnt, self.matchcnt, self.overunder, self.value, self.time_type)
+            print 'cnt=%s, matchcnt=%s, time_type=%s, overunder=%s, value=%s' % (self.cnt, self.matchcnt, self.time_type, self.overunder, float(self.value))
+            results = query_revenue_ann_growth_rate(self.cnt, self.matchcnt, self.overunder, float(self.value), self.time_type)
             return results
 
     class FinancialRatio(BaseFilter):
@@ -83,16 +83,18 @@ def filter_start(request):
         if inspect.isclass(targetClass): #check does the class exist
             instance = targetClass(item)
             results = instance.filter(item)
+            print results
             filter_list.append(results)
-    new_list = sorted(filter_list)
-    results_dic = {}
-    for item in new_list:
-        for symbol in item:
-            results_dic[symbol] = StockId.objects.get(symbol=symbol).name
-    #print results_dic
+    
+    intersection = []
+    if len(filter_list) == 1:
+        intersection = results
+    else:
+        for index in range(len(filter_list) - 1):
+            intersection = list(set(filter_list[index]) & set(filter_list[index+1]))
     return render_to_response(
                 'filter/filter_result.html', {
-                "results": results_dic},
+                "results": intersection},
                 context_instance = RequestContext(request))
 
 @csrf_exempt
