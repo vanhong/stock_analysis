@@ -156,7 +156,7 @@ def update_month_revenue(request):
     lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = MonthRevenue.objects.filter(date=lastDate).count()
     updateManagement = UpdateManagement(name = "mr", last_update_date = datetime.date.today(), 
-                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " month_revenues")
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                                  "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " month revenue on " + str(year) + "-" + str(month)})
@@ -410,61 +410,47 @@ def update_dividend(request):
 
 def update(request):
     all_data = UpdateManagement.objects.all()
-    stockID = {}
-    monthRevenue = {}
-    seasonRevenue = {}
-    seasonIncomeStatement = {}
-    seasonBalanceSheet = {}
-    seasonCashflow = {}
-    seasonFinancialRatio = {}
+    updateData = {}
     if all_data.filter(name='stockID').count() > 0:
         data = UpdateManagement.objects.get(name='stockID')
-        stockID['name'] = data.name
-        stockID['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        stockID['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        stockID['notes'] = data.notes
+        updateData['stockID'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
     if all_data.filter(name='mr').count() > 0:
         data = UpdateManagement.objects.get(name='mr')
-        monthRevenue['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        monthRevenue['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        monthRevenue['notes'] = data.notes
+        updateData['mr'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
     if all_data.filter(name='sr').count() > 0:
         data = UpdateManagement.objects.get(name='sr')
-        seasonRevenue['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonRevenue['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        seasonRevenue['notes'] = data.notes
+        updateData['sr'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
     if all_data.filter(name='sis').count() > 0:
         data = UpdateManagement.objects.get(name='sis')
-        seasonIncomeStatement['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonIncomeStatement['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        seasonIncomeStatement['notes'] = data.notes
+        updateData['sis'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
     if all_data.filter(name='sbs').count() > 0:
         data = UpdateManagement.objects.get(name='sbs')
-        seasonBalanceSheet['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonBalanceSheet['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        seasonBalanceSheet['notes'] = data.notes
+        updateData['sbs'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
     if all_data.filter(name='scf').count() > 0:
         data = UpdateManagement.objects.get(name='scf')
-        seasonCashflow['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonCashflow['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        seasonCashflow['notes'] = data.notes
+        updateData['scf'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
     if all_data.filter(name='sfr').count() > 0:
         data = UpdateManagement.objects.get(name='sfr')
-        seasonFinancialRatio['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
-        seasonFinancialRatio['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
-        seasonFinancialRatio['notes'] = data.notes
+        updateData['sfr'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
+    if all_data.filter(name='yis').count() > 0:
+        data = UpdateManagement.objects.get(name='yis')
+        updateData['yis'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
+
+    if all_data.filter(name='yfr').count() > 0:
+        data = UpdateManagement.objects.get(name='yfr')
+        updateData['yfr'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
     return render_to_response('analysis/update.html', 
-            {'stockid': stockID, 'mr': monthRevenue, 'sr': seasonRevenue,
-             'sis': seasonIncomeStatement, 'sbs' : seasonBalanceSheet,
-             'scf': seasonCashflow, 'sfr' : seasonFinancialRatio}, context_instance=RequestContext(request))
+            {'updateData': updateData}, context_instance=RequestContext(request))
 
-
+class UpdateData(object):
+    def __init__(self, updateDate, dataDate, notes):
+        self.updateDate, self.dataDate, self.notes = updateDate, dataDate, notes
 

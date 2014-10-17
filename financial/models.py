@@ -125,53 +125,53 @@ class SeasonIncomeStatement(models.Model):
     #-----------end--------------#
 
     def percent_operating_revenue(self):
-        return operating_revenue / operating_revenue
+        return total_operating_revenue / total_operating_revenue
     def percent_operating_cost(self):
-        return operating_cost / operating_revenue
+        return operating_cost / total_operating_revenue
     def percent_gross_profit_from_operations(self):
-        return gross_profit_from_operations / operating_revenue
+        return gross_profit_from_operations / total_operating_revenue
     def percent_selling_expenses(self):
-        return selling_expenses / operating_revenue
+        return selling_expenses / total_operating_revenue
     def percent_administrative_expenses(self):
-        return administrative_expenses / operating_revenue
+        return administrative_expenses / total_operating_revenue
     def percent_research_and_development_expenses(self):
-        return research_and_development_expenses / operating_revenue
+        return research_and_development_expenses / total_operating_revenue
     def percent_operating_expenses(self):
-        return operating_expenses / operating_revenue
+        return operating_expenses / total_operating_revenue
     def percent_net_operating_income(self):
-        return net_operating_income / operating_revenue
+        return net_operating_income / total_operating_revenue
     def percent_other_income(self):
-        return other_income / operating_revenue
+        return other_income / total_operating_revenue
     def percent_other_gains_and_losses(self):
-        return other_gains_and_losses / operating_revenue
+        return other_gains_and_losses / total_operating_revenue
     def percent_finance_costs(self):
-        return finance_costs / operating_revenue
+        return finance_costs / total_operating_revenue
     def percent_non_operating_income_and_expenses(self):
-        return non_operating_income_and_expenses / operating_revenue
+        return non_operating_income_and_expenses / total_operating_revenue
     def percent_profit_from_continuing_operations_before_tax(self):
-        return profit_from_continuing_operations_before_tax / operating_revenue
+        return profit_from_continuing_operations_before_tax / total_operating_revenue
     def percent_tax_expense(self):
-        return tax_expense / operating_revenue
+        return tax_expense / total_operating_revenue
     def percent_profit_from_continuing_operations(self):
-        return profit_from_continuing_operations / operating_revenue
+        return profit_from_continuing_operations / total_operating_revenue
     def percent_profit(self):
-        return profit / operating_revenue
+        return profit / total_operating_revenue
     def percent_exchange_differences_on_translation(self):
-        return exchange_differences_on_translation / operating_revenue
+        return exchange_differences_on_translation / total_operating_revenue
     def percent_unrealised_gains_for_sale_financial_assets(self):
-        return unrealised_gains_for_sale_financial_assets / operating_revenue
+        return unrealised_gains_for_sale_financial_assets / total_operating_revenue
     def percent_income_tax_of_other_comprehensive_income(self):
-        return other_comprehensive_income / operating_revenue
+        return other_comprehensive_income / total_operating_revenue
     def percent_total_comprehensive_income(self):
-        return total_comprehensive_income / operating_revenue
+        return total_comprehensive_income / total_operating_revenue
     def percent_profit_to_owners_of_parent(self):
-        return profit_to_owners_of_parent / operating_revenue
+        return profit_to_owners_of_parent / total_operating_revenue
     def percent_profit_to_non_controlling_interests(self):
-        return profit_to_non_controlling_interests / operating_revenue
+        return profit_to_non_controlling_interests / total_operating_revenue
     def percent_comprehensive_income_to_owners_of_parent(self):
-        return comprehensive_income_to_owners_of_parent / operating_revenue
+        return comprehensive_income_to_owners_of_parent / total_operating_revenue
     def percent_comprehensive_income_to_non_controlling_interests(self):
-        return comprehensive_income_to_non_controlling_interests / operating_revenue
+        return comprehensive_income_to_non_controlling_interests / total_operating_revenue
 
 # 綜合損益表(年)
 class YearIncomeStatement(models.Model):
@@ -294,7 +294,7 @@ class YearIncomeStatement(models.Model):
     income_from_discontinued_operations = models.DecimalField(max_digits=20, decimal_places=0, null=True)
     #-----------end--------------#
 
-class YearFinancialRatio(models.Model):
+class OldYearFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     date = models.DateField(db_index=True)
@@ -430,6 +430,86 @@ class SeasonFinancialRatio(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
     year = models.IntegerField(db_index=True)
     season = models.CharField(max_length=20, db_index=True)
+    symbol = models.CharField(max_length=20, db_index=True)
+    date = models.DateField(db_index=True)
+    # ---獲利能力---
+    # 營業毛利率 = 營業毛利 / 營業收入
+    gross_profit_margin = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 營業利益率 = 營業利益 / 營業收入
+    operating_profit_margin = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 稅前淨利率 = 稅前純益 / 營業收入
+    net_profit_margin_before_tax = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 稅後淨利率 = 稅後純益 / 營業收入
+    net_profit_margin = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 每股營業額(元)
+    revenue_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股營業利益(元)
+    operating_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股稅前淨利(元)
+    net_before_tax_profit_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 每股盈餘(EPS)
+    earnings_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+    # 總資產報酬率(ROA)
+    return_on_assets = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
+    return_on_equity = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # ---償債能力---
+    # 流動比率
+    current_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 速動比率
+    quick_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 金融負債比率
+    financial_debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 負債比率
+    debt_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 利息保障倍數
+    interest_cover = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    # ---經營能力---
+    # 應收帳款週轉率
+    accounts_receivable_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 存貨週轉率
+    inventory_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 固定資產週轉率
+    fixed_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 總資產週轉率
+    total_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # ---黃國華指標---
+    # 存貨營收比
+    inventory_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 備供出售比率
+    available_for_sale_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 無形資產比率
+    intangible_asset_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 折舊負擔比率
+    depreciation_to_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 營業利益佔稅前淨利比率
+    operating_profit_to_net_profit_before_tax_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 現金股息配發率
+    payout_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    # 營業稅率
+    tax_rate = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+
+    modified_date = models.DateField(auto_now=True)
+
+    def __unicode__(self):
+        return u'%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % (self.ID, self.symbol, self.date, 
+            self.gross_profit_margin, self.operating_profit_margin, self.net_profit_margin,
+            self.earnings_per_share, self.return_on_assets, self.return_on_equity,
+            self.current_ratio, self.quick_ratio, self.financial_debt_ratio, self.debt_ratio,
+            self.accounts_receivable_turnover_ratio, self.inventory_turnover_ratio,
+            self.fixed_asset_turnover_ratio, self.total_asset_turnover_ratio,
+            self.inventory_sales_ratio,self.available_for_sale_to_equity_ratio,
+            self.intangible_asset_to_equity_ratio,self.undepreciation_ratio,
+            self.depreciation_to_sales_ratio,self.operating_profit_to_net_profit_before_tax_ratio,
+            self.payout_ratio , self.tax_rate ,self.modified_date)
+    class Meta:
+        ordering = ['symbol', 'date']
+    class Admin:
+        pass
+
+class YearFinancialRatio(models.Model):
+    surrogate_key = models.CharField(max_length=20, primary_key=True)
+    year = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
     date = models.DateField(db_index=True)
     # ---獲利能力---
