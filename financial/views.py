@@ -7,7 +7,7 @@ from django.http import HttpResponse
 import time
 from stocks.models import StockId
 from financial.models import SeasonFinancialRatio, SeasonBalanceSheet, SeasonIncomeStatement, YearFinancialRatio
-from financial.models import SeasonCashflowStatement, YearCashflowStatement, NewSeasonFinancialRatio
+from financial.models import SeasonCashflowStatement, YearCashflowStatement, OldSeasonFinancialRatio
 from financial.models import YearIncomeStatement
 from stocks.models import UpdateManagement
 from bs4 import BeautifulSoup
@@ -556,7 +556,7 @@ def update_season_income_statement(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season income statements on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
 
 #綜合損益表(年)
@@ -825,7 +825,7 @@ def update_year_income_statement(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " datas on " + str(year)})
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " year income statements on " + str(year)})
     return HttpResponse(json_obj, content_type="application/json")
 
 #資產負債表
@@ -1254,7 +1254,7 @@ def update_season_balance_sheet(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonbalancesheet on " + str(year) + "-" + str(season)})
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season balancesheet on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
 
 #現金流量表(季)
@@ -1684,7 +1684,7 @@ def update_season_cashflow_statement(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonbalancesheet on " + str(year) + "-" + str(season)})
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season cashflow statements on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
 
 #現金流量表(年)
@@ -2073,7 +2073,7 @@ def update_year_cashflow_statement(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonbalancesheet on " + str(year)})
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " year cashflow statements on " + str(year)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def update_year_financial_ratio(request):
@@ -2264,7 +2264,7 @@ def update_year_financial_ratio(request):
 
     return HttpResponse('update year financial ratio')
 
-def update_season_financial_ratio(request):
+def old_update_season_financial_ratio(request):
     stock_ids = StockId.objects.all()
     if 'year' in request.GET and  'season' in request.GET:
         input_year = int(request.GET['year'])
@@ -2273,7 +2273,7 @@ def update_season_financial_ratio(request):
         return HttpResponse('please input year or season')
     for stock_id in stock_ids:
         stock_symbol = stock_id.symbol
-        ratioInDb = SeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=input_year, season=input_season)
+        ratioInDb = OldSeasonFinancialRatio.objects.filter(symbol=stock_symbol, year=input_year, season=input_season)
         if ratioInDb:
             ratioInDb = None
             continue
@@ -2289,7 +2289,7 @@ def update_season_financial_ratio(request):
                 try:
                     year = int(stage_data.string.split('Q')[0].split('.')[0]) + int(1911)
                     season = int(stage_data.string.split('Q')[0].split('.')[1])
-                    season_ratio = SeasonFinancialRatio()
+                    season_ratio = OldSeasonFinancialRatio()
                     season_ratio.surrogate_key = stock_symbol + '_' + str(year) + str(season).zfill(2)
                     season_ratio.year = year
                     season_ratio.season = season
@@ -2466,7 +2466,7 @@ def update_season_financial_ratio(request):
 
     return HttpResponse('update season financial ratio')
 
-def new_update_season_financial_ratio(request):
+def update_season_financial_ratio(request):
     print 'start update season financial ratio'
     if 'date' in request.GET:
         date = request.GET['date']
@@ -2491,7 +2491,6 @@ def new_update_season_financial_ratio(request):
     intersection = set(sisSymbol).intersection(set(sbsSymbol)).intersection(set(scfSymbol))
     diff = union.difference(intersection)
     print diff
-    intersection = ['8114']
     for stockID in intersection:
         has_sbs_prev = False
         try:
@@ -2505,7 +2504,7 @@ def new_update_season_financial_ratio(request):
         if SeasonBalanceSheet.objects.filter(year=prevSeasonYear, season=prevSeasonSeason, symbol=stockID):
             has_sbs_prev = True
             prev_sbs = SeasonBalanceSheet.objects.get(year=prevSeasonYear, season=prevSeasonSeason, symbol=stockID)
-        ratio = NewSeasonFinancialRatio()
+        ratio = SeasonFinancialRatio()
         ratio.year = year
         ratio.season = season
         ratio.symbol = stockID
@@ -2616,8 +2615,16 @@ def new_update_season_financial_ratio(request):
         #?? 金融負債比率 = 金融負債總額 / 資產總額（金融負債 = 短期借款 + 應付短期票券 + 應付公司債 + 長期借款，要付息的，單位：％）
         #未完成
         if sbs.total_assets and sbs.total_assets != 0:
+            numerator = Decimal(0)
             if sbs.total_short_term_borrowings:
-                ratio.financial_debt_ratio = sbs.total_short_term_borrowings / sbs.total_assets * 100
+                numerator += sbs.total_short_term_borrowings
+            if sbs.short_term_notes_and_bills_payable:
+                numerator += sbs.short_term_notes_and_bills_payable
+            if sbs.total_bonds_payable:
+                numerator += sbs.total_bonds_payable
+            if sbs.total_long_term_borrowings:
+                numerator += sbs.total_long_term_borrowings
+            ratio.financial_debt_ratio = numerator / sbs.total_assets * 100
         # 負債比率
         if sbs.total_assets and sbs.total_assets != 0:
             if sbs.total_liabilities:
@@ -2627,31 +2634,139 @@ def new_update_season_financial_ratio(request):
             if sis.profit_loss_from_continuing_operations_before_tax:
                 ratio.interest_cover = (scf.interest_expense + sis.profit_loss_from_continuing_operations_before_tax) / scf.interest_expense
         # ---經營能力---
-        # 應收帳款週轉率
-        #accounts_receivable_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 存貨週轉率
-        #inventory_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 固定資產週轉率
-        #fixed_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 總資產週轉率
-        #total_asset_turnover_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 應收帳款週轉率 = 營業收入合計 / 期初期末平均之應收票據淨額+應收帳款淨額+應收帳款－關係人淨額（單位：次／季）
+        if sis.total_operating_revenue and sis.total_operating_revenue != 0:
+            numerator = sis.total_operating_revenue
+            denumerator = Decimal(0)
+            if sbs.notes_receivable:
+                denumerator += sbs.notes_receivable
+            if sbs.accounts_receivable:
+                denumerator += sbs.accounts_receivable
+            if sbs.accounts_receivable_due_from_related_parties:
+                denumerator += sbs.accounts_receivable_due_from_related_parties
+            if has_sbs_prev:
+                if prev_sbs.notes_receivable:
+                    denumerator += prev_sbs.notes_receivable
+                if prev_sbs.accounts_receivable:
+                    denumerator += prev_sbs.accounts_receivable
+                if prev_sbs.accounts_receivable_due_from_related_parties:
+                    denumerator += prev_sbs.accounts_receivable_due_from_related_parties
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.accounts_receivable_turnover_ratio = 0
+            else:
+                ratio.accounts_receivable_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.accounts_receivable_turnover_ratio = 0
+        # 存貨週轉率 = 營業成本合計 / 期初期末平均之存貨（單位：次／季）
+        if sis.total_operating_cost and sis.total_operating_cost != 0:
+            numerator = sis.total_operating_cost
+            denumerator = Decimal(0)
+            if sbs.total_inventories:
+                denumerator += sbs.total_inventories
+            if has_sbs_prev:
+                if prev_sbs.total_inventories:
+                    denumerator += prev_sbs.total_inventories
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.inventory_turnover_ratio = 0
+            else:
+                ratio.inventory_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.inventory_turnover_ratio = 0
+        # 固定資產週轉率 = 營業收入合計 / 期初期末平均之不動產、廠房及設備（單位：次／季）
+        if sis.total_operating_cost and sis.total_operating_cost != 0:
+            numerator = sis.total_operating_cost
+            denumerator = Decimal(0)
+            if sbs.total_property_plant_and_equipment:
+                denumerator += sbs.total_property_plant_and_equipment
+            if has_sbs_prev:
+                if prev_sbs.total_property_plant_and_equipment:
+                    denumerator += prev_sbs.total_property_plant_and_equipment
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.fixed_asset_turnover_ratio = 0
+            else:
+                ratio.fixed_asset_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.fixed_asset_turnover_ratio = 0
+        # 總資產週轉率 = 營業收入合計 / 期初期末平均之資產總額（單位：次／季）
+        if sis.total_operating_revenue and sis.total_operating_revenue != 0:
+            numerator = sis.total_operating_revenue
+            denumerator = Decimal(0)
+            if sbs.total_assets:
+                denumerator += sbs.total_assets
+            if has_sbs_prev:
+                if prev_sbs.total_assets:
+                    denumerator += prev_sbs.total_assets
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.total_asset_turnover_ratio = 0
+            else:
+                ratio.total_asset_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.total_asset_turnover_ratio = 0
         # ---黃國華指標---
-        # 存貨營收比
-        #inventory_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 備供出售比率
-        #available_for_sale_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 無形資產比率
-        #intangible_asset_to_equity_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 未折舊比率
-        #undepreciation_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 折舊負擔比率
-        #depreciation_to_sales_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 營業利益佔稅前淨利比率
-        #operating_profit_to_net_profit_before_tax_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-        # 現金股息配發率
-        #payout_ratio = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        # 存貨營收比 = 存貨 / 營業收入合計（評估存貨要多少季可以消化完畢，單位：季）
+        if sis.total_operating_revenue and sis.total_operating_revenue != 0:
+            if sbs.total_inventories:
+                ratio.inventory_sales_ratio = sbs.total_inventories / sis.total_operating_revenue
+            else:
+                ratio.inventory_sales_ratio = 0
+        else:
+            ratio.inventory_sales_ratio = 0
+        # 備供出售比率 = 備供出售金融資產－非流動淨額 / 權益總額（單位：％）
+        if sbs.total_equity and sbs.total_equity != 0:
+            if sbs.non_current_available_for_sale_financial_assets:
+                ratio.available_for_sale_to_equity_ratio = sbs.non_current_available_for_sale_financial_assets / sbs.total_equity * 100
+            else:
+                ratio.available_for_sale_to_equity_ratio = 0
+        else:
+            ratio.available_for_sale_to_equity_ratio = 0
+        # 無形資產比率 = 無形資產 / 權益總額（單位：％）
+        if sbs.total_equity and sbs.total_equity != 0:
+            if sbs.intangible_assets:
+                ratio.intangible_asset_to_equity_ratio = sbs.intangible_assets / sbs.total_equity * 100
+            else:
+                ratio.intangible_asset_to_equity_ratio = 0
+        else:
+            ratio.intangible_asset_to_equity_ratio = 0
+        # 折舊負擔比率 = 折舊費用 / 營業收入合計（評估營收必須拿多少來攤提折舊，單位：％）
+        if sis.total_operating_revenue and sis.total_operating_revenue != 0:
+            if scf.depreciation_expense:
+                ratio.depreciation_to_sales_ratio = scf.depreciation_expense / sis.total_operating_revenue
+            else:
+                ratio.depreciation_to_sales_ratio = 1000
+        else:
+            ratio.depreciation_to_sales_ratio = 1000
+        # 營業利益佔稅前淨利比率 = 營業利益（損失） / 稅前淨利（淨損）（單位：％）
+        if sis.profit_loss_from_continuing_operations_before_tax and sis.profit_loss_from_continuing_operations_before_tax != 0:
+            numerator = Decimal(0)
+            if sis.net_operating_income_loss:
+                numerator += sis.net_operating_income_loss
+            # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替
+            elif sis.profit_loss_from_continuing_operations_before_tax:
+                numerator += sis.profit_loss_from_continuing_operations_before_tax
+            ratio.operating_profit_to_net_profit_before_tax_ratio = numerator / sis.profit_loss_from_continuing_operations_before_tax
+        # 現金股息配發率(季資料忽略此項目)
         # 營業稅率
-        #tax_rate = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+        if sis.profit_loss_from_continuing_operations_before_tax and sis.profit_loss_from_continuing_operations_before_tax != 0:
+            if sis.total_tax_expense:
+                if sis.profit_loss_from_continuing_operations_before_tax < 0:
+                    ratio.tax_rate = -sis.total_tax_expense / sis.profit_loss_from_continuing_operations_before_tax
+                else:
+                    ratio.tax_rate = sis.total_tax_expense / sis.profit_loss_from_continuing_operations_before_tax
+            else:
+                ratio.tax_rate = 0
         ratio.save()
-    return HttpResponse('hello')
+        # print (ratio.symbol + " season financial ratio saved")
+    cnt = SeasonFinancialRatio.objects.filter(year=year, season=season).count()
+    lastDate = SeasonFinancialRatio.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = SeasonFinancialRatio.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "sfr", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
+    updateManagement.save()
+    json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season cashflow statements on " + str(year) + "-" + str(season)})
+    return HttpResponse(json_obj, content_type="application/json")
     

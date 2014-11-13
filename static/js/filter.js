@@ -48,60 +48,46 @@ String.prototype.format = function() {
          }
     }
 
-    ConditionArray = [];
+    ConditionDic = {};
     function bind_button_event(){
         $('.filter_choice').html('&nbsp;').load('/filter_choice/', function(){
         });
         $('.m_revenue_yoy_button').click(function() {
+            var className = 'RevenueYoY'
             if (isInt($('.m_revenue_yoy_cnt').val()) && isInt($('.m_revenue_yoy_match_cnt').val()) &&isInt($('.m_revenue_yoy_percent').val())){
                 var conditionText = '最近' + $('.m_revenue_yoy_cnt').val() + '個月內有' + $('.m_revenue_yoy_match_cnt').val() + '個月營收年增率大於' + $('.m_revenue_yoy_percent').val() + '%';
-                var choiceID = "{0}_{1}_{2}_{3}".format($(this).attr('class'),$('.m_revenue_yoy_cnt').val(),$('.m_revenue_yoy_match_cnt').val(),$('.m_revenue_yoy_percent').val());
+                var conditionID = "{0}_{1}_{2}_{3}".format(className,$('.m_revenue_yoy_cnt').val(),$('.m_revenue_yoy_match_cnt').val(),$('.m_revenue_yoy_percent').val());
                 var str = '<tr class="danger"><td>' + conditionText;
-                str = str + '<button type="submit" id="' + choiceID + '" class="btn btn-primary btn-xs add_button"><span class="glyphicon glyphicon-minus"></span></button></td></tr>';
+                str = str + '<button type="submit" class="btn btn-primary btn-xs add_button"><span class="glyphicon glyphicon-minus"></span></button></td></tr>';
                 var $obj = $(str);
+                $obj.attr('id', conditionID)
+                var params = {};
+                params['class'] = className;
+                params['timetype'] = 'month'
+                params['overunder'] = 'gte'
+                params['cnt'] = $('.m_revenue_yoy_cnt').val();
+                params['matchcnt'] = $('.m_revenue_yoy_match_cnt').val();
+                params['value'] = $('.m_revenue_yoy_percent').val();
+                ConditionDic[conditionID] = params;
                 $('.filter_choice_table').append($obj);
                 $obj.click(function(){
+                    var id = $(this).attr('id');
+                    delete ConditionDic[id];
                     $(this).remove();
                 });
             } else {
                 console.log("error input");
             }
         });
-        $('button[id^=add-]').click(function(){
-            var condition = $(this).attr('id').split('-')[1];
-            var title = $(this).attr('title');
-            //組條件字串
-            var conditions = {};
-            var timetype, overunder;
-            conditions['class'] = condition;
-            $('[id^=' + condition + '-]').each(function(){
-                conditions[$(this).attr('id').split('-')[1]] = $(this).val();
-            });
-            if(conditions['timetype'] =='month'){
-                timetype = '個月';
-            }else if(conditions['timetype'] == 'season'){
-                timetype = '季';
-            }
 
-            if(conditions['overunder'] == 'gte'){
-                overunder = '大於';
-            }else{
-                overunder = '小於';
-            }
-            ConditionArray.push(conditions);
-            //條件 字串
-            var conditionStr = conditions['cnt'] + timetype + '內有' + conditions['matchcnt'] + timetype + title + overunder + conditions['value'];
-
-            //將選擇的條件區塊放到div#fileter_content
-            var cloneObj = $(this).clone();
-            var newID = $(this).attr('id') + '-select';
-            cloneObj.attr('id', newID).attr('class','btn btn-success').css({'width':'20em', 'margin':'0.5em'}).text(conditionStr).appendTo('#filter_content');
-        });
     }
 
     
 
     function start_filter() {
+        var ConditionArray = Object.keys(ConditionDic).map(function(key){
+            return ConditionDic[key];
+        });
         if (ConditionArray.length > 0){
             var jsonStr = JSON.stringify(ConditionArray);
             $.ajax({

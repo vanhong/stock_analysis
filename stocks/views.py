@@ -159,7 +159,7 @@ def update_month_revenue(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " month_revenues")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " monthrevenue on " + str(year) + "-" + str(month)})
+                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " month revenue on " + str(year) + "-" + str(month)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def check_month_revenue(request):
@@ -287,7 +287,7 @@ def update_season_revenue(request):
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
-                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " seasonrevenue on " + str(year) + "-" + str(season)})
+                                 "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season revenue on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
 
 def old_update_season_revenue(request):
@@ -416,6 +416,7 @@ def update(request):
     seasonIncomeStatement = {}
     seasonBalanceSheet = {}
     seasonCashflow = {}
+    seasonFinancialRatio = {}
     if all_data.filter(name='stockID').count() > 0:
         data = UpdateManagement.objects.get(name='stockID')
         stockID['name'] = data.name
@@ -453,10 +454,17 @@ def update(request):
         seasonCashflow['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
         seasonCashflow['notes'] = data.notes
 
+    if all_data.filter(name='sfr').count() > 0:
+        data = UpdateManagement.objects.get(name='sfr')
+        seasonFinancialRatio['updateDate'] = data.last_update_date.strftime("%y-%m-%d")
+        seasonFinancialRatio['dataDate'] = data.last_data_date.strftime("%y-%m-%d")
+        seasonFinancialRatio['notes'] = data.notes
+
+
     return render_to_response('analysis/update.html', 
             {'stockid': stockID, 'mr': monthRevenue, 'sr': seasonRevenue,
              'sis': seasonIncomeStatement, 'sbs' : seasonBalanceSheet,
-             'scf': seasonCashflow}, context_instance=RequestContext(request))
+             'scf': seasonCashflow, 'sfr' : seasonFinancialRatio}, context_instance=RequestContext(request))
 
 
 
