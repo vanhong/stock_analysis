@@ -1,4 +1,5 @@
-# Create your views here.
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import urllib
 import urllib2
 from django.http import HttpResponse
@@ -13,6 +14,19 @@ from stocks.models import StockId
 from price.models import *
 from bs4 import BeautifulSoup
 import pdb
+
+def show_price(request):
+	# a=月份-1(1月:00)
+	# b=日期(2日:02)
+	# c=年
+	# d=月份-1(1月:00)
+	# e=日期(2日:02)
+	# f=年
+	url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=d&ignore=.csv'
+	response = urllib.urlopen(url)
+	data = response.read()
+	array = string.split(data, '\n')
+	return HttpResponse(array)
 
 def update_price(request):
 	begin = request.GET['begin']
@@ -29,7 +43,13 @@ def update_price(request):
 		if no < startNo:
 			print no + 'continue'
 			continue
-		url = 'http://ichart.yahoo.com/table.csv?s={0}.tw&a=01&b=03&c={1}&d=11&e=30&f={2}&g=5&ignore=.csv'.format(no, begin, end)
+	# a=月份-1(1月:00)
+	# b=日期(2日:02)
+	# c=年
+	# d=月份-1(1月:00)
+	# e=日期(2日:02)
+	# f=年
+		url = 'http://ichart.yahoo.com/table.csv?s={0}.two&a=00&b=31&c={1}&d=12&e=31&f={2}&g=5&ignore=.csv'.format(no, begin, end)
 		response = urllib.urlopen(url)
 		data = response.read()
 
@@ -64,13 +84,4 @@ def update_price(request):
 			except :
 				print "Exception:", sys.exc_info()[0]
 				continue
-
-		#print the_page
-		# q(quit)：離開
-		# p [some variable](print)：秀某個變數的值
-		# n(next line)：下一行
-		# c(continue)：繼續下去
-		# s(step into)：進入函式
-		# r(return): 到本函式的return敘述式
-		# l(list)：秀出目前所在行號
-		# !： 改變變數的值
+	return HttpResponse('update_price')

@@ -107,7 +107,8 @@ def update_month_revenue(request):
     market = ['otc', 'sii']
     for i in range(len(market)):
         # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
-        url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
+        url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
+        print url
         req = urllib2.Request(url)
         try:
             response = urllib2.urlopen(req)

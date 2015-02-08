@@ -67,7 +67,7 @@ urlpatterns += patterns('stocks.views',
 
 urlpatterns += patterns('financial.views',
     (r'^update_season_financial_ratio/$', 'update_season_financial_ratio'),
-    (r'^new_update_season_financial_ratio/$', 'new_update_season_financial_ratio'),
+    (r'^new_update_season_financial_ratio/$', 'update_season_financial_ratio'),
     (r'^update_year_financial_ratio/$', 'update_year_financial_ratio'),
     (r'^update_season_income_statement/$', 'update_season_income_statement'),
     (r'^update_year_income_statement/$', 'update_year_income_statement'),
@@ -111,6 +111,11 @@ urlpatterns += patterns('filter.views',
 urlpatterns += patterns('chip.views',
     url(r'^update_corp_trade/$', 'update_corp_trade'),
     url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
+)
+
+urlpatterns += patterns('price.views',
+    url(r'^update_price/$', 'update_price'),
+    url(r'^show_price/$', 'show_price'),
 )
 
 urlpatterns += patterns('reaserch.views',
