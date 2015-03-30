@@ -51,7 +51,6 @@ def update_price_by_stockid(request):
 	response = urllib.urlopen(url)
 	data = response.read()
 	array = string.split(data, '\n')
-	pdb.set_trace()
 	for line in array:
 		try:
 			if not line:
