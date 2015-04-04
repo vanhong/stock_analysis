@@ -65,14 +65,14 @@ def update_price_by_stockid(request):
 				continue
 			priceObj = Price()
 			priceObj.surrogate_key = stockID + '_' + dataArr[0].replace('-','')
-			priceObj.trade_date = dataArr[0].replace('-','')
+			priceObj.date = datetime.strptime(dataArr[0], "%Y-%m-%d").date()
 			priceObj.symbol = stockID
-			priceObj.openp = dataArr[1]
-			priceObj.highp = dataArr[2]
-			priceObj.lowp = dataArr[3]
-			priceObj.closep = dataArr[4]
-			priceObj.quantity = dataArr[5]
-			priceObj.adjp = dataArr[6]
+			priceObj.open_price = dataArr[1]
+			priceObj.high_price = dataArr[2]
+			priceObj.low_price = dataArr[3]
+			priceObj.close_price = dataArr[4]
+			priceObj.volume = dataArr[5]
+			priceObj.adj_close_price = dataArr[6]
 			priceObj.save()
 		except :
 			print "Exception:", sys.exc_info()[0]
