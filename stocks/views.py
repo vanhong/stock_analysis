@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
+# -*- coding:utf-8 -*-
 
 import urllib, urllib2, datetime
 from urllib2 import URLError, HTTPError
@@ -33,7 +33,7 @@ def update_stock_id(request):
             return HttpResponse("Update failed")
         req = urllib2.Request(url)
         response = urllib2.urlopen(req)
-        soup = BeautifulSoup(response, from_encoding="big-5")
+        soup = BeautifulSoup(response, from_encoding="cp950")
         datas = soup.find('tr')
         while(datas.next_sibling):
             data = datas.next_sibling.td.next
@@ -42,6 +42,7 @@ def update_stock_id(request):
                    data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVTFR':
                     symbol,name = data.split()
                     print symbol
+                    #name = ''.join([chr(ord(x)) for x in name]).decode('big5')
                     listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
                     market_type = data.next.next_sibling.next_sibling.string.split()[0]
                     company_type = data.next.next_sibling.next_sibling.next_sibling.string.split()[0]
