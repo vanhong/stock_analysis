@@ -12,6 +12,7 @@ from datetime import *
 from decimal import Decimal
 from stocks.models import StockId
 from price.models import *
+from price.pivotal_state import *
 from bs4 import BeautifulSoup
 import pdb
 
@@ -80,7 +81,6 @@ def update_price_by_stockid(request):
 
 	return HttpResponse('update {0} history price'.format(stockID))
 
-
 def update_price(request):
 	begin = request.GET['begin']
 	end = request.GET['end']
@@ -138,3 +138,13 @@ def update_price(request):
 				print "Exception:", sys.exc_info()[0]
 				continue
 	return HttpResponse('update_price')
+
+def update_pirvtal_state(request):
+	stock_id = '1707'
+	stock_prices = Price.objects.filter(symbol=stock_id).order_by('date')[0]
+	pivotal_state = InitPivotalState(date=stock_prices.date.strftime('%Y-%m-%d'), price=0, symbol='1707', prev_state='init_pivotal_state', upward_trend=0 ,\
+	                                 downward_trend=0, natural_reaction=0, natural_rally=0, secondary_rally=0, secondary_reaction=0)
+	pivotal_state = pivotal_state.next(stock_prices.close_price, stock_prices.date)
+	pivotal_state.save_to_db()
+
+	return HttpResponse('update privtal state')
