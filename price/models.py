@@ -19,8 +19,8 @@ class PivotalPoint(models.Model):
     date = models.DateField(db_index=True)
     symbol = models.CharField(max_length=10, db_index=True)
     price = models.DecimalField(max_digits=20, decimal_places=2, null=True)
-    state = models.CharField(max_length=20)
-    prev_state = models.CharField(max_length=20)
+    state = models.CharField(max_length=50)
+    prev_state = models.CharField(max_length=50)
     # 上升趨勢關鍵點
     upward_trand_point = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 自然回檔關鍵點

@@ -35,7 +35,7 @@ def update_price_by_stockid(request):
 		begin = datetime.strptime(beginValue, "%Y%m%d")
 	except:
 		today = datetime.today()
-		begin = date(today.year-1, today.month, today.day)
+		begin = date(2008, 1, 1)
 	end = datetime.today()
 	stockID = request.GET['stockid']
 	if not StockId.objects.filter(symbol=stockID):
@@ -140,11 +140,12 @@ def update_price(request):
 	return HttpResponse('update_price')
 
 def update_pirvtal_state(request):
-	stock_id = '1707'
-	stock_prices = Price.objects.filter(symbol=stock_id).order_by('date')[0]
-	pivotal_state = InitPivotalState(date=stock_prices.date.strftime('%Y-%m-%d'), price=0, symbol='1707', prev_state='init_pivotal_state', upward_trend=0 ,\
+	stock_id = '1582'
+	stock_prices = Price.objects.filter(symbol=stock_id).order_by('date')
+	pivotal_state = InitPivotalState(date=stock_prices[0].date.strftime('%Y-%m-%d'), price=0, symbol=stock_id, prev_state='init_pivotal_state', upward_trend=0 ,\
 	                                 downward_trend=0, natural_reaction=0, natural_rally=0, secondary_rally=0, secondary_reaction=0)
-	pivotal_state = pivotal_state.next(stock_prices.close_price, stock_prices.date)
-	pivotal_state.save_to_db()
+	for stock_price in stock_prices:
+		pivotal_state = pivotal_state.next(stock_price.close_price, stock_price.date.strftime('%Y-%m-%d'))
+		pivotal_state.save_to_db()
 
-	return HttpResponse('update privtal state')
+	return HttpResponse('update {0} privtal state'.format(stock_id))
