@@ -34,7 +34,6 @@ def update_price_by_stockid(request):
 		beginValue = request.GET['begin']
 		begin = datetime.strptime(beginValue, "%Y%m%d")
 	except:
-		today = datetime.today()
 		begin = date(2008, 1, 1)
 	end = datetime.today()
 	stockID = request.GET['stockid']
@@ -82,6 +81,54 @@ def update_price_by_stockid(request):
 	return HttpResponse('update {0} history price'.format(stockID))
 
 def update_price(request):
+	try:
+		beginValue = request.GET['begin']
+		begin = datetime.strptime(beginValue, "%Y%m%d")
+	except:
+		begin = date(2008, 1, 1)
+	end = datetime.today()
+	stock_ids = StockId.objects.all()
+	for stock in stock_ids:
+		if stock.market_type == u"上市":
+			inputStock = stock.symbol + ".TW"
+		else:
+			inputStock = stock.symbol + ".TWO"
+		url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=d&ignore=.csv'\
+				.format(inputStock, "%02d" %(begin.month-1), begin.day, begin.year, "%02d" %(end.month-1), end.day, end.year)
+		response = urllib.urlopen(url)
+		data = response.read()
+		array = string.split(data, '\n')
+		for line in array:
+			try:
+				if not line:
+					continue
+				if 'Sorry' in line:
+					break
+				if 'doctype html public' in line:
+					break
+				dataArr = line.split(',')
+				if dataArr[0] == 'Date':
+					continue
+				priceObj = Price()
+				priceObj.surrogate_key = stock.symbol + '_' + dataArr[0].replace('-','')
+				priceObj.date = datetime.strptime(dataArr[0], "%Y-%m-%d").date()
+				priceObj.symbol = stock.symbol
+				priceObj.open_price = dataArr[1]
+				priceObj.high_price = dataArr[2]
+				priceObj.low_price = dataArr[3]
+				priceObj.close_price = dataArr[4]
+				priceObj.volume = dataArr[5]
+				priceObj.adj_close_price = dataArr[6]
+				priceObj.save()
+			except :
+				print "Exception:", sys.exc_info()[0]
+				continue
+		print ('update {0} history price'.format(stock.symbol))
+
+	return HttpResponse('update all history price')
+
+
+def old_update_price(request):
 	begin = request.GET['begin']
 	end = request.GET['end']
 	startNo = 0
