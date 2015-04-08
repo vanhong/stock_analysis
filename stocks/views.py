@@ -24,34 +24,40 @@ class ObjStock:
         return u'%s %s' % (self.symbol, self.name)
 
 def update_stock_id(request):
-    StockType = [2, 4]
+    market_type = [2, 4]
     cnt = 0
-    for i in xrange(0, len(StockType)):
-        url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(StockType[i])
+    StockId.objects.all().delete()
+    for mkt in market_type:
+        url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(mkt)
         webcode = urllib.urlopen(url)
         if webcode.code != 200:
             return HttpResponse("Update failed")
         req = urllib2.Request(url)
         response = urllib2.urlopen(req)
-        soup = BeautifulSoup(response, from_encoding="cp950")
+        html = response.read()
+        soup = BeautifulSoup(html.decode("cp950", "ignore"))
         datas = soup.find('tr')
+        if mkt == 2:
+            market = 'sii'
+        elif mkt == 4:
+            market = 'otc'
         while(datas.next_sibling):
             data = datas.next_sibling.td.next
             try:
                 if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR' or\
                    data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVTFR':
                     symbol,name = data.split()
-                    print symbol
-                    #name = ''.join([chr(ord(x)) for x in name]).decode('big5')
+                    # name = ''.join([chr(ord(x)) for x in name]).decode('big5')
                     listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
-                    market_type = data.next.next_sibling.next_sibling.string.split()[0]
                     company_type = data.next.next_sibling.next_sibling.next_sibling.string.split()[0]
-                    stockid = StockId(symbol = symbol, name = name, market_type = market_type,
+                    stockid = StockId(symbol = symbol, name = name, market_type = market,
                                       company_type = company_type, listing_date = listing_date)
                     stockid.save()
                     cnt += 1
+                    print symbol
                 datas = datas.next_sibling
             except:
+                # print "update has except"
                 datas = datas.next_sibling
     
     updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
