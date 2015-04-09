@@ -32,34 +32,29 @@ def update_stock_id(request):
         webcode = urllib.urlopen(url)
         if webcode.code != 200:
             return HttpResponse("Update failed")
-        req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
-        html = response.read()
-        soup = BeautifulSoup(html.decode("cp950", "ignore"))
-        datas = soup.find('tr')
         if mkt == 2:
             market = 'sii'
         elif mkt == 4:
             market = 'otc'
-        while(datas.next_sibling):
-            data = datas.next_sibling.td.next
-            try:
-                if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR' or\
-                   data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVTFR':
-                    symbol,name = data.split()
-                    # name = ''.join([chr(ord(x)) for x in name]).decode('big5')
-                    listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
-                    company_type = data.next.next_sibling.next_sibling.next_sibling.string.split()[0]
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        html = response.read()
+        soup = BeautifulSoup(html.decode("cp950", "ignore"))
+        trs = soup.find_all('tr')
+        for tr in trs:
+            tds = tr.find_all('td')
+            if len(tds) == 7:
+                if tds[5].string == 'ESVUFR' or tds[5].string == 'ESVTFR':
+                    symbol, name = tds[0].string.split()
+                    listing_date = datetime.datetime.strptime(tds[2].string.strip(), "%Y/%m/%d").date()
+                    company_type = tds[4].string.strip()
                     stockid = StockId(symbol = symbol, name = name, market_type = market,
                                       company_type = company_type, listing_date = listing_date)
-                    stockid.save()
-                    cnt += 1
-                    print symbol
-                datas = datas.next_sibling
-            except:
-                # print "update has except"
-                datas = datas.next_sibling
-    
+                    if symbol is not None:
+                        stockid.save()
+                        cnt += 1
+                        print symbol
+
     updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
                                         last_data_date = datetime.date.today(), notes="There is " + str(cnt) + " stockIds")
     updateManagement.save()
