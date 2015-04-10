@@ -29,31 +29,36 @@ def update_stock_id(request):
     StockId.objects.all().delete()
     for mkt in market_type:
         url = "http://isin.twse.com.tw/isin/C_public.jsp?strMode=" + str(mkt)
-        webcode = urllib.urlopen(url)
-        if webcode.code != 200:
-            return HttpResponse("Update failed")
-        if mkt == 2:
-            market = 'sii'
-        elif mkt == 4:
-            market = 'otc'
-        req = urllib2.Request(url)
-        response = urllib2.urlopen(req)
-        html = response.read()
-        soup = BeautifulSoup(html.decode("cp950", "ignore"))
-        trs = soup.find_all('tr')
-        for tr in trs:
-            tds = tr.find_all('td')
-            if len(tds) == 7:
-                if tds[5].string == 'ESVUFR' or tds[5].string == 'ESVTFR':
-                    symbol, name = tds[0].string.split()
-                    listing_date = datetime.datetime.strptime(tds[2].string.strip(), "%Y/%m/%d").date()
-                    company_type = tds[4].string.strip()
-                    stockid = StockId(symbol = symbol, name = name, market_type = market,
-                                      company_type = company_type, listing_date = listing_date)
-                    if symbol is not None:
-                        stockid.save()
-                        cnt += 1
-                        print symbol
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        req = urllib2.Request(url, None, headers)
+        try:
+            response = urllib2.urlopen(req)
+        except URLError, e:
+            if hasattr(e, "reason"):
+                print(mkt + " not update. Reason:", e.code)
+            elif hasattr(e, "code"):
+                print(mkt + " not update. Error code:", e.code)
+        else:
+            if mkt == 2:
+                market = 'sii'
+            elif mkt == 4:
+                market = 'otc'
+            html = response.read()
+            soup = BeautifulSoup(html.decode("cp950", "ignore"))
+            trs = soup.find_all('tr')
+            for tr in trs:
+                tds = tr.find_all('td')
+                if len(tds) == 7:
+                    if tds[5].string == 'ESVUFR' or tds[5].string == 'ESVTFR':
+                        symbol, name = tds[0].string.split()
+                        listing_date = datetime.datetime.strptime(tds[2].string.strip(), "%Y/%m/%d").date()
+                        company_type = tds[4].string.strip()
+                        stockid = StockId(symbol = symbol, name = name, market_type = market,
+                                          company_type = company_type, listing_date = listing_date)
+                        if symbol is not None:
+                            stockid.save()
+                            cnt += 1
+                            print symbol
 
     updateManagement = UpdateManagement(name = "stockID", last_update_date = datetime.date.today(), 
                                         last_data_date = datetime.date.today(), notes="There is " + str(cnt) + " stockIds")
@@ -61,6 +66,12 @@ def update_stock_id(request):
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                            "dataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
     return HttpResponse(json_obj, content_type="application/json")
+
+def last_month(day):
+    if day.month == 1:
+        return day.year - 1, 12
+    else:
+        return day.year, day.month - 1
 
 def last_season(day):
     year = day.year
@@ -88,71 +99,56 @@ def test_month_revenue(request):
     return HttpResponse(lastDate['date__max'])
 
 def update_month_revenue(request):
-    today = datetime.date.today() 
-    year = today.year
-    month = today.month
-    if month == 1:
-        year = year - 1
-        month = 12
-    else:
-        month = month - 1
-    if 'date' in request.GET:
-        date = request.GET['date']
-        if date != '':
-            try:
-                str_year, str_month = date.split('-')
-                year = int(str_year)
-                month = int(str_month)
-            except:
-                json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm'"})
-                return HttpResponse(json_obj, content_type="application/json")
-    market = ['otc', 'sii']
-    for i in range(len(market)):
-        # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
-        url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
-        print url
-        req = urllib2.Request(url)
+    today = datetime.date.today()
+    year, month = last_month(today)
+    if "date" in request.GET:
+        date = request.GET["date"]
+        try:
+            str_year, str_month = date.split("-")
+            year = int(str_year)
+            month = int(str_month)
+        except:
+            json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm'"})
+            return HttpResponse(json_obj, content_type="application/json")
+    market = ["otc", "sii"]
+    for mkt in market:
+        url = "http://mops.twse.com.tw/nas/t21/" + mkt + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        req = urllib2.Request(url, None, headers)
         try:
             response = urllib2.urlopen(req)
-        except URLError as e:
-            if hasattr(e, 'reason'):
-                json_obj = json.dumps({"notes": "Reason: " + e.reason})
-                return HttpResponse(json_obj, content_type="application/json")
-            elif hasattr(e, 'code'):
-                json_obj = json.dumps({"notes": "Error code:" + e.code})
-                return HttpResponse(json_obj, content_type="application/json")
-        soup = BeautifulSoup(response, from_encoding="utf-8")
-        datas = soup.find_all('td', {'align':'center'})
-        for data in datas:
-            if data.string:
-                if data.string != '-':
+        except URLError, e:
+            if hasattr(e, "reason"):
+                print(mkt + " not update. Reason:", e.code)
+            elif hasattr(e, "code"):
+                print(mkt + " not update. Error code:", e.code)
+        else:
+            html = response.read()
+            soup = BeautifulSoup(html.decode("cp950", "ignore"))
+            trs = soup.find_all("tr", {"align": "right"})
+            for tr in trs:
+                tds = tr.find_all('td')
+                if (len(tds) == 11):
                     revenue = MonthRevenue()
-                    revenue.surrogate_key = data.string + "_" + str(year) + str(month).zfill(2)
+                    revenue.surrogate_key = tds[0].string.strip() + "_" + str(year) + str(month).zfill(2)
                     revenue.year = year
                     revenue.month = month
                     revenue.date = datetime.date(year, month, 1)
-                    revenue.symbol = data.string
-                    revenue_data = data.next_sibling.next_sibling
-                    if is_decimal(st_to_decimal(revenue_data.string)):
-                        revenue.revenue = revenue_data.string.strip().replace(',', '')
-                    last_year_revenue_data = revenue_data.next_sibling.next_sibling
-                    if is_decimal(last_year_revenue_data.string.strip().replace(',', '')):
-                        revenue.last_year_revenue = last_year_revenue_data.string.strip().replace(',', '')
-                    month_growth_rate_data = last_year_revenue_data.next_sibling
-                    if is_decimal(month_growth_rate_data.string.strip().replace(',', '')):
-                        revenue.month_growth_rate = month_growth_rate_data.string.strip().replace(',', '')
-                    year_growth_rate_data = month_growth_rate_data.next_sibling
-                    if is_decimal(year_growth_rate_data.string.strip().replace(',', '')):
-                        revenue.year_growth_rate = year_growth_rate_data.string.strip().replace(',', '')
-                    acc_revenue_data = year_growth_rate_data.next_sibling
-                    if is_decimal(acc_revenue_data.string.strip().replace(',', '')):
-                        revenue.acc_revenue = acc_revenue_data.string.strip().replace(',', '')
-                    last_acc_revenue_data = acc_revenue_data.next_sibling
-                    if is_decimal(last_acc_revenue_data.string.strip().replace(',', '')):
-                        revenue.last_acc_revenue = last_acc_revenue_data.string.strip().replace(',', '')
-                    acc_year_growth_rate_data = last_acc_revenue_data.next_sibling
-                    if is_decimal(acc_year_growth_rate_data.string.strip().replace(',', '')):
-                        revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
+                    revenue.symbol = tds[0].string.strip()
+                    if is_decimal(st_to_decimal(tds[2].string.strip())):
+                        revenue.revenue = tds[2].string.strip().replace(',', '')
+                    if is_decimal(tds[4].string.strip().replace(',', '')):
+                        revenue.last_year_revenue = tds[4].string.strip().replace(',', '')
+                    if is_decimal(tds[5].string.strip().replace(',', '')):
+                        revenue.month_growth_rate = tds[5].string.strip().replace(',', '')
+                    if is_decimal(tds[6].string.strip().replace(',', '')):
+                        revenue.year_growth_rate = tds[6].string.strip().replace(',', '')
+                    if is_decimal(tds[7].string.strip().replace(',', '')):
+                        revenue.acc_revenue = tds[7].string.strip().replace(',', '')
+                    if is_decimal(tds[8].string.strip().replace(',', '')):
+                        revenue.last_acc_revenue = tds[8].string.strip().replace(',', '')
+                    if is_decimal(tds[9].string.strip().replace(',', '')):
+                        revenue.acc_year_growth_rate = tds[9].string.strip().replace(',', '')
                     print (revenue.symbol)
                     revenue.save()
     cnt = MonthRevenue.objects.filter(year=year, month=month).count()
@@ -164,6 +160,7 @@ def update_month_revenue(request):
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                                  "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " month revenue on " + str(year) + "-" + str(month)})
     return HttpResponse(json_obj, content_type="application/json")
+
 
 def check_month_revenue(request):
     if 'date' in request.GET:
