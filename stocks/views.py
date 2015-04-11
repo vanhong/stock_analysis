@@ -13,7 +13,7 @@ from decimal import Decimal
 from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue, UpdateManagement
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum, Max
-from core.utils import st_to_decimal
+from core.utils import st_to_decimal, last_month, last_season, is_decimal, month_between
 import pdb
 
 class ObjStock:
@@ -51,6 +51,8 @@ def update_stock_id(request):
                 if len(tds) == 7:
                     if tds[5].string == 'ESVUFR' or tds[5].string == 'ESVTFR':
                         symbol, name = tds[0].string.split()
+                        symbol = symbol.strip()
+                        name = name.strip()
                         listing_date = datetime.datetime.strptime(tds[2].string.strip(), "%Y/%m/%d").date()
                         company_type = tds[4].string.strip()
                         stockid = StockId(symbol = symbol, name = name, market_type = market,
@@ -66,33 +68,6 @@ def update_stock_id(request):
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                            "dataDate": updateManagement.last_data_date.strftime("%y-%m-%d"), "notes": updateManagement.notes})
     return HttpResponse(json_obj, content_type="application/json")
-
-def last_month(day):
-    if day.month == 1:
-        return day.year - 1, 12
-    else:
-        return day.year, day.month - 1
-
-def last_season(day):
-    year = day.year
-    month = day.month
-    if month <= 3:
-        season = 4
-        year -= 1
-    elif month >= 4 and month <= 6:
-        season = 1
-    elif month >= 7 and month <= 9:
-        season = 2
-    elif month >= 10:
-        season = 3
-    return year, season
-
-def is_decimal(s):
-    try:
-        Decimal(s)
-    except:
-        return False
-    return True
 
 def test_month_revenue(request):
     lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
@@ -161,7 +136,6 @@ def update_month_revenue(request):
                                  "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " month revenue on " + str(year) + "-" + str(month)})
     return HttpResponse(json_obj, content_type="application/json")
 
-
 def check_month_revenue(request):
     if 'date' in request.GET:
         date = request.GET['date']
@@ -205,9 +179,6 @@ def check_month_revenue(request):
     json_obj = json.dumps({"notes": "check month revenue ok"})
 
     return HttpResponse(json_obj, content_type="application/json")
-
-def month_between(startDate, endDate):
-    return (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
 
 def new_update_dividendupdate_season_revenue(request):
     return HttpResponse("update season revenue")

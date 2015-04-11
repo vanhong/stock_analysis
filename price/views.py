@@ -3,6 +3,7 @@
 import urllib
 import urllib2
 from django.http import HttpResponse
+from django.db.models import Min
 from HTMLParser import HTMLParser
 import time
 import StringIO
@@ -32,21 +33,25 @@ def show_price(request):
 def update_price_by_stockid(request):
 	try:
 		beginValue = request.GET['begin']
-		begin = datetime.strptime(beginValue, "%Y%m%d")
+		input_begin = datetime.strptime(beginValue, "%Y%m%d")
 	except:
-		begin = date(2008, 1, 1)
+		input_begin = date(2008, 1, 1)
+	begin = input_begin
+	# today - 1
+	# end = datetime.today() - datetime.timedelta(days=1)
 	end = datetime.today()
 	stockID = request.GET['stockid']
 	if not StockId.objects.filter(symbol=stockID):
 		return HttpResponse("{0} is not exist".format(stockID))
+	# check first day 2008-01-01
 	if Price.objects.filter(surrogate_key=stockID+"_"+begin.strftime("%Y%m%d")) and Price.objects.filter(surrogate_key=stockID+"_"+end.strftime("%Y%m%d")):
 		return HttpResponse("{0}'s price already exist".format(stockID))
 	stock = StockId.objects.get(symbol=stockID)
-	if stock.market_type == u"上市":
+	if stock.market_type == u"sii":
 		inputStock = stockID + ".TW"
 	else:
 		inputStock = stockID + ".TWO"
-	url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=d&ignore=.csv'\
+	url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=w&ignore=.csv'\
 		  .format(inputStock, "%02d" %(begin.month-1), begin.day, begin.year, "%02d" %(end.month-1), end.day, end.year)
 	response = urllib.urlopen(url)
 	data = response.read()
@@ -83,17 +88,18 @@ def update_price_by_stockid(request):
 def update_price(request):
 	try:
 		beginValue = request.GET['begin']
-		begin = datetime.strptime(beginValue, "%Y%m%d")
+		input_begin = datetime.strptime(beginValue, "%Y%m%d")
 	except:
-		begin = date(2008, 1, 1)
+		input_begin = date(2008, 1, 1)
 	end = datetime.today()
 	stock_ids = StockId.objects.all()
 	for stock in stock_ids:
+		begin = input_begin
 		if stock.market_type == u"上市":
 			inputStock = stock.symbol + ".TW"
 		else:
 			inputStock = stock.symbol + ".TWO"
-		url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=d&ignore=.csv'\
+		url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=w&ignore=.csv'\
 				.format(inputStock, "%02d" %(begin.month-1), begin.day, begin.year, "%02d" %(end.month-1), end.day, end.year)
 		response = urllib.urlopen(url)
 		data = response.read()
@@ -126,7 +132,6 @@ def update_price(request):
 		print ('update {0} history price'.format(stock.symbol))
 
 	return HttpResponse('update all history price')
-
 
 def old_update_price(request):
 	begin = request.GET['begin']
@@ -187,7 +192,7 @@ def old_update_price(request):
 	return HttpResponse('update_price')
 
 def update_pirvtal_state(request):
-	stock_id = '1582'
+	stock_id = request.GET['stockid']
 	stock_prices = Price.objects.filter(symbol=stock_id).order_by('date')
 	pivotal_state = InitPivotalState(date=stock_prices[0].date.strftime('%Y-%m-%d'), price=0, symbol=stock_id, prev_state='init_pivotal_state', upward_trend=0 ,\
 	                                 downward_trend=0, natural_reaction=0, natural_rally=0, secondary_rally=0, secondary_reaction=0)

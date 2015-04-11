@@ -22,7 +22,7 @@ class PivotalPoint(models.Model):
     state = models.CharField(max_length=50)
     prev_state = models.CharField(max_length=50)
     # 上升趨勢關鍵點
-    upward_trand_point = models.DecimalField(max_digits=20, decimal_places=2, null=True)
+    upward_trend_point = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 自然回檔關鍵點
     natural_reaction_point = models.DecimalField(max_digits=20, decimal_places=2, null=True)
     # 下降趨勢關鍵點
