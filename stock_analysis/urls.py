@@ -117,7 +117,7 @@ urlpatterns += patterns('price.views',
     url(r'^update_price/$', 'update_price'),
     url(r'^show_price/$', 'show_price'),
     url(r'^update_price_by_stockid/$', 'update_price_by_stockid'),
-    url(r'^update_pirvtal_state/$', 'update_pirvtal_state'),
+    url(r'^update_pivotal_state/$', 'update_pivotal_state'),
 )
 
 urlpatterns += patterns('reaserch.views',
