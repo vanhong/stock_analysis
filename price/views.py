@@ -167,7 +167,7 @@ def update_price(request):
 		print ('update {0} history price, there has {1} datas'.format(stock_id.symbol, cnt))
 	return HttpResponse('update all history price')
 
-def update_pirvtal_state_by_stockid(request):
+def update_pivotal_state_by_stockid(request):
 	stock_id = request.GET['stockid']
 	stock_prices = Price.objects.filter(symbol=stock_id).order_by('date')
 	pivotal_state = InitPivotalState(date=stock_prices[0].date.strftime('%Y-%m-%d'), price=0, symbol=stock_id, prev_state='init_pivotal_state', upward_trend=0 ,\
@@ -179,12 +179,15 @@ def update_pirvtal_state_by_stockid(request):
 	return HttpResponse('update {0} privtal state'.format(stock_id))
 
 def update_pivotal_state(request):
-	stock_ids = StockId.objects.filter(symbol='2330')
+	stock_ids = StockId.objects.all()
 	for stock_id in stock_ids:
 		cnt = 0
 		pivotal_point_count = PivotalPoint.objects.filter(symbol=stock_id.symbol).count()
 		if pivotal_point_count < 10:
 			stock_prices = Price.objects.filter(symbol=stock_id.symbol).order_by('date')
+			if stock_prices.count() == 0:
+				print ("update {0} pivotal error, there is no price data".format(stock_id))
+				continue
 			pivotal_state = InitPivotalState(date=stock_prices[0].date.strftime('%Y-%m-%d'), price=0, symbol=stock_id.symbol, prev_state='init_pivotal_state', upward_trend=0 ,\
 	                                         downward_trend=0, natural_reaction=0, natural_rally=0, secondary_rally=0, secondary_reaction=0)
 			for stock_price in stock_prices:
@@ -201,38 +204,38 @@ def update_pivotal_state(request):
 				if pivotal_state.state == INIT_PIVOTAL_STATE:
 					pivotal_state = InitPivotalState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
 													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
-													 natural_rally=pivotal_state.natural_rally.point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction.point)
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
 				elif pivotal_state.state == UPWARD_TREND_STATE:
 					pivotal_state = UpwardTrendState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
 													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
-													 natural_rally=pivotal_state.natural_rally.point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction.point)
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
 				elif pivotal_state.state == DOWNWARD_TREND_STATE:
 					pivotal_state = DownwardTrendState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
 													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
-													 natural_rally=pivotal_state.natural_rally.point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction.point)
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
 				elif pivotal_state.state == NATURAL_RALLY_STATE:
 					pivotal_state = NaturalRallyState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
 													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
-													 natural_rally=pivotal_state.natural_rally.point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction.point)
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
 				elif pivotal_state.state == NATURAL_REACTION_STATE:
 					pivotal_state = NaturalReactionState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
 													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
-													 natural_rally=pivotal_state.natural_rally.point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction.point)
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
 				elif pivotal_state.state == SECONDARY_RALLY_STATE:
 					pivotal_state = SecondaryRallyState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
 													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
-													 natural_rally=pivotal_state.natural_rally.point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction.point)
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
 				elif pivotal_state.state == SECONDARY_REACTION_STATE:
 					pivotal_state = SecondaryReactionState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
 													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
-													 natural_rally=pivotal_state.natural_rally.point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction.point)
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
 				else:
 					print ("update {0} pivotal error: can't find state".format(stock_id))
 				for stock_price in stock_prices:
 					if (stock_price.date != pivotal_state.date):
 						pivotal_state = pivotal_state.next(stock_price.close_price, stock_price.date.strftime('%Y-%m-%d'))
 						pivotal_state.save_to_db()
-						print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+						# print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
 						cnt += 1
 				print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
 	return HttpResponse('update {0} pivotal state'.format(stock_id))
