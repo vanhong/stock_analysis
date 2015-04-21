@@ -53,6 +53,8 @@ urlpatterns = patterns('stock_analysis.views',
 
     (r'^venue_lookup/$','venue_lookup'),
     (r'^venue/$','venue'),
+
+    (r'^test/$', 'test'),
 )
 
 urlpatterns += patterns('stocks.views',

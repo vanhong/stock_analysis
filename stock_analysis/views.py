@@ -9,12 +9,15 @@ from django.shortcuts import render_to_response
 from django.template.context import RequestContext
 from django.template import Context
 from django.db.models import Count
-from stock_analysis.settings import STATIC_URL
+# from stock_analysis.settings import STATIC_URL
 
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from financial.models import SeasonFinancialRatio, YearFinancialRatio
 
+
+def test(request):
+    return render_to_response('home/index2.html', context_instance=RequestContext(request))
 
 def venue(request):
     return render_to_response('analysis/test_auto.html', context_instance=RequestContext(request))

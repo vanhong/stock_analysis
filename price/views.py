@@ -238,7 +238,7 @@ def update_pivotal_state(request):
 						# print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
 						cnt += 1
 				print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
-	return HttpResponse('update {0} pivotal state'.format(stock_id))
+	return HttpResponse('update pivotal state')
 
 
 
