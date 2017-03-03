@@ -1,6 +1,14 @@
 from decimal import Decimal
 import datetime
 
+
+def is_decimal(s):
+    try:
+        Decimal(s)
+    except:
+        return False
+    return True
+
 def st_to_decimal(data):
 	return Decimal(data.strip().replace(',', ''))
 
@@ -16,6 +24,12 @@ def season_to_date(year, season):
 
 def year_to_date(year):
     return datetime.date(year, 1, 1)
+
+def last_month(day):
+    if day.month == 1:
+        return day.year - 1, 12
+    else:
+        return day.year, day.month - 1
 
 def last_season(day):
     year = day.year
@@ -37,3 +51,5 @@ def next_month(day):
     else:
         return datetime.date(day.year, day.month+1, 1)
 
+def month_between(startDate, endDate):
+    return (endDate.year - startDate.year) * 12 + endDate.month - startDate.month
