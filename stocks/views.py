@@ -105,9 +105,15 @@ def update_month_revenue(request):
                 json_obj = json.dumps({"notes": "please input correct date 'yyyy-mm'"})
                 return HttpResponse(json_obj, content_type="application/json")
     market = ['otc', 'sii']
+    updateCnt = 0
     for i in range(len(market)):
         # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
-        url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + ".html"
+        if year >= 2015:
+            url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
+        elif year == 2014 and month >= 11:
+            url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
+        else:
+            url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
         req = urllib2.Request(url)
         try:
             response = urllib2.urlopen(req)
@@ -151,7 +157,9 @@ def update_month_revenue(request):
                     if is_decimal(acc_year_growth_rate_data.string.strip().replace(',', '')):
                         revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
                     print (revenue.symbol)
+                    updateCnt = updateCnt + 1
                     revenue.save()
+    print ("update %d symbol") %updateCnt
     cnt = MonthRevenue.objects.filter(year=year, month=month).count()
     lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = MonthRevenue.objects.filter(date=lastDate).count()
