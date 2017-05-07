@@ -55,6 +55,7 @@ urlpatterns = patterns('stock_analysis.views',
     (r'^venue/$','venue'),
 
     (r'^test/$', 'test'),
+    (r'^test2/$', 'test2'),
 )
 
 urlpatterns += patterns('stocks.views',
@@ -120,6 +121,7 @@ urlpatterns += patterns('price.views',
     url(r'^show_price/$', 'show_price'),
     url(r'^update_price_by_stockid/$', 'update_price_by_stockid'),
     url(r'^update_pivotal_state/$', 'update_pivotal_state'),
+    url(r'^download_csv/$', 'download_csv'),
 )
 
 urlpatterns += patterns('reaserch.views',

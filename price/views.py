@@ -17,6 +17,8 @@ from price.models import *
 from price.pivotal_state import *
 from bs4 import BeautifulSoup
 import pdb
+import csv
+import ssl
 
 INIT_PIVOTAL_STATE = 'init_pivotal_state'
 UPWARD_TREND_STATE = 'upward_trend_state'
@@ -121,7 +123,7 @@ def update_price(request):
 		elif (lastest_price_date["date__max"] < input_begin):
 			pass
 		else:
-			begin = lastest_price_date["date__max"] - timedelta(days=60)
+			begin = lastest_price_date["date__max"] - timedelta(days=63)
 		if stock_id.market_type == u"sii":
 			inputStock = stock_id.symbol + ".TW"
 		else:
@@ -131,9 +133,10 @@ def update_price(request):
 				inputStock = stock_id.symbol + ".TWO"
 			else:
 				inputStock = stock_id.symbol + ".TW"
+		context = ssl._create_unverified_context()
 		url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=w&ignore=.csv'\
 		  .format(inputStock, "%02d" %(begin.month-1), begin.day, begin.year, "%02d" %(end.month-1), end.day, end.year)
-		response = urllib.urlopen(url)
+		response = urllib.urlopen(url, context=context)
 		data = response.read()
 		array = string.split(data, '\n')
 		cnt = 0;
@@ -237,8 +240,101 @@ def update_pivotal_state(request):
 						pivotal_state.save_to_db()
 						# print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
 						cnt += 1
-				print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+				if cnt != 11:
+					print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
 	return HttpResponse('update pivotal state')
+
+def download_csv2(request):
+	encode = request.GET.get('encode', 'big5')
+
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="test.csv"'
+
+	writer = csv.writer(response, delimiter=',', quotechar='"')
+	header = [u'H1', u'H2', u'H3']
+	writer.writerow([x.encode(encode) for x in header])
+	return response
+
+#201201開始
+def download_csv(request):
+	start_date = date(2016, 1, 1)
+	pivotal_point = PivotalPoint.objects.filter(date__gte=start_date)
+	sample_points = pivotal_point.filter(symbol='2330').order_by('date')
+	encode = request.GET.get('encode', 'big5')
+
+	response = HttpResponse(content_type='text/csv')
+	response['Content-Disposition'] = 'attachment; filename="test.csv"'
+
+	writer = csv.writer(response, delimiter=',', quotechar='"')
+	header = ['StockID','Name']
+	for p in sample_points:
+		header.append(p.date)
+	header.append('current')
+	writer.writerow([x for x in header])
+	stock_ids = ['2610','2618','2612','2606','2208',
+			'2330','6286','2337','3041','2458',
+			'5483','3556',
+			'2353','2324','3231','2382','2376',
+			'2357','4938','2395','3022','6206',
+			'2474','2387','6121','8210','3611',
+			'2308','2420','2457','2327','2428',
+			'6269','2383','3044','3037','2462',
+			'6224','6279','3299','8042','8091',
+			'3390','2317','6192','6146','3552',
+			'3563','2393','6278','2486','2374',
+			'5392','3454','3615','6231','5209',
+			'3546','5478','2412','3045','4904',
+			'2450','2345','2455','5388','3068',
+			'3234','6143','6263','3702','3010',
+			'6281','1535','1521','1525','1531',
+			'4526','4532','8374','1580','6122',
+			'1558','3379','8083','4528','2002',
+			'1101','1102','1301','1303','1304',
+			'1308','1326','1307','1325','6508',
+			'1723','1710','1704','4725','1742',
+			'2103','2105','2106','2108','6505',
+			'6184','9904','9939','9925','9917',
+			'9921','9914','9941','9924','5312',
+			'1216','1201','1227','1232','1233',
+			'1231','4205','1402','1477','1476',
+			'4401','2912','5904','1707','1733',
+			'3164','1788','4126','8940','2201',
+			'2207','2548','5522','2820','2881','2886','2449','1452','6202']
+	for stock_id in stock_ids:
+		if (StockId.objects.filter(symbol__contains=stock_id)):
+			stockId = StockId.objects.get(symbol=stock_id)
+			prev_point_state = ''
+			body = [stock_id]
+			body.append(stockId.name)
+			points = pivotal_point.filter(symbol=stock_id).order_by('date')
+			if (points.count() < sample_points.count()):
+				for i in range(sample_points.count() - points.count()):
+					body.append('')
+			for p in points:
+				if (p.state != prev_point_state):
+					body.append(str(p.price) + u'_' + p.state)
+				else:
+					body.append(str(p.price))
+				prev_point_state = p.state
+			body.append(p.state)
+			writer.writerow([x.encode("cp950") for x in body])
+	#body =['2330']
+	#for b in sample_points:
+	#	if (b.state != prev_point_state):
+	#		body.append(str(b.price) + u'_' + b.state)
+	#	else:
+	#		body.append(str(b.price))
+	#	prev_point_state = b.state
+	#body.append(b.state)
+	#writer.writerow([x for x in body])
+	return response
+
+
+
+
+
+
+
 
 
 
