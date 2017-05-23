@@ -53,6 +53,9 @@ urlpatterns = patterns('stock_analysis.views',
 
     (r'^venue_lookup/$','venue_lookup'),
     (r'^venue/$','venue'),
+
+    (r'^test/$', 'test'),
+    (r'^test2/$', 'test2'),
 )
 
 urlpatterns += patterns('stocks.views',
@@ -112,6 +115,17 @@ urlpatterns += patterns('chip.views',
     url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
 )
 
+<<<<<<< HEAD
+=======
+urlpatterns += patterns('price.views',
+    url(r'^update_price/$', 'update_price'),
+    url(r'^show_price/$', 'show_price'),
+    url(r'^update_price_by_stockid/$', 'update_price_by_stockid'),
+    url(r'^update_pivotal_state/$', 'update_pivotal_state'),
+    url(r'^download_csv/$', 'download_csv'),
+)
+
+>>>>>>> 8464e3d614df994d41c1aa3cac64796d8145e652
 urlpatterns += patterns('reaserch.views',
     url(r'^chip_price_relation/$', 'chip_price_relation'),
 )

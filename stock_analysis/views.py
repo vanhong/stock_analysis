@@ -19,6 +19,9 @@ from financial.models import SeasonFinancialRatio, YearFinancialRatio
 def test(request):
     return render_to_response('home/index2.html', context_instance=RequestContext(request))
 
+def test2(request):
+    return render_to_response('home/index3.html', context_instance=RequestContext(request))
+
 def venue(request):
     return render_to_response('analysis/test_auto.html', context_instance=RequestContext(request))
 
