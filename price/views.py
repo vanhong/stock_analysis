@@ -33,7 +33,8 @@ def show_price(request):
 	# d=月份-1(1月:00)
 	# e=日期(2日:02)
 	# f=年
-	url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=d&ignore=.csv'
+	url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=w&ignore=.csv'
+	aa = 'http://chart.finance.yahoo.com/table.csv?s=2330.TW&a=2&b=3&c=2016&d=2&e=3&f=2017&g=w&ignore=.csv'
 	response = urllib.urlopen(url)
 	data = response.read()
 	array = string.split(data, '\n')
