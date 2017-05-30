@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup
 import pdb
 import csv
 import ssl
+import requests
 
 INIT_PIVOTAL_STATE = 'init_pivotal_state'
 UPWARD_TREND_STATE = 'upward_trend_state'
@@ -28,6 +29,11 @@ NATURAL_RALLY_STATE = 'natural_rally_state'
 SECONDARY_REACTION_STATE = 'secondary_reaction_state'
 SECONDARY_RALLY_STATE = 'secondary_rally_state'
 
+def datetime_timestamp(dt):
+	datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
+	s = datetime.time.mktime(datetime.strptime(dt, '%Y-%m-%d %H:%M:%S'))
+	return str(int(s))
+
 def show_price(request):
 	# a=月份-1(1月:00)
 	# b=日期(2日:02)
@@ -35,11 +41,69 @@ def show_price(request):
 	# d=月份-1(1月:00)
 	# e=日期(2日:02)
 	# f=年
-	url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=d&ignore=.csv'
+	#context = ssl._create_unverified_context()
+	#url = 'https://finance.yahoo.com/quote/8109.TWO/history?period1=1463804015&period2=1495340015&interval=1wk&filter=history&frequency=1wk'
+	#url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=d&ignore=.csv'
+	#response = urllib.urlopen(url, context=context)	
+	#data = response.read()
+	#array = string.split(data, '\n')
+	#s = requests.Session()
+	#cookies = dict(B='89o0v8pav9jbc&b=4&d=odxId6xpYEMRFFGPAtrV.PcS_Qv2tjpUcB8-&s=e0&i=Gk6vsICmboJBrPfkL2KJ')
+	#crumb = 'DMUsUIRgSH6'
+	url = 'http://jsjustweb.jihsun.com.tw/Z/ZC/ZCW/czkc1.djbcd?a=2383&b=W&c=2880&E=1&ver=5'
 	response = urllib.urlopen(url)
 	data = response.read()
-	array = string.split(data, '\n')
-	return HttpResponse(array)
+	array = data.split(' ')
+	data1 = array[0].split(',')
+	data2 = array[1].split(',')
+	data3 = array[2].split(',')
+	data4 = array[3].split(',')
+	data5 = array[4].split(',')
+	data6 = array[5].split(',')
+	pdb.set_trace()
+	#begin = datetime_timestamp('2014-01-01 09:00:00')
+	#end = datetime_timestamp('2017-04-30 09:00:00')
+
+	#r = s.get("https://query1.finance.yahoo.com/v7/finance/download/IBM?period1=1493039845&period2=1495631845&interval=1d&events=history&crumb=DMUsUIRgSH6",cookies=cookies, verify=False)
+
+	return HttpResponse(data)
+
+def update_price_new(request):
+	stock_ids = StockId.objects.all()
+	symbol_cnt = 0;
+	today = datetime.today()
+	last_monday = today - timedelta(days=today.weekday())
+	for stock_id in stock_ids:
+		lastest_price_date = NewPrice.objects.filter(symbol=stock_id.symbol).aggregate(Max("date"))
+		if last_monday.date() == lastest_price_date['date__max']:
+			continue
+		url = 'http://jsjustweb.jihsun.com.tw/Z/ZC/ZCW/czkc1.djbcd?a=' + stock_id.symbol + '&b=W&c=2880&E=1&ver=5'
+		response = urllib.urlopen(url)
+		datas = response.read().split(' ')
+		dates = datas[0].split(',')
+		opens = datas[1].split(',')
+		highs = datas[2].split(',')
+		lows = datas[3].split(',')
+		closes = datas[4].split(',')
+		volumes = datas[5].split(',')
+		cnt = 0
+		for i in range(len(dates)):
+			priceObj = NewPrice()
+			priceObj.surrogate_key = stock_id.symbol + '_' + dates[i].replace('-','')
+			priceObj.date = datetime.strptime(dates[i], "%Y/%m/%d").date()
+			priceObj.symbol = stock_id.symbol
+			priceObj.open_price = opens[i]
+			priceObj.high_price = highs[i]
+			priceObj.low_price = lows[i]
+			priceObj.close_price = closes[i]
+			priceObj.volume = volumes[i]
+			priceObj.save()
+			cnt = cnt + 1
+		symbol_cnt = symbol_cnt + 1
+		print ('update {0} history price, there has {1} datas'.format(stock_id.symbol, cnt))
+	return HttpResponse('update %d history price' % (cnt))
+
+
 
 def update_price_by_stockid(request):
 	# 如果需要更新，至少更新60天的資料
@@ -244,6 +308,71 @@ def update_pivotal_state(request):
 					print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
 	return HttpResponse('update pivotal state')
 
+def update_pivotal_state2(request):
+	stock_ids = StockId.objects.all()
+	for stock_id in stock_ids:
+		cnt = 0
+		pivotal_point_count = PivotalPoint2.objects.filter(symbol=stock_id.symbol).count()
+		print("start update {0} pivotal".format(stock_id))
+		if pivotal_point_count < 10:
+			stock_prices = NewPrice.objects.filter(symbol=stock_id.symbol).order_by('date')
+			if stock_prices.count() == 0:
+				print ("update {0} pivotal error, there is no price data".format(stock_id))
+				continue
+			pivotal_state = InitPivotalState(date=stock_prices[0].date.strftime('%Y-%m-%d'), price=0, symbol=stock_id.symbol, prev_state='init_pivotal_state', upward_trend=0 ,\
+	                                         downward_trend=0, natural_reaction=0, natural_rally=0, secondary_rally=0, secondary_reaction=0)
+			for stock_price in stock_prices:
+				cnt += 1
+				pivotal_state = pivotal_state.next(stock_price.close_price, stock_price.date.strftime('%Y-%m-%d'))
+				pivotal_state.save_to_db()
+			print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+		else:
+			pivotal_state = PivotalPoint2.objects.filter(symbol=stock_id.symbol).order_by("-date")[9]
+			stock_prices = NewPrice.objects.filter(symbol=stock_id.symbol, date__gte=pivotal_state.date).order_by("date")
+			if (pivotal_state.date != stock_prices[0].date):
+				print ("update {0} pivotal error date is not the same".format(stock_id))
+			else:
+				if pivotal_state.state == INIT_PIVOTAL_STATE:
+					pivotal_state = InitPivotalState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == UPWARD_TREND_STATE:
+					pivotal_state = UpwardTrendState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == DOWNWARD_TREND_STATE:
+					pivotal_state = DownwardTrendState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == NATURAL_RALLY_STATE:
+					pivotal_state = NaturalRallyState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == NATURAL_REACTION_STATE:
+					pivotal_state = NaturalReactionState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == SECONDARY_RALLY_STATE:
+					pivotal_state = SecondaryRallyState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == SECONDARY_REACTION_STATE:
+					pivotal_state = SecondaryReactionState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				else:
+					print ("update {0} pivotal error: can't find state".format(stock_id))
+				for stock_price in stock_prices:
+					if (stock_price.date != pivotal_state.date):
+						pivotal_state = pivotal_state.next(stock_price.close_price, stock_price.date.strftime('%Y-%m-%d'))
+						pivotal_state.save_to_db()
+						# print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+						cnt += 1
+				if cnt != 11:
+					print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+	return HttpResponse('update pivotal state')
+
+
 def download_csv2(request):
 	encode = request.GET.get('encode', 'big5')
 
@@ -258,7 +387,7 @@ def download_csv2(request):
 #201201開始
 def download_csv(request):
 	start_date = date(2016, 1, 1)
-	pivotal_point = PivotalPoint.objects.filter(date__gte=start_date)
+	pivotal_point = PivotalPoint2.objects.filter(date__gte=start_date)
 	sample_points = pivotal_point.filter(symbol='2330').order_by('date')
 	encode = request.GET.get('encode', 'big5')
 
