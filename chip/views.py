@@ -42,7 +42,7 @@ def update_corp_trade(request):
         req = urllib2.Request(url, data)
         response = urllib2.urlopen(req)
         the_page = response.read()
-        #print(the_page)
+        print(the_page)
         soup = BeautifulSoup(the_page)
         securityIdList = [td.string for td in soup.findAll('td', {'align' : 'center'})]
         buyCnt = 0 
@@ -134,7 +134,7 @@ def update_corp_trade(request):
             corpTrade.foreign_sell = value.foreign_sell
             corpTrade.save()
             #print ('update ' + value.trade_date + ', ' + key + ' corp trade')
-        
+    return HttpResponse('update corp')
     return HttpResponse('%s, %s, %s' % (securityIdList[0], securityIdList[0].next, securityIdList[0].next.next_sibling))
 
 #更新股權分佈

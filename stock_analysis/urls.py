@@ -124,6 +124,7 @@ urlpatterns += patterns('price.views',
     url(r'^download_csv/$', 'download_csv'),
     url(r'^update_price_new/$', 'update_price_new'),
     url(r'^update_pivotal_state2/$', 'update_pivotal_state2'),
+    url(r'^show_price_new/$', 'show_price_new'),
 )
 
 urlpatterns += patterns('reaserch.views',
