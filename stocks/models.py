@@ -99,3 +99,9 @@ class UpdateManagement(models.Model):
 
     def __unicode__(self):
         return u"%s %s %s" % (self.name, self.last_update_date, self.last_data_date)
+
+class WatchList(models.Model):
+    surrogate_key = models.CharField(max_length=20, primary_key=True)
+    user = models.CharField(max_length=20)
+    symbol = models.CharField(max_length=20)
+    rank = models.IntegerField()

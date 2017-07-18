@@ -10,7 +10,7 @@ from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
 import time, json
 from decimal import Decimal
-from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue, UpdateManagement
+from stocks.models import StockId, MonthRevenue, SeasonProfit, Dividend, SeasonRevenue, UpdateManagement, WatchList
 from financial.models import SeasonIncomeStatement
 from django.db.models import Sum, Max
 from core.utils import st_to_decimal
@@ -457,6 +457,45 @@ def update(request):
 
     return render_to_response('analysis/update.html', 
             {'updateData': updateData}, context_instance=RequestContext(request))
+
+def update_watchlist(request):
+    stock_ids = ['2610','2618','2612','2606','2208',
+            '2330','6286','2337','3041','2458',
+            '5483','3556',
+            '2353','2324','3231','2382','2376',
+            '2357','4938','2395','3022','6206',
+            '2474','2387','6121','8210','3611',
+            '2308','2420','2457','2327','2428',
+            '6269','2383','3044','3037','2462',
+            '6224','6279','3299','8042','8091',
+            '3390','2317','6192','6146','3552',
+            '3563','2393','6278','2486','2374',
+            '5392','3454','3615','6231','5209',
+            '3546','5478','2412','3045','4904',
+            '2450','2345','2455','5388','3068',
+            '3234','6143','6263','3702','3010',
+            '6281','1535','1521','1525','1531',
+            '4526','4532','8374','1580','6122',
+            '1558','3379','8083','4528','2002',
+            '1101','1102','1301','1303','1304',
+            '1308','1326','1307','1325','6508',
+            '1723','1710','1704','4725','1742',
+            '2103','2105','2106','2108','6505',
+            '6184','9904','9939','9925','9917',
+            '9921','9914','9941','9924','5312',
+            '1216','1201','1227','1232','1233',
+            '1231','4205','1402','1477','1476',
+            '4401','2912','5904','1707','1733',
+            '3164','1788','4126','8940','2201',
+            '2207','2548','5522','2820','2881','2886','2449','1452','6202', '6449']
+    for stockid in stock_ids:
+        watchlist = WatchList()
+        watchlist.surrogate_key = 'vk_' + stockid
+        watchlist.user = 'vk'
+        watchlist.symbol = stockid
+        watchlist.rank = -1
+        watchlist.save()
+    return HttpResponse('update watchlist')
 
 class UpdateData(object):
     def __init__(self, updateDate, dataDate, notes):
