@@ -335,6 +335,50 @@ def old_update_dividend(request):
     # print response.read()
     return HttpResponse(response.read())
 
+def show_dividend(request):
+    if 'year' in request.GET:
+        input_year = int(request.GET['year'])
+    else:
+        input_year = 2013
+    stockids = StockId.objects.all()
+    for stockid in stockids:
+        revenueInDb = Dividend.objects.filter(symbol=stockid.symbol, year=int(input_year))
+        if revenueInDb:
+            print(stockid.symbol + ' is exists')
+            continue
+        print 'update ' + stockid.symbol + ' dividend'
+        url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stockid.symbol + ".djhtm"
+        req = urllib2.Request(url)
+        response = urllib2.urlopen(req)
+        soup = BeautifulSoup(response)
+        dividend_datas = soup.find_all("td", {"class": ['t3n0', 't3n1']})
+        dataCnt = 0
+        for data in dividend_datas:
+            if(data['class'][0]=='t3n0' and data.string):
+                try:
+                    dividend = Dividend()
+                    year = int(data.string)
+                    dividend.year = year
+                    dividend.date = datetime.date(year, 1, 1)
+                    dividend.symbol = stockid.symbol
+                    dividend.surrogate_key = stockid.symbol + "_" + str(year)
+                    data = data.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling.next_sibling
+                    dividend.cash_dividends = Decimal(data.string)
+                    data = data.next_sibling.next_sibling
+                    dividend.stock_dividends_from_retained_earnings = Decimal(data.string)
+                    data = data.next_sibling.next_sibling
+                    dividend.stock_dividends_from_capital_reserve = Decimal(data.string)
+                    data = data.next_sibling.next_sibling
+                    dividend.stock_dividends = Decimal(data.string)
+                    data = data.next_sibling.next_sibling
+                    dividend.total_dividends = Decimal(data.string)
+                    data = data.next_sibling.next_sibling
+                    dividend.employee_stock_rate = Decimal(data.string)
+                    dividend.save()
+                except:
+                    pass
+    return HttpResponse("update dividend")
+
 def update_dividend(request):
     if 'year' in request.GET:
         input_year = int(request.GET['year'])

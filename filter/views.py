@@ -20,7 +20,7 @@ from abc import ABCMeta, abstractmethod
 from stock_analysis.settings import STATIC_URL
 from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
 from financial.models import SeasonFinancialRatio
-from price.models import Price
+from price.models import Price, NewPrice
 from chip.models import *
 
 import inspect
@@ -214,6 +214,7 @@ def filter_start2(request):
     fieldName.name = 'Name'
     fieldName.stockid = 'Symbol'
     fieldName.company_type = 'Type'
+    fieldName.pe = 'PE'
     fieldName.revenue_date = 'Revenue_Date'
     results_dic['0000'] = fieldName
     for item in new_list:
@@ -226,6 +227,19 @@ def filter_start2(request):
             resultObj.company_type = stockid.company_type
             revenue = MonthRevenue.objects.filter(symbol=item).order_by('-date')[0]
             resultObj.revenue_date = revenue.date.strftime('%Y-%m-%d')
+            price = NewPrice.objects.filter(symbol=item).order_by('-date')[0]
+            if (SeasonFinancialRatio.objects.filter(symbol=item).count() > 3):
+                try:
+                    eps = SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[0].earnings_per_share +\
+                      SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[1].earnings_per_share +\
+                      SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[2].earnings_per_share +\
+                      SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[3].earnings_per_share
+                    resultObj.pe = (price.close_price / eps)
+                    resultObj.pe = '{0:.2f}'.format(resultObj.pe)
+                except:
+                    resultObj.pe = 0
+            else:
+                resultObj.pe = 0
             results_dic[item] = resultObj
     return render_to_response(
                 'filter/filter_result.html', {
@@ -241,6 +255,8 @@ class ResultObj():
         self.company_type = company_type
     def setRevenueDate(self, date):
         self.revenue_date = date
+    def setPE(self, pe):
+        self.pe = pe
 
 #not used
 def check_season_data(cnt, overunder, condition, conditionValue):

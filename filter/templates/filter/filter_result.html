@@ -6,6 +6,7 @@
   	{% for key, value in results %}
       <tr>
         <td style="width:6em">{{ value.stockid }}</td><td>{{ value.name }}</td><td>{{ value.company_type }}</td>
+        <td>{{ value.pe }}</td>
         <td>{{ value.revenue_date }}</td>
       </tr>
     {% endfor %}
