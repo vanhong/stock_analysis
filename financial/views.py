@@ -821,7 +821,7 @@ def update_year_income_statement(request):
     cnt = YearIncomeStatement.objects.filter(year=year).count()
     lastDate = YearIncomeStatement.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = YearIncomeStatement.objects.filter(date=lastDate).count()
-    updateManagement = UpdateManagement(name = "yearIncomeStatement", last_update_date = datetime.date.today(), 
+    updateManagement = UpdateManagement(name = "yis", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"name": updateManagement.name, "updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
@@ -2069,14 +2069,14 @@ def update_year_cashflow_statement(request):
     cnt = YearCashflowStatement.objects.filter(year=year).count()
     lastDate = YearCashflowStatement.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = YearCashflowStatement.objects.filter(date=lastDate).count()
-    updateManagement = UpdateManagement(name = "scf", last_update_date = datetime.date.today(), 
+    updateManagement = UpdateManagement(name = "ycf", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
     json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
                            "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " year cashflow statements on " + str(year)})
     return HttpResponse(json_obj, content_type="application/json")
 
-def update_year_financial_ratio(request):
+def old_update_year_financial_ratio(request):
     stock_ids = StockId.objects.all()
     today = datetime.date.today()
     for stock_id in stock_ids:
@@ -2770,3 +2770,302 @@ def update_season_financial_ratio(request):
                            "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " season cashflow statements on " + str(year) + "-" + str(season)})
     return HttpResponse(json_obj, content_type="application/json")
     
+def update_year_financial_ratio(request):
+    print 'start update season financial ratio'
+    if 'date' in request.GET:
+        date = request.GET['date']
+        if date != '':
+            try:
+                year = int(date)
+            except:
+                json_obj = json.dumps({"notes": "please input correct year"})
+                return HttpResponse(json_obj, content_type="application/json")
+        else:
+            json_obj = json.dumps({"notes": "please input correct year"})
+            return HttpResponse(json_obj, content_type="application/json")
+    else:
+        json_obj = json.dumps({"notes": "please input correct season year"})
+        return HttpResponse(json_obj, content_type="application/json")
+    yisSymbol = YearIncomeStatement.objects.filter(year=year).values_list('symbol', flat=True)
+    ybsSymbol = SeasonBalanceSheet.objects.filter(year=year, season=4).values_list('symbol', flat=True)
+    ycfSymbol = YearCashflowStatement.objects.filter(year=year).values_list('symbol', flat=True)
+    union = set(yisSymbol).union(set(ybsSymbol)).union(set(ycfSymbol))
+    intersection = set(yisSymbol).intersection(set(ybsSymbol)).intersection(set(ycfSymbol))
+    diff = union.difference(intersection)
+    print diff
+    for stockID in intersection:
+        has_ybs_prev = False
+        try:
+            yis = YearIncomeStatement.objects.get(year=year, symbol=stockID)
+            ybs = SeasonBalanceSheet.objects.get(year=year, season=4, symbol=stockID)
+            ycf = YearCashflowStatement.objects.get(year=year, symbol=stockID)
+        except:
+            print ("load " + stockID + "'s data error")
+            continue
+        if SeasonBalanceSheet.objects.filter(year=year-1, symbol=stockID):
+            has_ybs_prev = True
+            prev_ybs = SeasonBalanceSheet.objects.get(year=year-1, season=4, symbol=stockID)
+        ratio = YearFinancialRatio()
+        ratio.year = year
+        ratio.symbol = stockID
+        ratio.date = year_to_date(year)
+        ratio.surrogate_key = stockID + '_' + str(year)
+        # 毛利率 = 營業毛利（毛損）淨額 / 營業收入合計（單位：％）
+        if yis.total_operating_revenue and yis.total_operating_revenue > 0:
+            if yis.gross_profit_loss_from_operations:
+                ratio.gross_profit_margin = yis.gross_profit_loss_from_operations / yis.total_operating_revenue * 100
+            # 有的公司使用舊式報表，沒有營業毛利這一項，就改用繼續營業單位稅前淨利代替
+            elif yis.profit_loss_from_continuing_operations:
+                ratio.gross_profit_margin = yis.profit_loss_from_continuing_operations / yis.total_operating_revenue * 100
+        elif yis.total_operating_revenue and yis.total_operating_revenue == 0:
+            ratio.gross_profit_margin = 0
+        # 營業利益率 = 營業利益（損失） / 營業收入合計（單位：％）
+        if yis.total_operating_revenue and yis.total_operating_revenue > 0:
+            if yis.net_operating_income_loss:
+                ratio.operating_profit_margin = yis.net_operating_income_loss / yis.total_operating_revenue * 100
+            # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替
+            elif yis.profit_loss_from_continuing_operations:
+                ratio.operating_profit_margin = yis.profit_loss_from_continuing_operations / yis.total_operating_revenue * 100
+        elif yis.total_operating_revenue and yis.total_operating_revenue == 0:
+            ratio.operating_profit_margin = 0
+        # 稅前淨利率 = 稅前純益 / 營業收入
+        if yis.total_operating_revenue and yis.total_operating_revenue > 0:
+            if yis.profit_loss_from_continuing_operations_before_tax:
+                ratio.net_profit_margin_before_tax = yis.profit_loss_from_continuing_operations_before_tax / yis.total_operating_revenue * 100
+            elif yis.profit_loss_from_continuing_operations:
+                ratio.net_profit_margin_before_tax = yis.profit_loss_from_continuing_operations / yis.total_operating_revenue * 100
+        elif yis.total_operating_revenue and yis.total_operating_revenue == 0:
+            ratio.net_profit_margin_before_tax = 0
+        # 稅後淨利率 = 稅後純益 / 營業收入
+        if yis.total_operating_revenue and yis.total_operating_revenue > 0:
+            if yis.profit_loss:
+                ratio.net_profit_margin = yis.profit_loss / yis.total_operating_revenue * 100
+        elif yis.total_operating_revenue and yis.total_operating_revenue == 0:
+            ratio.net_profit_margin = 0
+        # 每股淨值(元)
+        #net_value_per_share = models.DecimalField(max_digits=20, decimal_places=4, null=True)
+        # 每股營業額(元)
+        if ybs.total_capital_stock and ybs.total_capital_stock > 0:
+            if yis.total_operating_revenue:
+                ratio.revenue_per_share = yis.total_operating_revenue / ybs.total_capital_stock * 10
+        elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
+            ratio.revenue_per_share = 0
+        # 每股營業利益(元)
+        if ybs.total_capital_stock and ybs.total_capital_stock > 0:
+            if yis.net_operating_income_loss:
+                ratio.operating_profit_per_share = yis.net_operating_income_loss / ybs.total_capital_stock * 10
+            # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替    
+            elif yis.profit_loss_from_continuing_operations:
+                ratio.operating_profit_per_share = yis.profit_loss_from_continuing_operations / ybs.total_capital_stock * 10
+        elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
+            ratio.operating_profit_per_share = 0
+        # 每股稅前淨利(元)
+        if ybs.total_capital_stock and ybs.total_capital_stock > 0:
+            if yis.profit_loss_from_continuing_operations_before_tax:
+                ratio.net_before_tax_profit_per_share = yis.profit_loss_from_continuing_operations_before_tax / ybs.total_capital_stock * 10
+            elif yis.profit_loss_from_continuing_operations:
+                ratio.net_before_tax_profit_per_share = yis.profit_loss_from_continuing_operations / ybs.total_capital_stock
+        elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
+            ratio.net_before_tax_profit_per_share = 0
+        # 每股盈餘(EPS)
+        if ybs.total_capital_stock and ybs.total_capital_stock > 0:
+            if yis.profit_loss:
+                ratio.earnings_per_share = yis.profit_loss / ybs.total_capital_stock * 10
+        elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
+            ratio.earnings_per_share = 0
+        # 總資產報酬率(ROA) = 本期淨利（淨損） / 期初期末平均之資產總額（單位：％）
+        if yis.profit_loss:
+            if ycf.interest_expense:
+                profitLoss = yis.profit_loss + ycf.interest_expense
+            else:
+                profitLoss = yis.profit_loss
+            if ybs.total_assets:
+                if has_ybs_prev:
+                    ratio.return_on_assets = profitLoss / ((ybs.total_assets + prev_ybs.total_assets) / 2) * 100
+                else:
+                    ratio.return_on_assets = profitLoss / (ybs.total_assets / 2) * 100
+            else:
+                ratio.return_on_assets = 0
+        # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
+        if yis.profit_loss:
+            if ybs.total_equity:
+                if has_ybs_prev:
+                    ratio.return_on_equity = yis.profit_loss / ((ybs.total_equity + prev_ybs.total_equity) / 2) * 100
+                else:
+                    ratio.return_on_equity = yis.profit_loss / (ybs.total_equity / 2) * 100
+            else:
+                ratio.return_on_equity = 0
+        # ---償債能力---
+        # 流動比率 = 流動資產合計 / 流動負債合計
+        if ybs.total_current_liabilities and ybs.total_current_liabilities != 0:
+            if ybs.total_current_assets:
+                ratio.current_ratio = ybs.total_current_assets / ybs.total_current_liabilities * 100
+        # 速動比率 = 速動資產合計 / 流動負債合計（速動資產 = 流動資產 - 存貨 - 預付款項 - 其他流動資產）
+        if ybs.total_current_liabilities and ybs.total_current_liabilities != 0:
+            numerator = Decimal(0)
+            if ybs.total_current_assets:
+                numerator += ybs.total_current_assets
+            if ybs.total_inventories:
+                numerator -= ybs.total_inventories
+            if ybs.total_prepayments:
+                numerator -= ybs.total_prepayments
+            if ybs.total_other_current_assets:
+                numerator -= ybs.total_other_current_assets
+            ratio.quick_ratio = numerator / ybs.total_current_liabilities * 100
+        #?? 金融負債比率 = 金融負債總額 / 資產總額（金融負債 = 短期借款 + 應付短期票券 + 應付公司債 + 長期借款，要付息的，單位：％）
+        #未完成
+        if ybs.total_assets and ybs.total_assets != 0:
+            numerator = Decimal(0)
+            if ybs.total_short_term_borrowings:
+                numerator += ybs.total_short_term_borrowings
+            if ybs.short_term_notes_and_bills_payable:
+                numerator += ybs.short_term_notes_and_bills_payable
+            if ybs.total_bonds_payable:
+                numerator += ybs.total_bonds_payable
+            if ybs.total_long_term_borrowings:
+                numerator += ybs.total_long_term_borrowings
+            ratio.financial_debt_ratio = numerator / ybs.total_assets * 100
+        # 負債比率
+        if ybs.total_assets and ybs.total_assets != 0:
+            if ybs.total_liabilities:
+                ratio.debt_ratio = ybs.total_liabilities / ybs.total_assets * 100
+        # 利息保障倍數
+        if ycf.interest_expense and ycf.interest_expense != 0:
+            if yis.profit_loss_from_continuing_operations_before_tax:
+                ratio.interest_cover = (ycf.interest_expense + yis.profit_loss_from_continuing_operations_before_tax) / ycf.interest_expense
+        # ---經營能力---
+        # 應收帳款週轉率 = 營業收入合計 / 期初期末平均之應收票據淨額+應收帳款淨額+應收帳款－關係人淨額（單位：次／季）
+        if yis.total_operating_revenue and yis.total_operating_revenue != 0:
+            numerator = yis.total_operating_revenue
+            denumerator = Decimal(0)
+            if ybs.notes_receivable:
+                denumerator += ybs.notes_receivable
+            if ybs.accounts_receivable:
+                denumerator += ybs.accounts_receivable
+            if ybs.accounts_receivable_due_from_related_parties:
+                denumerator += ybs.accounts_receivable_due_from_related_parties
+            if has_ybs_prev:
+                if prev_ybs.notes_receivable:
+                    denumerator += prev_ybs.notes_receivable
+                if prev_ybs.accounts_receivable:
+                    denumerator += prev_ybs.accounts_receivable
+                if prev_ybs.accounts_receivable_due_from_related_parties:
+                    denumerator += prev_ybs.accounts_receivable_due_from_related_parties
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.accounts_receivable_turnover_ratio = 0
+            else:
+                ratio.accounts_receivable_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.accounts_receivable_turnover_ratio = 0
+        # 存貨週轉率 = 營業成本合計 / 期初期末平均之存貨（單位：次／季）
+        if yis.total_operating_cost and yis.total_operating_cost != 0:
+            numerator = yis.total_operating_cost
+            denumerator = Decimal(0)
+            if ybs.total_inventories:
+                denumerator += ybs.total_inventories
+            if has_ybs_prev:
+                if prev_ybs.total_inventories:
+                    denumerator += prev_ybs.total_inventories
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.inventory_turnover_ratio = 0
+            else:
+                ratio.inventory_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.inventory_turnover_ratio = 0
+        # 固定資產週轉率 = 營業收入合計 / 期初期末平均之不動產、廠房及設備（單位：次／季）
+        if yis.total_operating_cost and yis.total_operating_cost != 0:
+            numerator = yis.total_operating_cost
+            denumerator = Decimal(0)
+            if ybs.total_property_plant_and_equipment:
+                denumerator += ybs.total_property_plant_and_equipment
+            if has_ybs_prev:
+                if prev_ybs.total_property_plant_and_equipment:
+                    denumerator += prev_ybs.total_property_plant_and_equipment
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.fixed_asset_turnover_ratio = 0
+            else:
+                ratio.fixed_asset_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.fixed_asset_turnover_ratio = 0
+        # 總資產週轉率 = 營業收入合計 / 期初期末平均之資產總額（單位：次／季）
+        if yis.total_operating_revenue and yis.total_operating_revenue != 0:
+            numerator = yis.total_operating_revenue
+            denumerator = Decimal(0)
+            if ybs.total_assets:
+                denumerator += ybs.total_assets
+            if has_ybs_prev:
+                if prev_ybs.total_assets:
+                    denumerator += prev_ybs.total_assets
+                denumerator /= 2
+            if denumerator == 0:
+                ratio.total_asset_turnover_ratio = 0
+            else:
+                ratio.total_asset_turnover_ratio = numerator / denumerator * 4
+        else:
+            ratio.total_asset_turnover_ratio = 0
+        # ---黃國華指標---
+        # 存貨營收比 = 存貨 / 營業收入合計（評估存貨要多少季可以消化完畢，單位：季）
+        if yis.total_operating_revenue and yis.total_operating_revenue != 0:
+            if ybs.total_inventories:
+                ratio.inventory_sales_ratio = ybs.total_inventories / yis.total_operating_revenue
+            else:
+                ratio.inventory_sales_ratio = 0
+        else:
+            ratio.inventory_sales_ratio = 0
+        # 備供出售比率 = 備供出售金融資產－非流動淨額 / 權益總額（單位：％）
+        if ybs.total_equity and ybs.total_equity != 0:
+            if ybs.non_current_available_for_sale_financial_assets:
+                ratio.available_for_sale_to_equity_ratio = ybs.non_current_available_for_sale_financial_assets / ybs.total_equity * 100
+            else:
+                ratio.available_for_sale_to_equity_ratio = 0
+        else:
+            ratio.available_for_sale_to_equity_ratio = 0
+        # 無形資產比率 = 無形資產 / 權益總額（單位：％）
+        if ybs.total_equity and ybs.total_equity != 0:
+            if ybs.intangible_assets:
+                ratio.intangible_asset_to_equity_ratio = ybs.intangible_assets / ybs.total_equity * 100
+            else:
+                ratio.intangible_asset_to_equity_ratio = 0
+        else:
+            ratio.intangible_asset_to_equity_ratio = 0
+        # 折舊負擔比率 = 折舊費用 / 營業收入合計（評估營收必須拿多少來攤提折舊，單位：％）
+        if yis.total_operating_revenue and yis.total_operating_revenue != 0:
+            if ycf.depreciation_expense:
+                ratio.depreciation_to_sales_ratio = ycf.depreciation_expense / yis.total_operating_revenue
+            else:
+                ratio.depreciation_to_sales_ratio = 1000
+        else:
+            ratio.depreciation_to_sales_ratio = 1000
+        # 營業利益佔稅前淨利比率 = 營業利益（損失） / 稅前淨利（淨損）（單位：％）
+        if yis.profit_loss_from_continuing_operations_before_tax and yis.profit_loss_from_continuing_operations_before_tax != 0:
+            numerator = Decimal(0)
+            if yis.net_operating_income_loss:
+                numerator += yis.net_operating_income_loss
+            # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替
+            elif yis.profit_loss_from_continuing_operations_before_tax:
+                numerator += yis.profit_loss_from_continuing_operations_before_tax
+            ratio.operating_profit_to_net_profit_before_tax_ratio = numerator / yis.profit_loss_from_continuing_operations_before_tax
+        # 現金股息配發率(季資料忽略此項目)
+        # 營業稅率
+        if yis.profit_loss_from_continuing_operations_before_tax and yis.profit_loss_from_continuing_operations_before_tax != 0:
+            if yis.total_tax_expense:
+                if yis.profit_loss_from_continuing_operations_before_tax < 0:
+                    ratio.tax_rate = -yis.total_tax_expense / yis.profit_loss_from_continuing_operations_before_tax
+                else:
+                    ratio.tax_rate = yis.total_tax_expense / yis.profit_loss_from_continuing_operations_before_tax
+            else:
+                ratio.tax_rate = 0
+        ratio.save()
+        # print (ratio.symbol + " season financial ratio saved")
+    cnt = YearFinancialRatio.objects.filter(year=year).count()
+    lastDate = YearFinancialRatio.objects.all().aggregate(Max('date'))['date__max']
+    lastDateDataCnt = FinancialRatio.objects.filter(date=lastDate).count()
+    updateManagement = UpdateManagement(name = "yfr", last_update_date = datetime.date.today(), 
+                                        last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
+    updateManagement.save()
+    json_obj = json.dumps({"updateDate": updateManagement.last_update_date.strftime("%y-%m-%d"),
+                           "dataDate": lastDate.strftime("%y-%m-%d"), "notes": "Update " + str(cnt) + " year cashflow statements on " + str(year)})
+    return HttpResponse(json_obj, content_type="application/json")

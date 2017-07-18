@@ -79,6 +79,14 @@
 						$('.ycf_notes').html(jData.notes);
 					});
 				});
+
+				$(".update_yfr").click(function () {
+					$.get('/update_year_financial_ratio/', {'date':$('.yfr_date').val()}).done(function(jData){
+						$('.yfr_lastUpdate').html(jData.updateDate);
+						$('.yfr_dataDate').html(jData.dataDate);
+						$('.yfr_notes').html(jData.notes);
+					});
+				});
 			});
 		};
 	}
