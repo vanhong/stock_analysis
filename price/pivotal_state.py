@@ -30,7 +30,7 @@ class PivotalState:
 	def next(self, price, date):
 		assert 0, "next not implemented"
 	def save_to_db(self):
-		state = PivotalPoint()
+		state = PivotalPoint2()
 		state.surrogate_key = self.symbol + '_' + self.date
 		state.date = self.date
 		state.symbol = self.symbol

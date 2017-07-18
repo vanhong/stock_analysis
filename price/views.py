@@ -5,12 +5,12 @@ import urllib2
 from django.http import HttpResponse
 from django.db.models import Min, Max
 from HTMLParser import HTMLParser
-import time
 import StringIO
 import string
 import sys
 from datetime import *
-from datetime import timedelta
+from datetime import timedelta, time
+from time import mktime
 from decimal import Decimal
 from stocks.models import StockId
 from price.models import *
@@ -19,7 +19,12 @@ from bs4 import BeautifulSoup
 import pdb
 import csv
 import ssl
+<<<<<<< HEAD
 import xmlrpclib
+=======
+import requests
+import dryscrape
+>>>>>>> ad4f559bf43e2d91842d6701749c852b5bba013d
 
 INIT_PIVOTAL_STATE = 'init_pivotal_state'
 UPWARD_TREND_STATE = 'upward_trend_state'
@@ -29,6 +34,66 @@ NATURAL_RALLY_STATE = 'natural_rally_state'
 SECONDARY_REACTION_STATE = 'secondary_reaction_state'
 SECONDARY_RALLY_STATE = 'secondary_rally_state'
 
+def datetime_timestamp(dt):
+	datetime.strptime(dt, '%Y-%m-%d %H:%M:%S')
+	s = time.mktime(datetime.strptime(dt, '%Y-%m-%d %H:%M:%S'))
+	return str(int(s))
+
+def show_price_new(request):
+	#we visit the main page to initialise sessions and cookies
+	session = dryscrape.Session()
+	session.set_attribute('auto_load_images', False)
+	session.set_header('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95     Safari/537.36')    
+
+	#call this once as it is slow(er) and then you can do multiple download, though there seems to be a limit after which you have to reinitialise...
+	#session.visit("https://finance.yahoo.com/quote/AAPL/history?p=AAPL")
+	#session.visit("https://finance.yahoo.com/quote/AAPL/history?period1=1464920004&period2=1496456004&interval=1wk&filter=history&frequency=1wk")
+	session.visit("https://finance.yahoo.com/quote/1256.TW/history?period1=1465008959&period2=1496544959&interval=1wk&filter=history&frequency=1wk")
+	session.visit("https://finance.yahoo.com/quote/1256.TW/history?period1=1212508800&period2=1496505600&interval=1wk&filter=history&frequency=1wk")
+	response = session.body()
+
+	#get the dowload link
+	soup = BeautifulSoup(response, 'lxml')
+	for taga in soup.findAll('a'):
+		if taga.has_attr('download'):
+			url_download = taga['href']
+	print(url_download)
+
+	#now replace the default end date end start date that yahoo provides
+	s = "2017-02-18"
+	period1 = '%.0f' % mktime(datetime.strptime(s, "%Y-%m-%d").timetuple())
+	e = "2017-05-18"
+	period2 = '%.0f' % mktime(datetime.strptime(e, "%Y-%m-%d").timetuple())
+
+	period1_index = url_download.find('period1=')
+	period2_index = url_download.find('period2=')
+
+	old_period1 = url_download[period1_index+8:period1_index+18]
+	old_period2 = url_download[period2_index+8:period2_index+18]
+
+	url_download = url_download.replace(old_period1, period1)
+	url_download = url_download.replace(old_period2, period2)
+
+	print(url_download)
+	
+	pdb.set_trace()
+	
+	#now we replace the period download by our dates, please feel free to improve, I suck at regex
+	#m = re.search('period1=(.+?)&', url_download)
+	#if m:
+	#	to_replace = m.group(m.lastindex)
+	#	url_download = url_download.replace(to_replace, period1)
+	#m = re.search('period2=(.+?)&', url_download)
+	#if m:
+	#	to_replace = m.group(m.lastindex)
+	#	url_download = url_download.replace(to_replace, period2)
+
+	#and now viti and get body and you have your csv
+	session.visit(url_download)
+	csv_data = session.body()
+
+	return HttpResponse(csv_data)
+
 def show_price(request):
 	# a=月份-1(1月:00)
 	# b=日期(2日:02)
@@ -36,6 +101,7 @@ def show_price(request):
 	# d=月份-1(1月:00)
 	# e=日期(2日:02)
 	# f=年
+<<<<<<< HEAD
 	url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=w&ignore=.csv'
 	#url = 'http://chart.finance.yahoo.com/table.csv?s=2330.TW&a=2&b=3&c=2016&d=2&e=3&f=2017&g=w&ignore=.csv'
 	#url = 'https://finance.yahoo.com/quote/8109.TWO/history?period1=1463992416&period2=1495528416&interval=1d&filter=history&frequency=1d'
@@ -48,6 +114,72 @@ def show_price(request):
 	data = response.read()
 	#array = string.split(data, '\n')
 	return HttpResponse(data)
+=======
+	#context = ssl._create_unverified_context()
+	#url = 'https://finance.yahoo.com/quote/8109.TWO/history?period1=1463804015&period2=1495340015&interval=1wk&filter=history&frequency=1wk'
+	#url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=d&ignore=.csv'
+	#response = urllib.urlopen(url, context=context)	
+	#data = response.read()
+	#array = string.split(data, '\n')
+	#s = requests.Session()
+	#cookies = dict(B='89o0v8pav9jbc&b=4&d=odxId6xpYEMRFFGPAtrV.PcS_Qv2tjpUcB8-&s=e0&i=Gk6vsICmboJBrPfkL2KJ')
+	#crumb = 'DMUsUIRgSH6'
+	url = 'http://jsjustweb.jihsun.com.tw/Z/ZC/ZCW/czkc1.djbcd?a=2383&b=W&c=2880&E=1&ver=5'
+	response = urllib.urlopen(url)
+	data = response.read()
+	array = data.split(' ')
+	data1 = array[0].split(',')
+	data2 = array[1].split(',')
+	data3 = array[2].split(',')
+	data4 = array[3].split(',')
+	data5 = array[4].split(',')
+	data6 = array[5].split(',')
+	pdb.set_trace()
+	#begin = datetime_timestamp('2014-01-01 09:00:00')
+	#end = datetime_timestamp('2017-04-30 09:00:00')
+
+	#r = s.get("https://query1.finance.yahoo.com/v7/finance/download/IBM?period1=1493039845&period2=1495631845&interval=1d&events=history&crumb=DMUsUIRgSH6",cookies=cookies, verify=False)
+
+	return HttpResponse(data)
+
+def update_price(request):
+	stock_ids = StockId.objects.all()
+	symbol_cnt = 0;
+	today = datetime.today()
+	last_monday = today - timedelta(days=today.weekday())
+	if 'date' in request.GET:
+		date = request.GET['date']
+		last_monday = datetime.strptime(date, '%Y-%m-%d')
+	for stock_id in stock_ids:
+		lastest_price_date = NewPrice.objects.filter(symbol=stock_id.symbol).aggregate(Max("date"))
+		if last_monday.date() == lastest_price_date['date__max']:
+			continue
+		url = 'http://jsjustweb.jihsun.com.tw/Z/ZC/ZCW/czkc1.djbcd?a=' + stock_id.symbol + '&b=W&c=2880&E=1&ver=5'
+		response = urllib.urlopen(url)
+		datas = response.read().split(' ')
+		dates = datas[0].split(',')
+		opens = datas[1].split(',')
+		highs = datas[2].split(',')
+		lows = datas[3].split(',')
+		closes = datas[4].split(',')
+		volumes = datas[5].split(',')
+		cnt = 0
+		for i in range(len(dates)):
+			priceObj = NewPrice()
+			priceObj.surrogate_key = stock_id.symbol + '_' + dates[i].replace('-','')
+			priceObj.date = datetime.strptime(dates[i], "%Y/%m/%d").date()
+			priceObj.symbol = stock_id.symbol
+			priceObj.open_price = opens[i]
+			priceObj.high_price = highs[i]
+			priceObj.low_price = lows[i]
+			priceObj.close_price = closes[i]
+			priceObj.volume = volumes[i]
+			priceObj.save()
+			cnt = cnt + 1
+		symbol_cnt = symbol_cnt + 1
+		print ('update {0} history price, there has {1} datas'.format(stock_id.symbol, cnt))
+	return HttpResponse('update %d history price' % (cnt))
+>>>>>>> ad4f559bf43e2d91842d6701749c852b5bba013d
 
 def update_price_by_stockid(request):
 	# 如果需要更新，至少更新60天的資料
@@ -114,18 +246,28 @@ def update_price_by_stockid(request):
 
 	return HttpResponse('update {0} history price'.format(stockID))
 
-def update_price(request):
+def update_price_old(request):
 	except_list = ["3266", "3437", "3661", "4171"]
 	try:
 		input_begin = datetime.strptime(request.GET['begin'], "%Y%m%d")
 	except:
 		input_begin = date(2008, 1, 2)
+	try:
+		input_date =  datetime.strptime(request.GET['date'], "%Y-%m-%d")
+	except:
+		input_date =  date(2008, 1, 2)
 	end = datetime.today()
 	stock_ids = StockId.objects.all()
+	session = dryscrape.Session()
+	session.set_attribute('auto_load_images', False)
+	session.set_header('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95     Safari/537.36')    
+	
 	for stock_id in stock_ids:
 		begin = input_begin
 		lastest_price_date = Price.objects.filter(symbol=stock_id.symbol).aggregate(Max("date"))
 		earliest_price_date = Price.objects.filter(symbol=stock_id.symbol).aggregate(Min("date"))
+		if input_date.date() == lastest_price_date['date__max']:
+			continue
 		if (earliest_price_date["date__min"] == None):
 			begin = date(2008, 1, 2)
 		elif (lastest_price_date["date__max"] < input_begin):
@@ -141,11 +283,41 @@ def update_price(request):
 				inputStock = stock_id.symbol + ".TWO"
 			else:
 				inputStock = stock_id.symbol + ".TW"
-		context = ssl._create_unverified_context()
-		url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=w&ignore=.csv'\
-		  .format(inputStock, "%02d" %(begin.month-1), begin.day, begin.year, "%02d" %(end.month-1), end.day, end.year)
-		response = urllib.urlopen(url, context=context)
-		data = response.read()
+		#we visit the main page to initialise sessions and cookies
+		
+		#call this once as it is slow(er) and then you can do multiple download, though there seems to be a limit after which you have to reinitialise...
+		#session.visit("https://finance.yahoo.com/quote/AAPL/history?p=AAPL")
+		session.visit("https://finance.yahoo.com/quote/" + inputStock + "/history?period1=1464920004&period2=1496456004&interval=1wk&filter=history&frequency=1wk")
+		response = session.body()
+
+		#get the dowload link
+		soup = BeautifulSoup(response, 'lxml')
+		for taga in soup.findAll('a'):
+			if taga.has_attr('download'):
+				url_download = taga['href']
+		#now replace the default end date end start date that yahoo provides
+		#s = "2017-02-18"
+		#period1 = '%.0f' % mktime(datetime.strptime(begin, "%Y-%m-%d").timetuple())
+		#e = "2017-05-18"
+		#period2 = '%.0f' % mktime(datetime.strptime(end, "%Y-%m-%d").timetuple())
+		period1 = '%.0f' % mktime(begin.timetuple())
+		period2 = '%.0f' % mktime(end.timetuple())
+
+		period1_index = url_download.find('period1=')
+		period2_index = url_download.find('period2=')
+
+		old_period1 = url_download[period1_index+8:period1_index+18]
+		old_period2 = url_download[period2_index+8:period2_index+18]
+
+		url_download = url_download.replace(old_period1, period1)
+		url_download = url_download.replace(old_period2, period2)
+		#context = ssl._create_unverified_context()
+		#url = 'http://ichart.yahoo.com/table.csv?s={0}&a={1}&b={2}&c={3}&d={4}&e={5}&f={6}&g=w&ignore=.csv'\
+		#  .format(inputStock, "%02d" %(begin.month-1), begin.day, begin.year, "%02d" %(end.month-1), end.day, end.year)
+		#response = urllib.urlopen(url, context=context)
+		session.visit(url_download)
+		data = session.body()
+		#data = response.read()
 		array = string.split(data, '\n')
 		cnt = 0;
 		for line in array:
@@ -189,7 +361,7 @@ def update_pivotal_state_by_stockid(request):
 
 	return HttpResponse('update {0} privtal state'.format(stock_id))
 
-def update_pivotal_state(request):
+def update_pivotal_state_old(request):
 	stock_ids = StockId.objects.all()
 	for stock_id in stock_ids:
 		cnt = 0
@@ -252,6 +424,71 @@ def update_pivotal_state(request):
 					print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
 	return HttpResponse('update pivotal state')
 
+def update_pivotal_state(request):
+	stock_ids = StockId.objects.all()
+	for stock_id in stock_ids:
+		cnt = 0
+		pivotal_point_count = PivotalPoint2.objects.filter(symbol=stock_id.symbol).count()
+		print("start update {0} pivotal".format(stock_id))
+		if pivotal_point_count < 10:
+			stock_prices = NewPrice.objects.filter(symbol=stock_id.symbol).order_by('date')
+			if stock_prices.count() == 0:
+				print ("update {0} pivotal error, there is no price data".format(stock_id))
+				continue
+			pivotal_state = InitPivotalState(date=stock_prices[0].date.strftime('%Y-%m-%d'), price=0, symbol=stock_id.symbol, prev_state='init_pivotal_state', upward_trend=0 ,\
+	                                         downward_trend=0, natural_reaction=0, natural_rally=0, secondary_rally=0, secondary_reaction=0)
+			for stock_price in stock_prices:
+				cnt += 1
+				pivotal_state = pivotal_state.next(stock_price.close_price, stock_price.date.strftime('%Y-%m-%d'))
+				pivotal_state.save_to_db()
+			print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+		else:
+			pivotal_state = PivotalPoint2.objects.filter(symbol=stock_id.symbol).order_by("-date")[9]
+			stock_prices = NewPrice.objects.filter(symbol=stock_id.symbol, date__gte=pivotal_state.date).order_by("date")
+			if (pivotal_state.date != stock_prices[0].date):
+				print ("update {0} pivotal error date is not the same".format(stock_id))
+			else:
+				if pivotal_state.state == INIT_PIVOTAL_STATE:
+					pivotal_state = InitPivotalState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == UPWARD_TREND_STATE:
+					pivotal_state = UpwardTrendState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == DOWNWARD_TREND_STATE:
+					pivotal_state = DownwardTrendState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == NATURAL_RALLY_STATE:
+					pivotal_state = NaturalRallyState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == NATURAL_REACTION_STATE:
+					pivotal_state = NaturalReactionState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == SECONDARY_RALLY_STATE:
+					pivotal_state = SecondaryRallyState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				elif pivotal_state.state == SECONDARY_REACTION_STATE:
+					pivotal_state = SecondaryReactionState(date=pivotal_state.date.strftime('%Y-%m-%d'), price=pivotal_state.price, symbol=stock_id.symbol, prev_state=pivotal_state.prev_state, \
+													 upward_trend=pivotal_state.upward_trend_point , downward_trend=pivotal_state.downward_trend_point, natural_reaction=pivotal_state.natural_reaction_point, \
+													 natural_rally=pivotal_state.natural_rally_point, secondary_rally=pivotal_state.secondary_rally_point, secondary_reaction=pivotal_state.secondary_reaction_point)
+				else:
+					print ("update {0} pivotal error: can't find state".format(stock_id))
+				for stock_price in stock_prices:
+					if (stock_price.date != pivotal_state.date):
+						pivotal_state = pivotal_state.next(stock_price.close_price, stock_price.date.strftime('%Y-%m-%d'))
+						pivotal_state.save_to_db()
+						# print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+						cnt += 1
+				if cnt != 11:
+					print ('update {0} pivotal state, there has {1} datas'.format(stock_id.symbol, cnt))
+	return HttpResponse('update pivotal state')
+
+
 def download_csv2(request):
 	encode = request.GET.get('encode', 'big5')
 
@@ -266,12 +503,15 @@ def download_csv2(request):
 #201201開始
 def download_csv(request):
 	start_date = date(2016, 1, 1)
-	pivotal_point = PivotalPoint.objects.filter(date__gte=start_date)
+	pivotal_point = PivotalPoint2.objects.filter(date__gte=start_date)
 	sample_points = pivotal_point.filter(symbol='2330').order_by('date')
 	encode = request.GET.get('encode', 'big5')
 
 	response = HttpResponse(content_type='text/csv')
-	response['Content-Disposition'] = 'attachment; filename="test.csv"'
+	today = datetime.today()
+	last_monday = today - timedelta(days=today.weekday())
+	filename = last_monday.strftime('%Y%m%d') + '.csv'
+	response['Content-Disposition'] = 'attachment; filename=' + filename
 
 	writer = csv.writer(response, delimiter=',', quotechar='"')
 	header = ['StockID','Name']
@@ -307,7 +547,7 @@ def download_csv(request):
 			'1231','4205','1402','1477','1476',
 			'4401','2912','5904','1707','1733',
 			'3164','1788','4126','8940','2201',
-			'2207','2548','5522','2820','2881','2886','2449','1452','6202']
+			'2207','2548','5522','2820','2881','2886','2449','1452','6202', '6449']
 	for stock_id in stock_ids:
 		if (StockId.objects.filter(symbol__contains=stock_id)):
 			stockId = StockId.objects.get(symbol=stock_id)

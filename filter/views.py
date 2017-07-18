@@ -122,8 +122,9 @@ def filter_start2(request):
     for key, value in conditions.iteritems(): #逐一條件做篩選
         if key == 'RevenueYoY': #月營收連續幾個月年增率>
             cnt = int(value['cnt'])
-            value = int(value['value'])
-            update_lists = query_revenue_ann_growth_rate(cnt, cnt, 'gte', value, 'month')
+            YoyValue = int(value['value'])
+            matchcnt = int(value['matchcnt'])
+            update_lists = query_revenue_ann_growth_rate(cnt, matchcnt, 'gte', YoyValue, 'month')
             #targetClass = getattr(FilterClasses, key)
             #instance = targetClass()
             #results = instance.filter(value)
@@ -209,13 +210,37 @@ def filter_start2(request):
     print filterIntersection
     new_list = sorted(filterIntersection)    
     results_dic = {}
+    fieldName = ResultObj()
+    fieldName.name = 'Name'
+    fieldName.stockid = 'Symbol'
+    fieldName.company_type = 'Type'
+    fieldName.revenue_date = 'Revenue_Date'
+    results_dic['0000'] = fieldName
     for item in new_list:
         if StockId.objects.filter(symbol=item):
-            results_dic[item] = StockId.objects.get(symbol=item).name
+            #results_dic[item] = StockId.objects.get(symbol=item).name
+            resultObj = ResultObj()
+            stockid = StockId.objects.get(symbol=item)
+            resultObj.name = stockid.name
+            resultObj.stockid = stockid.symbol
+            resultObj.company_type = stockid.company_type
+            revenue = MonthRevenue.objects.filter(symbol=item).order_by('-date')[0]
+            resultObj.revenue_date = revenue.date.strftime('%Y-%m-%d')
+            results_dic[item] = resultObj
     return render_to_response(
                 'filter/filter_result.html', {
                 "results": sorted(results_dic.iteritems())},
                 context_instance = RequestContext(request))
+
+class ResultObj():
+    def setName(self, name):
+        self.name = name
+    def setPrice(self, stockid):
+        self.stockid = stockid
+    def setCompany_type(self, company_type):
+        self.company_type = company_type
+    def setRevenueDate(self, date):
+        self.revenue_date = date
 
 #not used
 def check_season_data(cnt, overunder, condition, conditionValue):
