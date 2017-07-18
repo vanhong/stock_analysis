@@ -115,8 +115,6 @@ urlpatterns += patterns('chip.views',
     url(r'^update_shareholder_structure/$', 'update_shareholder_structure'),
 )
 
-<<<<<<< HEAD
-=======
 urlpatterns += patterns('price.views',
     url(r'^update_price/$', 'update_price'),
     url(r'^show_price/$', 'show_price'),
@@ -125,7 +123,6 @@ urlpatterns += patterns('price.views',
     url(r'^download_csv/$', 'download_csv'),
 )
 
->>>>>>> 8464e3d614df994d41c1aa3cac64796d8145e652
 urlpatterns += patterns('reaserch.views',
     url(r'^chip_price_relation/$', 'chip_price_relation'),
 )
