@@ -101,20 +101,19 @@ def show_price(request):
 	# d=月份-1(1月:00)
 	# e=日期(2日:02)
 	# f=年
-<<<<<<< HEAD
-	url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=w&ignore=.csv'
+	#url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=w&ignore=.csv'
 	#url = 'http://chart.finance.yahoo.com/table.csv?s=2330.TW&a=2&b=3&c=2016&d=2&e=3&f=2017&g=w&ignore=.csv'
 	#url = 'https://finance.yahoo.com/quote/8109.TWO/history?period1=1463992416&period2=1495528416&interval=1d&filter=history&frequency=1d'
-	url = 'https://finance.yahoo.com/quote/2330.TW/history?period1=1211558400&period2=9999999999&interval=1wk&filter=history&frequency=1wk'
+	#url = 'https://finance.yahoo.com/quote/2330.TW/history?period1=1211558400&period2=9999999999&interval=1wk&filter=history&frequency=1wk'
 	#context = ssl._create_unverified_context()
-	headers = {'User-Agent': 'Mozilla/5.0'}
-	req = urllib2.Request(url)
-	response = urllib2.urlopen(req)
+	#headers = {'User-Agent': 'Mozilla/5.0'}
+	#req = urllib2.Request(url)
+	#response = urllib2.urlopen(req)
 	#response = urllib2.urlopen(url)
-	data = response.read()
+	#data = response.read()
 	#array = string.split(data, '\n')
-	return HttpResponse(data)
-=======
+	#return HttpResponse(data)
+	
 	#context = ssl._create_unverified_context()
 	#url = 'https://finance.yahoo.com/quote/8109.TWO/history?period1=1463804015&period2=1495340015&interval=1wk&filter=history&frequency=1wk'
 	#url = 'http://ichart.yahoo.com/table.csv?s=6146.two&a=00&b=01&c=2014&d=12&e=31&f=2015&g=d&ignore=.csv'
@@ -179,7 +178,6 @@ def update_price(request):
 		symbol_cnt = symbol_cnt + 1
 		print ('update {0} history price, there has {1} datas'.format(stock_id.symbol, cnt))
 	return HttpResponse('update %d history price' % (cnt))
->>>>>>> ad4f559bf43e2d91842d6701749c852b5bba013d
 
 def update_price_by_stockid(request):
 	# 如果需要更新，至少更新60天的資料
