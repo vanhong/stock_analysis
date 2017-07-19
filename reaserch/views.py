@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 # Create your views here.
-
+from django.http import HttpResponse
+from reaserch.models import WawaGrowthPower
+from financial.models import SeasonFinancialRatio, YearFinancialRatio
+from decimal import Decimal
+from core.utils import season_to_date
 
 #找出籌碼跟股價 持續 高度相關的
 def chip_price_relation(cnt, score, chip_type):
@@ -38,3 +42,119 @@ def chip_price_relation(cnt, score, chip_type):
 	results = list(set(update_lists).union(set(not_update_lists)))
 	result_symbols = map(lambda item: item[0], results)
 	return result_symbols
+
+#wawa growth power
+def update_wawa_growth_power(request):
+	print 'start update wawa growth power'
+	if 'date' in request.GET:
+		date = request.GET['date']
+		if date != '':
+			try:
+				str_year, str_season = date.split('-')
+				year = int(str_year)
+				season = int(str_season)
+			except:
+					return HttpResponse("please input correct season 'year-season'")
+		else:
+			return HttpResponse("please input correct season 'year-season'")
+	else:
+		return HttpResponse("please input correct season 'year-season'")
+	stockids = ['6274']
+	for stockid in stockids:
+		wawa_growth = WawaGrowthPower()
+		wawa_growth.symbol = stockid
+		wawa_growth.year = year
+		wawa_growth.season = season
+		wawa_growth.date = season_to_date(year, season)
+		wawa_growth.surrogate_key = stockid + '_' + str(year) + str(season).zfill(2)
+		if season == 1:
+			financial_ratio = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
+			wawa_growth.season_eps = financial_ratio.earnings_per_share
+			wawa_growth.estimate_eps = wawa_growth.season_eps * 4
+			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
+			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
+			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.save()
+		elif season == 2:
+			financial_ratio1 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-1)
+			financial_ratio2 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
+			wawa_growth.season_eps = financial_ratio2.earnings_per_share
+			wawa_growth.estimate_eps = (financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share) * 2
+			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season)
+			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
+			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.save()
+		elif season == 3:
+			financial_ratio1 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-2)
+			financial_ratio2 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-1)
+			financial_ratio3 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
+			wawa_growth.season_eps = financial_ratio3.earnings_per_share
+			wawa_growth.estimate_eps = (financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share + financial_ratio3.earnings_per_share) * 4 / 3
+			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season)
+			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
+			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.save()
+		elif season == 4:
+			financial_ratio1 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-3)
+			financial_ratio2 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-2)
+			financial_ratio3 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-1)
+			financial_ratio4 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
+			wawa_growth.season_eps = financial_ratio4.earnings_per_share
+			wawa_growth.estimate_eps = financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share + \
+									   financial_ratio3.earnings_per_share + financial_ratio4.earnings_per_share
+			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season)
+			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
+			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.save()
+		print("update " + stockid + "'s wawa growth power date:" + str_year + "-" + str_season)
+	return HttpResponse('update wawa_growth')
+
+def update_vk_growth_power(request):
+	print 'start update vk growth power'
+	if 'date' in request.GET:
+		date = request.GET['date']
+		if date != '':
+			try:
+				str_year, str_season = date.split('-')
+				year = int(str_year)
+				season = int(str_season)
+			except:
+					return HttpResponse("please input correct season 'year-season'")
+		else:
+			return HttpResponse("please input correct season 'year-season'")
+	else:
+		return HttpResponse("please input correct season 'year-season'")
+	stockids = ['6274']
+	for stockid in stockids:
+		vk_growth = VKGrowthPower()
+		vk_growth.symbol = stockid
+		vk_growth.year = year
+		vk_growth.season = season
+		vk_growth.date = season_to_date(year, season)
+		vk_growth.surrogate_key = stockid + '_' + str(year) + str(season).zfill(2)
+		financial_ratios = SeasonFinancialRatio.objects.filter(symbol=stockid).order_by('-date')
+		if (len(financial_ratios) >= 8):
+			financial_ratio = financial_ratios[0]
+			financial_ratio1 = financial_ratios[1]
+			financial_ratio2 = financial_ratios[2]
+			financial_ratio3 = financial_ratios[3]
+			financial_ratio4 = financial_ratios[4]
+			financial_ratio5 = financial_ratios[5]
+			financial_ratio6 = financial_ratios[6]
+			financial_ratio7 = financial_ratios[7]
+			vk_growth.season_eps = financial_ratio.earnings_per_share
+			vk_growth.estimate_eps = financial_ratio.earnings_per_share + financial_ratio1.earnings_per_share + \
+									 financial_ratio2.earnings_per_share + financial_ratio3.earnings_per_share
+			vk_growth.last_year_season_eps = financial_ratio4.earnings_per_share + financial_ratio5.earnings_per_share + \
+									  financial_ratio6.earnings_per_share + financial_ratio7.earnings_per_share
+			vk_growth.estimate_growth_rate = vk_growth.season_eps / vk_growth.last_year_season_eps - 1
+			vk_growth.reasonable_price = vk_growth.estimate_growth_rate * Decimal(0.66) * vk_growth.last_year_eps
+			vk_growth.save()
+			print("update " + stockid + "'s vk growth power date:" + year + "-" + season)
+		else:
+			print(stockid + "'s data not enough to update vk growth power")
+	return HttpResponse('update vk_growth date:' + str_year + "-"+ str_season)

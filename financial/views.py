@@ -3062,7 +3062,7 @@ def update_year_financial_ratio(request):
         # print (ratio.symbol + " season financial ratio saved")
     cnt = YearFinancialRatio.objects.filter(year=year).count()
     lastDate = YearFinancialRatio.objects.all().aggregate(Max('date'))['date__max']
-    lastDateDataCnt = FinancialRatio.objects.filter(date=lastDate).count()
+    lastDateDataCnt = YearFinancialRatio.objects.filter(date=lastDate).count()
     updateManagement = UpdateManagement(name = "yfr", last_update_date = datetime.date.today(), 
                                         last_data_date = lastDate, notes="There is " + str(lastDateDataCnt) + " datas")
     updateManagement.save()
