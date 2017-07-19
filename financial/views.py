@@ -1708,7 +1708,7 @@ def update_year_cashflow_statement(request):
     stockIDs = get_updated_id(year, 4)
     for stock_id in stockIDs:
         stock_symbol = stock_id
-        if not YearCashflowStatement.objects.filter(symbol=stock_symbol):
+        if not YearCashflowStatement.objects.filter(symbol=stock_symbol, year=year):
             print stock_symbol + ' loaded'
             url = 'http://mops.twse.com.tw/mops/web/t164sb05'
             values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
