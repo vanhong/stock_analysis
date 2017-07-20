@@ -581,7 +581,7 @@ def update_year_income_statement(request):
     stockIDs = get_updated_id(year, 4)
     update_cnt = 0
     for stockID in stockIDs:
-        update_cnt += update_cnt + 1
+        update_cnt = update_cnt + 1
         stock_symbol = stockID
         if not (YearIncomeStatement.objects.filter(symbol=stock_symbol, year=year)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
