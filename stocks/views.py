@@ -499,6 +499,9 @@ def update(request):
         data = UpdateManagement.objects.get(name='yfr')
         updateData['yfr'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
 
+    if all_data.filter(name='ycf').count() > 0:
+        data = UpdateManagement.objects.get(name='ycf')
+        updateData['ycf'] = UpdateData(data.last_update_date.strftime("%y-%m-%d"), data.last_data_date.strftime("%y-%m-%d"), data.notes)
     return render_to_response('analysis/update.html', 
             {'updateData': updateData}, context_instance=RequestContext(request))
 
