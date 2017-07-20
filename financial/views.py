@@ -818,6 +818,8 @@ def update_year_income_statement(request):
                 print stock_symbol + ' data updated'
             else:
                 print stock_symbol + 'has no data-----------'
+                print stock_symbol + 'time sleep' 
+                time.sleep(20)
     cnt = YearIncomeStatement.objects.filter(year=year).count()
     lastDate = YearIncomeStatement.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = YearIncomeStatement.objects.filter(date=lastDate).count()
