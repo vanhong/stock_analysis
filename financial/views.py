@@ -120,8 +120,10 @@ def update_season_income_statement(request):
         incomeStatementsSeason1 = SeasonIncomeStatement.objects.filter(year=year, season=1)
         incomeStatementsSeason2 = SeasonIncomeStatement.objects.filter(year=year, season=2)
         incomeStatementsSeason3 = SeasonIncomeStatement.objects.filter(year=year, season=3)
+    update_cnt = 0
     for stockID in stockIDs:
         stock_symbol = stockID
+        update_cnt = update_cnt+1
         if not (SeasonIncomeStatement.objects.filter(symbol=stock_symbol, year=year, season=season)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
             # values = {'encodeURIComponent' : '1', 'step' : '1', 'firstin' : '1', 'off' : '1',
@@ -546,7 +548,7 @@ def update_season_income_statement(request):
                             income_statement.income_from_discontinued_operations = st_to_decimal(next_data.string) - symbolSeason1.income_from_discontinued_operations - symbolSeason2.income_from_discontinued_operations - symbolSeason3.income_from_discontinued_operations
             if income_statement.total_basic_earnings_per_share is not None:
                 income_statement.save()
-                print stock_symbol + ' data updated'
+                print stock_symbol + ' data updated ' + str(update_cnt) + ' in ' + str(len(stockIDs))
             else:
                 print stock_symbol + 'has no data-----------'
     cnt = SeasonIncomeStatement.objects.filter(year=year, season=season).count()
@@ -577,7 +579,9 @@ def update_year_income_statement(request):
         json_obj = json.dumps({"notes": "please input correct season year"})
         return HttpResponse(json_obj, content_type="application/json")
     stockIDs = get_updated_id(year, 4)
+    update_cnt = 0
     for stockID in stockIDs:
+        update_cnt = update_cnt + 1
         stock_symbol = stockID
         if not (YearIncomeStatement.objects.filter(symbol=stock_symbol, year=year)):
             url = 'http://mops.twse.com.tw/mops/web/ajax_t164sb04'
@@ -815,7 +819,7 @@ def update_year_income_statement(request):
                         income_statement.income_from_discontinued_operations = st_to_decimal(next_data.string)
             if income_statement.total_basic_earnings_per_share is not None:
                 income_statement.save()
-                print stock_symbol + ' data updated'
+                print stock_symbol + ' data updated ' + str(update_cnt) + ' in ' + str(len(stockIDs))
             else:
                 print stock_symbol + 'has no data-----------'
                 print stock_symbol + 'time sleep' 
@@ -890,7 +894,9 @@ def update_season_balance_sheet(request):
     #     today = datetime.datetime.now()
     #     year, season = last_season(today)
     stockIDs = get_updated_id(year, season)
+    update_cnt = 0
     for stock_id in stockIDs:
+        update_cnt += 1
         stock_symbol = stock_id
         if not SeasonBalanceSheet.objects.filter(symbol=stock_symbol, year=year, season=season):
             print stock_symbol + ' loaded'
@@ -1248,7 +1254,7 @@ def update_season_balance_sheet(request):
                 print stock_symbol + ' time sleep'
                 time.sleep(5)
 
-            print stock_symbol + ' data updated'
+            print stock_symbol + ' data updated ' + str(update_cnt) + ' in ' + str(len(stockIDs))
     cnt = SeasonBalanceSheet.objects.filter(year=year, season=season).count()
     lastDate = SeasonBalanceSheet.objects.all().aggregate(Max('date'))['date__max']
     lastDateDataCnt = SeasonBalanceSheet.objects.filter(date=lastDate).count()
@@ -1310,10 +1316,12 @@ def update_season_cashflow_statement(request):
         return HttpResponse(json_obj, content_type="application/json")
     
     stockIDs = get_updated_id(year, season)
+    update_cnt = 0
     for stock_id in stockIDs:
+        update_cnt += 1
         stock_symbol = stock_id
         if not SeasonCashflowStatement.objects.filter(symbol=stock_symbol, year=year, season=season):
-            print stock_symbol + ' loaded'
+            print stock_symbol + ' loaded '+ str(update_cnt) + ' in ' + str(len(stockIDs))
             url = 'http://mops.twse.com.tw/mops/web/t164sb05'
             values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
                     'year' : str(year-1911), 'season' : str(season).zfill(1), 'co_id' : stock_symbol, 'firstin' : '1'}
@@ -1708,10 +1716,12 @@ def update_year_cashflow_statement(request):
         return HttpResponse(json_obj, content_type="application/json")
     
     stockIDs = get_updated_id(year, 4)
+    update_cnt = 0
     for stock_id in stockIDs:
+        update_cnt += 1
         stock_symbol = stock_id
         if not YearCashflowStatement.objects.filter(symbol=stock_symbol, year=year):
-            print stock_symbol + ' loaded'
+            print stock_symbol + ' loaded ' + str(update_cnt) + ' in ' + str(len(stockIDs))
             url = 'http://mops.twse.com.tw/mops/web/t164sb05'
             values = {'encodeURIComponent' : '1', 'id' : '', 'key' : '', 'TYPEK' : 'all', 'step' : '2',
                     'year' : str(year-1911), 'season' : '4', 'co_id' : stock_symbol, 'firstin' : '1'}
@@ -2773,7 +2783,7 @@ def update_season_financial_ratio(request):
     return HttpResponse(json_obj, content_type="application/json")
     
 def update_year_financial_ratio(request):
-    print 'start update season financial ratio'
+    print 'start update year financial ratio'
     if 'date' in request.GET:
         date = request.GET['date']
         if date != '':
