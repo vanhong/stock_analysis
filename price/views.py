@@ -19,12 +19,7 @@ from bs4 import BeautifulSoup
 import pdb
 import csv
 import ssl
-<<<<<<< HEAD
 import xmlrpclib
-=======
-import requests
-import dryscrape
->>>>>>> ad4f559bf43e2d91842d6701749c852b5bba013d
 
 INIT_PIVOTAL_STATE = 'init_pivotal_state'
 UPWARD_TREND_STATE = 'upward_trend_state'

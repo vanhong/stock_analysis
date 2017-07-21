@@ -6,6 +6,7 @@ from financial.models import SeasonFinancialRatio, YearFinancialRatio
 from decimal import Decimal
 from core.utils import season_to_date
 from stocks.models import WatchList
+from datetime import *
 import pdb
 
 #找出籌碼跟股價 持續 高度相關的
@@ -165,3 +166,45 @@ def update_vk_growth_power(request):
 		else:
 			print(stockid + "'s data not enough to update vk growth power")
 	return HttpResponse('update vk_growth date:' + str_year + "-"+ str_season)
+
+def down_load_growth(request):
+	if 'date' in request.GET:
+		date = request.GET['date']
+		if date != '':
+			try:
+				str_year, str_season = date.split('-')
+				year = int(str_year)
+				season = int(str_season)
+			except:
+					return HttpResponse("please input correct season 'year-season'")
+		else:
+			return HttpResponse("please input correct season 'year-season'")
+	else:
+		return HttpResponse("please input correct season 'year-season'")
+	response = HttpResponse(content_type='text/csv')
+	today = datetime.today()
+	filename = 'growth_power_' + today.strftime('%Y%m%d') + '.csv'
+	response['Content-Disposition'] = 'attachment; filename=' + filename
+	writer = csv.writer(response, delimiter=',', quotechar='"')
+	header = ['StockID','Name', 'Type', 'Price', 'ReasonablePrice', 'GrowthRate', 'EstiamteEPS', 'LastYearEPS', 'SeasonEPS', 'LastYearSeasonEPS']
+	writer.writerow([x for x in header])
+	stockids = WatchList.objects.values_list('symbol', flat=True)
+	for stockid in stockids:
+		if (StockId.objects.filter(symbol__contains=stocid)):
+			body = [stockid]
+			body.append(stockid.name)
+			body.append(stockid.company_type)
+			if (NewPrice.objects.filter(symbol=stocid)):
+				body.append(NewPrice.objects.filter(symbol=stocid).order_by(-date)[0].close_price)
+			else:
+				body.append('0')
+			if (WawaGrowthPower.objects.filter(symbol=stockid, year=year, season=season)):
+				growth_power = WawaGrowthPower.objects.get(symbol=stockid, year=year, season=season)
+				body.append(growth_power.reasonable_price)
+				body.append(growth_power.growth_rate)
+				body.append(growth_power.estimate_eps)
+				body.append(growth_rate.last_year_eps)
+				body.append(growth_rate.season_eps)
+				body.append(growth_rate.last_year_season_eps)
+			writer.writerow([x.encode("cp950") for x in body])
+	return response
