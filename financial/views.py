@@ -1120,9 +1120,6 @@ def update_season_balance_sheet(request):
                 elif r'預收股本' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.advance_receipts_for_share_capital = st_to_decimal(next_data.string)
-                elif r'股本合計' in data.string.encode('utf-8'):
-                    next_data = data.next_sibling.next_sibling
-                    balance_sheet.total_capital_stock = st_to_decimal(next_data.string)
                 elif r'資本公積－發行溢價' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.additional_paid_in_capital = st_to_decimal(next_data.string)
@@ -1238,6 +1235,10 @@ def update_season_balance_sheet(request):
                 elif r'其他金融負債' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_other_financial_liabilities = st_to_decimal(next_data.string)
+                elif r'股本合計' in data.string.encode('utf-8') or r'股本' in data.string.encode('utf-8'):
+                    if data.next_sibling.next_sibling.string is not None:
+                        next_data = data.next_sibling.next_sibling
+                        balance_sheet.total_capital_stock = st_to_decimal(next_data.string)
                 elif r'其他負債' in data.string.encode('utf-8'):
                     if data.next_sibling.next_sibling.string is not None:
                         next_data = data.next_sibling.next_sibling

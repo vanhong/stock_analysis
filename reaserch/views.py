@@ -1,10 +1,12 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Create your views here.
 from django.http import HttpResponse
 from reaserch.models import WawaGrowthPower
 from financial.models import SeasonFinancialRatio, YearFinancialRatio
 from decimal import Decimal
 from core.utils import season_to_date
+from stocks.models import WatchList
+import pdb
 
 #找出籌碼跟股價 持續 高度相關的
 def chip_price_relation(cnt, score, chip_type):
@@ -59,21 +61,26 @@ def update_wawa_growth_power(request):
 			return HttpResponse("please input correct season 'year-season'")
 	else:
 		return HttpResponse("please input correct season 'year-season'")
-	stockids = ['6274']
+	stockids = WatchList.objects.values_list('symbol', flat=True)
 	for stockid in stockids:
+		print("start " + stockid + "'s wawa growth power date:" + str_year + "-" + str_season)
 		wawa_growth = WawaGrowthPower()
 		wawa_growth.symbol = stockid
 		wawa_growth.year = year
 		wawa_growth.season = season
 		wawa_growth.date = season_to_date(year, season)
 		wawa_growth.surrogate_key = stockid + '_' + str(year) + str(season).zfill(2)
+		if not SeasonFinancialRatio.objects.filter(symbol=stockid, year=year-1, season=season):
+			continue
+		if not YearFinancialRatio.objects.filter(symbol=stockid, year=year-1):
+			continue
 		if season == 1:
 			financial_ratio = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
 			wawa_growth.season_eps = financial_ratio.earnings_per_share
 			wawa_growth.estimate_eps = wawa_growth.season_eps * 4
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
-			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		elif season == 2:
@@ -81,9 +88,9 @@ def update_wawa_growth_power(request):
 			financial_ratio2 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
 			wawa_growth.season_eps = financial_ratio2.earnings_per_share
 			wawa_growth.estimate_eps = (financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share) * 2
-			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season)
+			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
-			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		elif season == 3:
@@ -92,9 +99,9 @@ def update_wawa_growth_power(request):
 			financial_ratio3 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
 			wawa_growth.season_eps = financial_ratio3.earnings_per_share
 			wawa_growth.estimate_eps = (financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share + financial_ratio3.earnings_per_share) * 4 / 3
-			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season)
+			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
-			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		elif season == 4:
@@ -105,9 +112,9 @@ def update_wawa_growth_power(request):
 			wawa_growth.season_eps = financial_ratio4.earnings_per_share
 			wawa_growth.estimate_eps = financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share + \
 									   financial_ratio3.earnings_per_share + financial_ratio4.earnings_per_share
-			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season)
+			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
-			wawa_growth.estimate_growth_rate = wawa_growth.season_eps / wawa_growth.last_year_season_eps - 1
+			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		print("update " + stockid + "'s wawa growth power date:" + str_year + "-" + str_season)

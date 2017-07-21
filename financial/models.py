@@ -491,17 +491,17 @@ class SeasonFinancialRatio(models.Model):
 
     modified_date = models.DateField(auto_now=True)
 
-    def __unicode__(self):
-        return u'%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % (self.ID, self.symbol, self.date, 
-            self.gross_profit_margin, self.operating_profit_margin, self.net_profit_margin,
-            self.earnings_per_share, self.return_on_assets, self.return_on_equity,
-            self.current_ratio, self.quick_ratio, self.financial_debt_ratio, self.debt_ratio,
-            self.accounts_receivable_turnover_ratio, self.inventory_turnover_ratio,
-            self.fixed_asset_turnover_ratio, self.total_asset_turnover_ratio,
-            self.inventory_sales_ratio,self.available_for_sale_to_equity_ratio,
-            self.intangible_asset_to_equity_ratio,self.undepreciation_ratio,
-            self.depreciation_to_sales_ratio,self.operating_profit_to_net_profit_before_tax_ratio,
-            self.payout_ratio , self.tax_rate ,self.modified_date)
+    #def __unicode__(self):
+    #    return u'%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s' % (self.surrogate_key, self.symbol, self.date, 
+    #        self.gross_profit_margin, self.operating_profit_margin, self.net_profit_margin,
+    #        self.earnings_per_share, self.return_on_assets, self.return_on_equity,
+    #        self.current_ratio, self.quick_ratio, self.financial_debt_ratio, self.debt_ratio,
+    #        self.accounts_receivable_turnover_ratio, self.inventory_turnover_ratio,
+    #        self.fixed_asset_turnover_ratio, self.total_asset_turnover_ratio,
+    #        self.inventory_sales_ratio,self.available_for_sale_to_equity_ratio,
+    #        self.intangible_asset_to_equity_ratio,self.undepreciation_ratio,
+    #        self.depreciation_to_sales_ratio,self.operating_profit_to_net_profit_before_tax_ratio,
+    #        self.payout_ratio , self.tax_rate ,self.modified_date)
     class Meta:
         ordering = ['symbol', 'date']
     class Admin:
