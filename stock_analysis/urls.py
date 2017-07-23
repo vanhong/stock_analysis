@@ -131,6 +131,8 @@ urlpatterns += patterns('price.views',
 urlpatterns += patterns('reaserch.views',
     url(r'^chip_price_relation/$', 'chip_price_relation'),
     url(r'^update_wawa_growth_power/$', 'update_wawa_growth_power'),
+    url(r'^down_load_growth/$', 'down_load_growth'),
+    url(r'^update_vk_growth_power/$', 'update_vk_growth_power'),
 )
 
 urlpatterns += patterns('us_stocks.views',

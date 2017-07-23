@@ -1,13 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
-from reaserch.models import WawaGrowthPower
+from reaserch.models import WawaGrowthPower, VKGrowthPower
 from financial.models import SeasonFinancialRatio, YearFinancialRatio
 from decimal import Decimal
 from core.utils import season_to_date
-from stocks.models import WatchList
+from stocks.models import WatchList, StockId
+from price.models import NewPrice
 from datetime import *
 import pdb
+import csv
 
 #找出籌碼跟股價 持續 高度相關的
 def chip_price_relation(cnt, score, chip_type):
@@ -82,7 +84,7 @@ def update_wawa_growth_power(request):
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
 			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
-			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		elif season == 2:
 			financial_ratio1 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-1)
@@ -92,7 +94,7 @@ def update_wawa_growth_power(request):
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
 			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
-			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		elif season == 3:
 			financial_ratio1 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-2)
@@ -103,7 +105,7 @@ def update_wawa_growth_power(request):
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
 			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
-			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		elif season == 4:
 			financial_ratio1 = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season-3)
@@ -116,7 +118,7 @@ def update_wawa_growth_power(request):
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
 			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
-			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(0.66) * wawa_growth.last_year_eps
+			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.estimate_eps
 			wawa_growth.save()
 		print("update " + stockid + "'s wawa growth power date:" + str_year + "-" + str_season)
 	return HttpResponse('update wawa_growth')
@@ -136,7 +138,7 @@ def update_vk_growth_power(request):
 			return HttpResponse("please input correct season 'year-season'")
 	else:
 		return HttpResponse("please input correct season 'year-season'")
-	stockids = ['6274']
+	stockids = WatchList.objects.values_list('symbol', flat=True)
 	for stockid in stockids:
 		vk_growth = VKGrowthPower()
 		vk_growth.symbol = stockid
@@ -157,12 +159,13 @@ def update_vk_growth_power(request):
 			vk_growth.season_eps = financial_ratio.earnings_per_share
 			vk_growth.estimate_eps = financial_ratio.earnings_per_share + financial_ratio1.earnings_per_share + \
 									 financial_ratio2.earnings_per_share + financial_ratio3.earnings_per_share
-			vk_growth.last_year_season_eps = financial_ratio4.earnings_per_share + financial_ratio5.earnings_per_share + \
+			vk_growth.last_year_season_eps = financial_ratio4.earnings_per_share
+			vk_growth.last_year_eps = financial_ratio4.earnings_per_share + financial_ratio5.earnings_per_share + \
 									  financial_ratio6.earnings_per_share + financial_ratio7.earnings_per_share
-			vk_growth.estimate_growth_rate = vk_growth.season_eps / vk_growth.last_year_season_eps - 1
-			vk_growth.reasonable_price = vk_growth.estimate_growth_rate * Decimal(0.66) * vk_growth.last_year_eps
+			vk_growth.estimate_growth_rate = vk_growth.estimate_eps / vk_growth.last_year_eps - 1
+			vk_growth.reasonable_price = vk_growth.estimate_growth_rate * 66 * vk_growth.estimate_eps
 			vk_growth.save()
-			print("update " + stockid + "'s vk growth power date:" + year + "-" + season)
+			print("update " + stockid + "'s vk growth power date:" + str_year + "-" + str_season)
 		else:
 			print(stockid + "'s data not enough to update vk growth power")
 	return HttpResponse('update vk_growth date:' + str_year + "-"+ str_season)
@@ -186,25 +189,49 @@ def down_load_growth(request):
 	filename = 'growth_power_' + today.strftime('%Y%m%d') + '.csv'
 	response['Content-Disposition'] = 'attachment; filename=' + filename
 	writer = csv.writer(response, delimiter=',', quotechar='"')
-	header = ['StockID','Name', 'Type', 'Price', 'ReasonablePrice', 'GrowthRate', 'EstiamteEPS', 'LastYearEPS', 'SeasonEPS', 'LastYearSeasonEPS']
+	header = ['StockID','Name', 'Type','W_G', 'V_G', 'Price', 'SeasonEPS', 'LastYearSeasonEPS',
+			  'W_ReasonablePrice', 'W_GrowthRate', 'W_EstiamteEPS', 'W_LastYearEPS', 
+			  'V_ResonablePrice', 'V_GrowthRate', 'V_EstimateEPS', 'V_LastYearEPS']
 	writer.writerow([x for x in header])
 	stockids = WatchList.objects.values_list('symbol', flat=True)
 	for stockid in stockids:
-		if (StockId.objects.filter(symbol__contains=stocid)):
+		if (StockId.objects.filter(symbol__contains=stockid)):
+			stockId = StockId.objects.get(symbol=stockid)
 			body = [stockid]
-			body.append(stockid.name)
-			body.append(stockid.company_type)
-			if (NewPrice.objects.filter(symbol=stocid)):
-				body.append(NewPrice.objects.filter(symbol=stocid).order_by(-date)[0].close_price)
+			body.append(stockId.name)
+			body.append(stockId.company_type)
+			body.append('')
+			body.append('')
+			if (NewPrice.objects.filter(symbol=stockid)):
+				price = NewPrice.objects.filter(symbol=stockid).order_by('-date')[0].close_price
+				body.append(str(price))
 			else:
 				body.append('0')
 			if (WawaGrowthPower.objects.filter(symbol=stockid, year=year, season=season)):
 				growth_power = WawaGrowthPower.objects.get(symbol=stockid, year=year, season=season)
-				body.append(growth_power.reasonable_price)
-				body.append(growth_power.growth_rate)
-				body.append(growth_power.estimate_eps)
-				body.append(growth_rate.last_year_eps)
-				body.append(growth_rate.season_eps)
-				body.append(growth_rate.last_year_season_eps)
+				body.append(str(growth_power.season_eps))
+				body.append(str(growth_power.last_year_season_eps))
+				body.append(str(growth_power.reasonable_price))
+				body.append(str(growth_power.estimate_growth_rate))
+				body.append(str(growth_power.estimate_eps))
+				body.append(str(growth_power.last_year_eps))
+			else:
+				body.append('')
+				body.append('')
+				body.append('')
+				body.append('')
+				body.append('')
+				body.append('')
+			if (VKGrowthPower.objects.filter(symbol=stockid, year=year, season=season)):
+				vk_growth_power = VKGrowthPower.objects.get(symbol=stockid, year=year, season=season)
+				body.append(str(vk_growth_power.reasonable_price))
+				body.append(str(vk_growth_power.estimate_growth_rate))
+				body.append(str(vk_growth_power.estimate_eps))
+				body.append(str(vk_growth_power.last_year_eps))
+			else:
+				body.append('')
+				body.append('')
+				body.append('')
+				body.append('')
 			writer.writerow([x.encode("cp950") for x in body])
 	return response

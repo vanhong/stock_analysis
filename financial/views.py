@@ -1179,7 +1179,7 @@ def update_season_balance_sheet(request):
                 elif r'非控制權益' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.non_controlling_interests = st_to_decimal(next_data.string)
-                elif r'權益總額' in data.string.encode('utf-8'):
+                elif r'權益總額' in data.string.encode('utf-8') or r'權益總計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_equity = st_to_decimal(next_data.string)
                 elif r'待註銷股本股數（單位：股）' in data.string.encode('utf-8'):
@@ -2523,6 +2523,12 @@ def update_season_financial_ratio(request):
         ratio.symbol = stockID
         ratio.date = season_to_date(year, season)
         ratio.surrogate_key = stockID + '_' + str(year) + str(season).zfill(2)
+        if sbs.total_capital_stock and sbs.total_capital_stock > 0 and sbs.number_of_shares_in_entity_held_by_entity and sbs.number_of_shares_in_entity_held_by_entity > 0:
+            total_stock = sbs.total_capital_stock - sbs.number_of_shares_in_entity_held_by_entity / 100
+            if total_stock == 0:
+                total_stock = sbs.total_capital_stock
+        elif sbs.total_capital_stock and sbs.total_capital_stock > 0:
+            total_stock = sbs.total_capital_stock
         # 毛利率 = 營業毛利（毛損）淨額 / 營業收入合計（單位：％）
         if sis.total_operating_revenue and sis.total_operating_revenue > 0:
             if sis.gross_profit_loss_from_operations:
@@ -2560,32 +2566,34 @@ def update_season_financial_ratio(request):
         # 每股營業額(元)
         if sbs.total_capital_stock and sbs.total_capital_stock > 0:
             if sis.total_operating_revenue:
-                ratio.revenue_per_share = sis.total_operating_revenue / sbs.total_capital_stock * 10
+                ratio.revenue_per_share = sis.total_operating_revenue / total_stock * 10
         elif sbs.total_capital_stock and sbs.total_capital_stock == 0:
             ratio.revenue_per_share = 0
         # 每股營業利益(元)
         if sbs.total_capital_stock and sbs.total_capital_stock > 0:
             if sis.net_operating_income_loss:
-                ratio.operating_profit_per_share = sis.net_operating_income_loss / sbs.total_capital_stock * 10
+                ratio.operating_profit_per_share = sis.net_operating_income_loss / total_stock * 10
             # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替    
             elif sis.profit_loss_from_continuing_operations:
-                ratio.operating_profit_per_share = sis.profit_loss_from_continuing_operations / sbs.total_capital_stock * 10
+                ratio.operating_profit_per_share = sis.profit_loss_from_continuing_operations / total_stock * 10
         elif sbs.total_capital_stock and sbs.total_capital_stock == 0:
             ratio.operating_profit_per_share = 0
         # 每股稅前淨利(元)
         if sbs.total_capital_stock and sbs.total_capital_stock > 0:
             if sis.profit_loss_from_continuing_operations_before_tax:
-                ratio.net_before_tax_profit_per_share = sis.profit_loss_from_continuing_operations_before_tax / sbs.total_capital_stock * 10
+                ratio.net_before_tax_profit_per_share = sis.profit_loss_from_continuing_operations_before_tax / total_stock * 10
             elif sis.profit_loss_from_continuing_operations:
-                ratio.net_before_tax_profit_per_share = sis.profit_loss_from_continuing_operations / sbs.total_capital_stock
+                ratio.net_before_tax_profit_per_share = sis.profit_loss_from_continuing_operations / total_stock
         elif sbs.total_capital_stock and sbs.total_capital_stock == 0:
             ratio.net_before_tax_profit_per_share = 0
         # 每股盈餘(EPS)
         if sbs.total_capital_stock and sbs.total_capital_stock > 0:
             if sis.profit_loss:
-                ratio.earnings_per_share = sis.profit_loss / sbs.total_capital_stock * 10
+                ratio.earnings_per_share = sis.profit_loss / total_stock * 10
+                ratio.earnings_per_share = sis.total_basic_earnings_per_share
         elif sbs.total_capital_stock and sbs.total_capital_stock == 0:
             ratio.earnings_per_share = 0
+            ratio.earnings_per_share = sis.total_basic_earnings_per_share
         # 總資產報酬率(ROA) = 本期淨利（淨損） / 期初期末平均之資產總額（單位：％）
         if sis.profit_loss:
             if scf.interest_expense:
@@ -2601,7 +2609,7 @@ def update_season_financial_ratio(request):
                 ratio.return_on_assets = 0
         # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
         if sis.profit_loss:
-            if sbs.total_equity:
+            if sbs.total_equity and prev_sbs.total_equity:
                 if has_sbs_prev:
                     ratio.return_on_equity = sis.profit_loss / ((sbs.total_equity + prev_sbs.total_equity) / 2) * 100
                 else:
@@ -2807,6 +2815,7 @@ def update_year_financial_ratio(request):
     diff = union.difference(intersection)
     print diff
     for stockID in intersection:
+        #print 'update ' + stockID + "'s year financial ratio"
         has_ybs_prev = False
         try:
             yis = YearIncomeStatement.objects.get(year=year, symbol=stockID)
@@ -2815,7 +2824,7 @@ def update_year_financial_ratio(request):
         except:
             print ("load " + stockID + "'s data error")
             continue
-        if SeasonBalanceSheet.objects.filter(year=year-1, symbol=stockID):
+        if SeasonBalanceSheet.objects.filter(year=year-1, season=4, symbol=stockID):
             has_ybs_prev = True
             prev_ybs = SeasonBalanceSheet.objects.get(year=year-1, season=4, symbol=stockID)
         ratio = YearFinancialRatio()
@@ -2823,6 +2832,10 @@ def update_year_financial_ratio(request):
         ratio.symbol = stockID
         ratio.date = year_to_date(year)
         ratio.surrogate_key = stockID + '_' + str(year)
+        if ybs.total_capital_stock and ybs.total_capital_stock > 0 and ybs.number_of_shares_in_entity_held_by_entity and ybs.number_of_shares_in_entity_held_by_entity > 0:
+            total_stock = ybs.total_capital_stock - ybs.number_of_shares_in_entity_held_by_entity / 100
+        elif ybs.total_capital_stock and ybs.total_capital_stock > 0:
+            total_stock = ybs.total_capital_stock
         # 毛利率 = 營業毛利（毛損）淨額 / 營業收入合計（單位：％）
         if yis.total_operating_revenue and yis.total_operating_revenue > 0:
             if yis.gross_profit_loss_from_operations:
@@ -2860,32 +2873,34 @@ def update_year_financial_ratio(request):
         # 每股營業額(元)
         if ybs.total_capital_stock and ybs.total_capital_stock > 0:
             if yis.total_operating_revenue:
-                ratio.revenue_per_share = yis.total_operating_revenue / ybs.total_capital_stock * 10
+                ratio.revenue_per_share = yis.total_operating_revenue / total_stock * 10
         elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
             ratio.revenue_per_share = 0
         # 每股營業利益(元)
         if ybs.total_capital_stock and ybs.total_capital_stock > 0:
             if yis.net_operating_income_loss:
-                ratio.operating_profit_per_share = yis.net_operating_income_loss / ybs.total_capital_stock * 10
+                ratio.operating_profit_per_share = yis.net_operating_income_loss / total_stock * 10
             # 有的公司使用舊式報表，沒有營業利益這一項，就改用繼續營業單位稅前淨利代替    
             elif yis.profit_loss_from_continuing_operations:
-                ratio.operating_profit_per_share = yis.profit_loss_from_continuing_operations / ybs.total_capital_stock * 10
+                ratio.operating_profit_per_share = yis.profit_loss_from_continuing_operations / total_stock * 10
         elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
             ratio.operating_profit_per_share = 0
         # 每股稅前淨利(元)
         if ybs.total_capital_stock and ybs.total_capital_stock > 0:
             if yis.profit_loss_from_continuing_operations_before_tax:
-                ratio.net_before_tax_profit_per_share = yis.profit_loss_from_continuing_operations_before_tax / ybs.total_capital_stock * 10
+                ratio.net_before_tax_profit_per_share = yis.profit_loss_from_continuing_operations_before_tax / total_stock * 10
             elif yis.profit_loss_from_continuing_operations:
-                ratio.net_before_tax_profit_per_share = yis.profit_loss_from_continuing_operations / ybs.total_capital_stock
+                ratio.net_before_tax_profit_per_share = yis.profit_loss_from_continuing_operations / total_stock
         elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
             ratio.net_before_tax_profit_per_share = 0
         # 每股盈餘(EPS)
         if ybs.total_capital_stock and ybs.total_capital_stock > 0:
             if yis.profit_loss:
-                ratio.earnings_per_share = yis.profit_loss / ybs.total_capital_stock * 10
+                ratio.earnings_per_share = yis.profit_loss / total_stock * 10
+                ratio.earnings_per_share = yis.total_basic_earnings_per_share
         elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
             ratio.earnings_per_share = 0
+            ratio.earnings_per_share = yis.total_basic_earnings_per_share
         # 總資產報酬率(ROA) = 本期淨利（淨損） / 期初期末平均之資產總額（單位：％）
         if yis.profit_loss:
             if ycf.interest_expense:
@@ -2902,7 +2917,7 @@ def update_year_financial_ratio(request):
         # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
         if yis.profit_loss:
             if ybs.total_equity:
-                if has_ybs_prev:
+                if has_ybs_prev and prev_ybs.total_equity:
                     ratio.return_on_equity = yis.profit_loss / ((ybs.total_equity + prev_ybs.total_equity) / 2) * 100
                 else:
                     ratio.return_on_equity = yis.profit_loss / (ybs.total_equity / 2) * 100
