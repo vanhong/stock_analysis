@@ -235,3 +235,35 @@ def down_load_growth(request):
 				body.append('')
 			writer.writerow([x.encode("cp950") for x in body])
 	return response
+
+def update_avg_pe(request):
+	if 'year' in request.GET:
+		str_year = request.GET['year']
+		try:
+			year = int(str_year)
+		except:
+			return HttpResponse("please input correct 'year'")
+		else:
+			return HttpResponse("please input correct 'year'")
+	else:
+		return HttpResponse("please input correct 'year'")
+	yfrs = YearFinancialRatio.objects.filter(year=year, symbol='6274')
+	for yfr in yfrs:
+		max_price = 0;
+		min_price = 1000000;
+		prices = NewPrice.objects.filter(symbol=yfr.symbol)
+		for price in prices:
+			if price.close_price > max_price:
+				max_price = price.close_price
+			if price.close_price < min_price:
+				min_price = price.close_price
+		avg_pe = AvgPE()
+		avg_pe.surrogate_key = yfr.symbol + '_' + str(year)
+		avg_pe.symbol = yfr.symbol
+		avg_pe.year = year
+		avg_pe.date = season_to_date(year, 1)
+		avg_pe.low_price = min_price;
+		avg_pe.high_price = max_price;
+		avg_pe.eps = yfr.earnings_per_share
+		avg_pe.pe = (avg_pe.low_price + avg_pe.high_price) / 2 / avg_pe.eps
+	return HttpResponse('update avg pe')

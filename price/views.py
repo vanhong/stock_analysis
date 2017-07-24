@@ -146,17 +146,22 @@ def update_price(request):
 		last_monday = datetime.strptime(date, '%Y-%m-%d')
 	for stock_id in stock_ids:
 		lastest_price_date = NewPrice.objects.filter(symbol=stock_id.symbol).aggregate(Max("date"))
-		if last_monday.date() == lastest_price_date['date__max']:
+		if lastest_price_date['date__max'] == None:
+			pass
+		elif last_monday.date() <= lastest_price_date['date__max']:
 			continue
 		url = 'http://jsjustweb.jihsun.com.tw/Z/ZC/ZCW/czkc1.djbcd?a=' + stock_id.symbol + '&b=W&c=2880&E=1&ver=5'
 		response = urllib.urlopen(url)
 		datas = response.read().split(' ')
-		dates = datas[0].split(',')
-		opens = datas[1].split(',')
-		highs = datas[2].split(',')
-		lows = datas[3].split(',')
-		closes = datas[4].split(',')
-		volumes = datas[5].split(',')
+		if (len(datas) >=6):
+			dates = datas[0].split(',')
+			opens = datas[1].split(',')
+			highs = datas[2].split(',')
+			lows = datas[3].split(',')
+			closes = datas[4].split(',')
+			volumes = datas[5].split(',')
+		else:
+			continue
 		cnt = 0
 		for i in range(len(dates)):
 			priceObj = NewPrice()
