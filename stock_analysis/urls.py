@@ -133,6 +133,7 @@ urlpatterns += patterns('reaserch.views',
     url(r'^update_wawa_growth_power/$', 'update_wawa_growth_power'),
     url(r'^down_load_growth/$', 'down_load_growth'),
     url(r'^update_vk_growth_power/$', 'update_vk_growth_power'),
+    url(r'^update_avg_pe/$', 'update_avg_pe'),
 )
 
 urlpatterns += patterns('us_stocks.views',

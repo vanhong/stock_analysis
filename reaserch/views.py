@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
-from reaserch.models import WawaGrowthPower, VKGrowthPower
+from reaserch.models import WawaGrowthPower, VKGrowthPower, AvgPE
 from financial.models import SeasonFinancialRatio, YearFinancialRatio
 from decimal import Decimal
 from core.utils import season_to_date
@@ -243,15 +243,13 @@ def update_avg_pe(request):
 			year = int(str_year)
 		except:
 			return HttpResponse("please input correct 'year'")
-		else:
-			return HttpResponse("please input correct 'year'")
 	else:
 		return HttpResponse("please input correct 'year'")
-	yfrs = YearFinancialRatio.objects.filter(year=year, symbol='6274')
+	yfrs = YearFinancialRatio.objects.filter(year=year)
 	for yfr in yfrs:
 		max_price = 0;
 		min_price = 1000000;
-		prices = NewPrice.objects.filter(symbol=yfr.symbol)
+		prices = NewPrice.objects.filter(symbol=yfr.symbol, date__year=year)
 		for price in prices:
 			if price.close_price > max_price:
 				max_price = price.close_price
@@ -265,5 +263,10 @@ def update_avg_pe(request):
 		avg_pe.low_price = min_price;
 		avg_pe.high_price = max_price;
 		avg_pe.eps = yfr.earnings_per_share
-		avg_pe.pe = (avg_pe.low_price + avg_pe.high_price) / 2 / avg_pe.eps
+		if (avg_pe.eps > 0):
+			avg_pe.pe = (avg_pe.low_price + avg_pe.high_price) / 2 / avg_pe.eps
+		else:
+			avg_pe.pe = 1000000
+		avg_pe.save()
+		print("update " + yfr.symbol + "'s avg_pe year:" + str_year)
 	return HttpResponse('update avg pe')

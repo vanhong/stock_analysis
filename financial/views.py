@@ -2898,7 +2898,7 @@ def update_year_financial_ratio(request):
             if yis.profit_loss:
                 ratio.earnings_per_share = yis.profit_loss / total_stock * 10
                 ratio.earnings_per_share = yis.total_basic_earnings_per_share
-        elif ybs.total_capital_stock and ybs.total_capital_stock == 0:
+        elif ybs.total_capital_stock == 0:
             ratio.earnings_per_share = 0
             ratio.earnings_per_share = yis.total_basic_earnings_per_share
         # 總資產報酬率(ROA) = 本期淨利（淨損） / 期初期末平均之資產總額（單位：％）
