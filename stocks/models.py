@@ -78,17 +78,17 @@ class Dividend(models.Model):
     year = models.IntegerField(db_index=True)
     symbol = models.CharField(max_length=20, db_index=True)
     cash_dividends = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True)
+        max_digits=20, decimal_places=3, null=True)
     stock_dividends_from_retained_earnings = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True)
+        max_digits=20, decimal_places=3, null=True)
     stock_dividends_from_capital_reserve = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True)
+        max_digits=20, decimal_places=3, null=True)
     stock_dividends = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True)
+        max_digits=20, decimal_places=3, null=True)
     total_dividends = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True)
+        max_digits=20, decimal_places=3, null=True)
     employee_stock_rate = models.DecimalField(
-        max_digits=20, decimal_places=10, null=True)
+        max_digits=20, decimal_places=3, null=True)
 
 
 class UpdateManagement(models.Model):

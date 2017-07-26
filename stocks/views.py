@@ -376,20 +376,19 @@ def show_dividend(request):
     if 'year' in request.GET:
         input_year = int(request.GET['year'])
     else:
-        input_year = 2013
+        input_year = 2016
     stockids = StockId.objects.all()
+    #stockids = ['6274']
     for stockid in stockids:
         revenueInDb = Dividend.objects.filter(symbol=stockid.symbol, year=int(input_year))
         if revenueInDb:
-            print(stockid.symbol + ' is exists')
             continue
         print 'update ' + stockid.symbol + ' dividend'
         url = "http://jsjustweb.jihsun.com.tw/z/zc/zcc/zcc_" + stockid.symbol + ".djhtm"
         req = urllib2.Request(url)
         response = urllib2.urlopen(req)
-        soup = BeautifulSoup(response)
+        soup = BeautifulSoup(response, 'html.parser')
         dividend_datas = soup.find_all("td", {"class": ['t3n0', 't3n1']})
-        dataCnt = 0
         for data in dividend_datas:
             if(data['class'][0]=='t3n0' and data.string):
                 try:

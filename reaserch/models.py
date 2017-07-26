@@ -35,6 +35,7 @@ class WawaValueLine(models.Model):
 	year = models.IntegerField(db_index=True)
 	season = models.IntegerField(db_index=True)
 	date = models.DateField(db_index=True)
+	last_year_eps = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 	future_eps_growth = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 	past_pe = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 	estimate_eps = models.DecimalField(max_digits=10, decimal_places=2, null=False)
