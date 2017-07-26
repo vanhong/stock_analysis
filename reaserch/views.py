@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from django.http import HttpResponse
-from reaserch.models import WawaGrowthPower, VKGrowthPower, AvgPE
+from reaserch.models import WawaGrowthPower, VKGrowthPower, AvgPE, WawaValueLine
 from financial.models import SeasonFinancialRatio, YearFinancialRatio
 from decimal import Decimal
 from core.utils import season_to_date
-from stocks.models import WatchList, StockId
+from stocks.models import WatchList, StockId, Dividend
 from price.models import NewPrice
 from datetime import *
 import pdb
@@ -247,6 +247,7 @@ def update_avg_pe(request):
 		return HttpResponse("please input correct 'year'")
 	yfrs = YearFinancialRatio.objects.filter(year=year)
 	for yfr in yfrs:
+		print('update ' + yfr.symbol + "'s avg pe")
 		max_price = 0;
 		min_price = 1000000;
 		prices = NewPrice.objects.filter(symbol=yfr.symbol, date__year=year)
@@ -270,3 +271,99 @@ def update_avg_pe(request):
 		avg_pe.save()
 		print("update " + yfr.symbol + "'s avg_pe year:" + str_year)
 	return HttpResponse('update avg pe')
+
+def update_wawa_value_line(request):
+	if 'date' in request.GET:
+		date = request.GET['date']
+		if date != '':
+			try:
+				str_year, str_season = date.split('-')
+				year = int(str_year)
+				season = int(str_season)
+			except:
+					return HttpResponse("please input correct season 'year-season'")
+		else:
+			return HttpResponse("please input correct season 'year-season'")
+	else:
+		return HttpResponse("please input correct season 'year-season'")
+	symbols = SeasonFinancialRatio.objects.filter(year=year, season=season).values_list('symbol')
+	symbols = ['6274']
+	for symbol in symbols:
+		value_line = WawaValueLine()
+		value_line.surrogate_key = symbol + '_' + str(year)
+		value_line.symbol = symbol
+		value_line.year = year
+		value_line.season = season
+		value_line.date = season_to_date(year, season)
+		sfrs = SeasonFinancialRatio.objects.filter(symbol=symbol).order_by('-date')
+		if (len(sfrs) >= 4):
+			value_line.last_year_eps = sfrs[0].earnings_per_share + sfrs[1].earnings_per_share + \
+									   sfrs[2].earnings_per_share + sfrs[3].earnings_per_share
+		else:
+			continue
+		yfrs = YearFinancialRatio.objects.filter(symbol=symbol).order_by('-date')
+		len_yfrs = len(yfrs)
+		if (len_yfrs >=6):
+			if (yfrs[5].earnings_per_share > 0):
+				if (yfrs[0].earnings_per_share > yfrs[5].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[0].earnings_per_share / yfrs[5].earnings_per_share) ** (Decimal(1)/5)-1
+				elif (yfrs[1].earnings_per_share > yfrs[5].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[1].earnings_per_share / yfrs[5].earnings_per_share) ** (Decimal(1)/4)-1
+				else:
+					value_line.future_eps_growth = 0.01
+			elif (yfrs[4].earnings_per_share > 0):
+				if (yfrs[0].earnings_per_share > yfrs[4].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[0].earnings_per_share / yfrs[4].earnings_per_share) ** (Decimal(1)/4) -1
+				elif (yfrs[1].earnings_per_share > yfrs[4].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[1].earnings_per_share / yfrs[4].earnings_per_share) ** (Decimal(1)/3) -1
+				else:
+					value_line.future_eps_growth = 0.01
+			else:
+				value_line.future_eps_growth = 0.01
+		elif (len_yfrs <= 1):
+			value_line.future_eps_growth = 0.01
+		else:
+			if (yfrs[len_yfrs-1].earnings_per_share > 0):
+				if (yfrs[0].earnings_per_share > yfrs[len_yfrs-1].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[0].earnings_per_share / yfrs[len_yfrs-1].earnings_per_share) ** (Decimal(1)/(len_yfrs-1)) - 1
+				elif (yfrs[1].earnings_per_share > yfrs[len_yfrs-1].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[1].earnings_per_share / yfrs[len_yfrs-1].earnings_per_share) ** (Decimal(1)/(len_yfrs-2)) - 1
+			elif (yfrs[len_yfrs-2].earnings_per_share > 0):
+				if (yfrs[0].earnings_per_share > yfrs[len_yfrs-2].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[0].earnings_per_share / yfrs[len_yfrs-2].earnings_per_share) ** (Decimal(1)/(len_yfrs-2)) - 1
+				elif (yfrs[1].earnings_per_share > yfrs[len_yfrs-2].earnings_per_share):
+					value_line.future_eps_growth = (yfrs[1].earnings_per_share / yfrs[len_yfrs-2].earnings_per_share) ** (Decimal(1)/(len_yfrs-3)) - 1
+			else:
+				value_line.future_eps_growth = 0.01
+		avg_pes = AvgPE.objects.filter(symbol=symbol).order_by('-year')
+		if (len(avg_pes) >= 6):
+			value_line.past_pe = (avg_pes[0].pe + avg_pes[1].pe + avg_pes[2].pe + \
+								 avg_pes[3].pe + avg_pes[4].pe) / 5
+		else:
+			total_pe = 0
+			for avg_pe in avg_pes:
+				total_pe += avg_pe.pe
+			value_line.past_pe = total_pe / (len(avg_pes))
+		value_line.estimate_eps = value_line.last_year_eps * ((value_line.future_eps_growth+1) ** 10)
+		value_line.estimate_future_price = value_line.estimate_eps * value_line.past_pe
+		value_line.estimate_price = value_line.estimate_future_price / (Decimal(1.1) ** 10)
+		value_line.hold_price = value_line.estimate_price * Decimal(0.8)
+		dividends = Dividend.objects.filter(symbol=symbol,year__gte = year-5)
+		total_dividend = 0
+		for dividend in dividends:
+			total_dividend += dividend.total_dividends
+		value_line.avg_dividend = total_dividend / len(dividends)
+		value_line.low_price = 16 * value_line.avg_dividend
+		value_line.high_price = 32 * value_line.avg_dividend
+		value_line.recovery_years = 100
+		if (value_line.future_eps_growth > 0):
+			eps_growth = value_line.future_eps_growth + 1
+			total_value = 0
+			for i in range(1, 15):
+				total_value += value_line.last_year_eps * (eps_growth ** i)
+				if total_value > value_line.hold_price:
+					pdb.set_trace()
+					value_line.recovery_years = i
+					break
+		value_line.save()
+	return HttpResponse('update wawa value line')
