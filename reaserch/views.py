@@ -286,9 +286,9 @@ def update_wawa_value_line(request):
 			return HttpResponse("please input correct season 'year-season'")
 	else:
 		return HttpResponse("please input correct season 'year-season'")
-	symbols = SeasonFinancialRatio.objects.filter(year=year, season=season).values_list('symbol')
-	symbols = ['6274']
+	symbols = WatchList.objects.values_list('symbol', flat=True)
 	for symbol in symbols:
+		print("start update " + symbol + "'s value line date:" + str_year + "-" + str_season)
 		value_line = WawaValueLine()
 		value_line.surrogate_key = symbol + '_' + str(year)
 		value_line.symbol = symbol
@@ -303,23 +303,18 @@ def update_wawa_value_line(request):
 			continue
 		yfrs = YearFinancialRatio.objects.filter(symbol=symbol).order_by('-date')
 		len_yfrs = len(yfrs)
+		value_line.future_eps_growth = 0.01
 		if (len_yfrs >=6):
 			if (yfrs[5].earnings_per_share > 0):
 				if (yfrs[0].earnings_per_share > yfrs[5].earnings_per_share):
 					value_line.future_eps_growth = (yfrs[0].earnings_per_share / yfrs[5].earnings_per_share) ** (Decimal(1)/5)-1
 				elif (yfrs[1].earnings_per_share > yfrs[5].earnings_per_share):
 					value_line.future_eps_growth = (yfrs[1].earnings_per_share / yfrs[5].earnings_per_share) ** (Decimal(1)/4)-1
-				else:
-					value_line.future_eps_growth = 0.01
 			elif (yfrs[4].earnings_per_share > 0):
 				if (yfrs[0].earnings_per_share > yfrs[4].earnings_per_share):
 					value_line.future_eps_growth = (yfrs[0].earnings_per_share / yfrs[4].earnings_per_share) ** (Decimal(1)/4) -1
 				elif (yfrs[1].earnings_per_share > yfrs[4].earnings_per_share):
 					value_line.future_eps_growth = (yfrs[1].earnings_per_share / yfrs[4].earnings_per_share) ** (Decimal(1)/3) -1
-				else:
-					value_line.future_eps_growth = 0.01
-			else:
-				value_line.future_eps_growth = 0.01
 		elif (len_yfrs <= 1):
 			value_line.future_eps_growth = 0.01
 		else:
@@ -333,26 +328,31 @@ def update_wawa_value_line(request):
 					value_line.future_eps_growth = (yfrs[0].earnings_per_share / yfrs[len_yfrs-2].earnings_per_share) ** (Decimal(1)/(len_yfrs-2)) - 1
 				elif (yfrs[1].earnings_per_share > yfrs[len_yfrs-2].earnings_per_share):
 					value_line.future_eps_growth = (yfrs[1].earnings_per_share / yfrs[len_yfrs-2].earnings_per_share) ** (Decimal(1)/(len_yfrs-3)) - 1
-			else:
-				value_line.future_eps_growth = 0.01
 		avg_pes = AvgPE.objects.filter(symbol=symbol).order_by('-year')
 		if (len(avg_pes) >= 6):
 			value_line.past_pe = (avg_pes[0].pe + avg_pes[1].pe + avg_pes[2].pe + \
 								 avg_pes[3].pe + avg_pes[4].pe) / 5
-		else:
+		elif (len(avg_pes) > 0):
 			total_pe = 0
 			for avg_pe in avg_pes:
 				total_pe += avg_pe.pe
 			value_line.past_pe = total_pe / (len(avg_pes))
-		value_line.estimate_eps = value_line.last_year_eps * ((value_line.future_eps_growth+1) ** 10)
+		else:
+			value_line.past_pe = 0
+		if (value_line.future_eps_growth > 3):
+			value_line.future_eps_growth = Decimal(1)
+		value_line.estimate_eps = value_line.last_year_eps * (Decimal(value_line.future_eps_growth+1) ** 10)
 		value_line.estimate_future_price = value_line.estimate_eps * value_line.past_pe
 		value_line.estimate_price = value_line.estimate_future_price / (Decimal(1.1) ** 10)
 		value_line.hold_price = value_line.estimate_price * Decimal(0.8)
 		dividends = Dividend.objects.filter(symbol=symbol,year__gte = year-5)
 		total_dividend = 0
-		for dividend in dividends:
-			total_dividend += dividend.total_dividends
-		value_line.avg_dividend = total_dividend / len(dividends)
+		if (len(dividends) > 0):
+			for dividend in dividends:
+				total_dividend += dividend.total_dividends
+			value_line.avg_dividend = total_dividend / len(dividends)
+		else:
+			value_line.avg_dividend = 0
 		value_line.low_price = 16 * value_line.avg_dividend
 		value_line.high_price = 32 * value_line.avg_dividend
 		value_line.recovery_years = 100
@@ -360,9 +360,8 @@ def update_wawa_value_line(request):
 			eps_growth = value_line.future_eps_growth + 1
 			total_value = 0
 			for i in range(1, 15):
-				total_value += value_line.last_year_eps * (eps_growth ** i)
+				total_value += value_line.last_year_eps * Decimal(eps_growth ** i)
 				if total_value > value_line.hold_price:
-					pdb.set_trace()
 					value_line.recovery_years = i
 					break
 		value_line.save()
