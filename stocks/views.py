@@ -41,10 +41,12 @@ def update_stock_id(request):
                 if data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVUFR' or\
                    data.next.next_sibling.next_sibling.next_sibling.next_sibling.string.split()[0] == 'ESVTFR':
                     symbol,name = data.split()
+                    name = name.encode('utf8')
                     print symbol
                     listing_date = datetime.datetime.strptime(data.next.next_sibling.string.split()[0], "%Y/%m/%d").date()
                     market_type = data.next.next_sibling.next_sibling.string.split()[0]
                     company_type = data.next.next_sibling.next_sibling.next_sibling.string.split()[0]
+                    company_type = company_type.encode('utf8')
                     stockid = StockId(symbol = symbol, name = name, market_type = market_type,
                                       company_type = company_type, listing_date = listing_date)
                     stockid.save()
@@ -506,7 +508,7 @@ def update(request):
 
 def update_watchlist(request):
     stock_ids = ['2610','2618','2612','2606','2208',
-            '2330','6286','2337','3041','2458',
+            '2330','2337','3041','2458',
             '5483','3556',
             '2353','2324','3231','2382','2376',
             '2357','4938','2395','3022','6206',
@@ -533,7 +535,15 @@ def update_watchlist(request):
             '1231','4205','1402','1477','1476',
             '4401','2912','5904','1707','1733',
             '3164','1788','4126','8940','2201',
-            '2207','2548','5522','2820','2881','2886','2449','1452','6202', '6449']
+            '2207','2548','5522','2820','2881']
+    for stockid in stock_ids:
+        watchlist = WatchList()
+        watchlist.surrogate_key = 'wawa_' + stockid
+        watchlist.user = 'wawa'
+        watchlist.symbol = stockid
+        watchlist.rank = -1
+        watchlist.save()
+    stock_ids = ['2886','2449','1452','6202', '6449']
     for stockid in stock_ids:
         watchlist = WatchList()
         watchlist.surrogate_key = 'vk_' + stockid

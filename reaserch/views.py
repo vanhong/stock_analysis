@@ -10,6 +10,8 @@ from price.models import NewPrice
 from datetime import *
 import pdb
 import csv
+import operator
+from django.db.models import Q
 
 #找出籌碼跟股價 持續 高度相關的
 def chip_price_relation(cnt, score, chip_type):
@@ -73,9 +75,14 @@ def update_wawa_growth_power(request):
 		wawa_growth.season = season
 		wawa_growth.date = season_to_date(year, season)
 		wawa_growth.surrogate_key = stockid + '_' + str(year) + str(season).zfill(2)
+		if not SeasonFinancialRatio.objects.filter(symbol=stockid, year=year, season=season):
+			print(stockid + "'s sfr is empty date:" + str_year + "-" + str_season)
+			continue
 		if not SeasonFinancialRatio.objects.filter(symbol=stockid, year=year-1, season=season):
+			print(stockid + "'s sfr is empty date:" +str(year-1) + "-" + str_season)
 			continue
 		if not YearFinancialRatio.objects.filter(symbol=stockid, year=year-1):
+			print(stockid + "'s yfr is empty year:" + str(year-1))
 			continue
 		if season == 1:
 			financial_ratio = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
@@ -146,6 +153,9 @@ def update_vk_growth_power(request):
 		vk_growth.season = season
 		vk_growth.date = season_to_date(year, season)
 		vk_growth.surrogate_key = stockid + '_' + str(year) + str(season).zfill(2)
+		if not SeasonFinancialRatio.objects.filter(symbol=stockid, year=year, season=season):
+			print(stockid + "'s sfr is empty date:" + str_year + "-" + str_season)
+			continue
 		financial_ratios = SeasonFinancialRatio.objects.filter(symbol=stockid).order_by('-date')
 		if (len(financial_ratios) >= 8):
 			financial_ratio = financial_ratios[0]
@@ -189,32 +199,69 @@ def down_load_growth(request):
 	filename = 'growth_power_' + today.strftime('%Y%m%d') + '.csv'
 	response['Content-Disposition'] = 'attachment; filename=' + filename
 	writer = csv.writer(response, delimiter=',', quotechar='"')
-	header = ['StockID','Name', 'Type','W_G', 'V_G', 'Price', 'SeasonEPS', 'LastYearSeasonEPS',
+	header = ['StockID','Name', 'Type','V', '5', 'Y', 'WG', 'VG',
+			  'Price', 'P/FE', 'P/E', 
+			  'recovery_year', 'hold_price', 'low_price', 'high_price', 'one_year_price',
+			  'SeasonEPS', 'LastYearSeasonEPS',
 			  'W_ReasonablePrice', 'W_GrowthRate', 'W_EstiamteEPS', 'W_LastYearEPS', 
 			  'V_ResonablePrice', 'V_GrowthRate', 'V_EstimateEPS', 'V_LastYearEPS']
 	writer.writerow([x for x in header])
 	stockids = WatchList.objects.values_list('symbol', flat=True)
-	for stockid in stockids:
+	#query = reduce(operator.and_, (Q(symbol__contains=item) for item in stockids))
+	symbols = StockId.objects.filter(symbol__in=stockids).order_by('company_type', 'symbol').values_list('symbol', flat=True)
+	#symbols = StockId.objects.filter(query)
+	for stockid in symbols:
+		print stockid
 		if (StockId.objects.filter(symbol__contains=stockid)):
 			stockId = StockId.objects.get(symbol=stockid)
 			body = [stockid]
-			body.append(stockId.name)
+			if stockid == '2353':
+				body.append(u'宏碁')
+			else:
+				body.append(stockId.name)
 			body.append(stockId.company_type)
+			body.append('')
+			body.append('')
+			body.append('')
 			body.append('')
 			body.append('')
 			if (NewPrice.objects.filter(symbol=stockid)):
 				price = NewPrice.objects.filter(symbol=stockid).order_by('-date')[0].close_price
 				body.append(str(price))
 			else:
+				price = 0
 				body.append('0')
 			if (WawaGrowthPower.objects.filter(symbol=stockid, year=year, season=season)):
 				growth_power = WawaGrowthPower.objects.get(symbol=stockid, year=year, season=season)
-				body.append(str(growth_power.season_eps))
-				body.append(str(growth_power.last_year_season_eps))
-				body.append(str(growth_power.reasonable_price))
+				body.append(str(round(price/growth_power.estimate_eps,2)))
+			else:
+				body.append('')
+			if (VKGrowthPower.objects.filter(symbol=stockid, year=year, season=season)):
+				vk_growth_power = VKGrowthPower.objects.get(symbol=stockid, year=year, season=season)
+				body.append(str(round(price/vk_growth_power.last_year_eps, 2)))
+			else:
+				body.append('')
+			if (WawaValueLine.objects.filter(symbol=stockid, year=year)):
+				value_line = WawaValueLine.objects.get(symbol=stockid, year=year)
+				body.append(str(value_line.recovery_years))
+				body.append('$'+str(value_line.hold_price))
+				body.append('$'+str(value_line.low_price))
+				body.append('$'+str(value_line.high_price))
+				body.append('$'+str(value_line.one_low_price))
+			else:
+				body.append('')
+				body.append('')
+				body.append('')
+				body.append('')
+				body.append('')
+			if (WawaGrowthPower.objects.filter(symbol=stockid, year=year, season=season)):
+				growth_power = WawaGrowthPower.objects.get(symbol=stockid, year=year, season=season)
+				body.append('$'+str(growth_power.season_eps))
+				body.append('$'+str(growth_power.last_year_season_eps))
+				body.append('$'+str(growth_power.reasonable_price))
 				body.append(str(growth_power.estimate_growth_rate))
-				body.append(str(growth_power.estimate_eps))
-				body.append(str(growth_power.last_year_eps))
+				body.append('$'+str(growth_power.estimate_eps))
+				body.append('$'+str(growth_power.last_year_eps))
 			else:
 				body.append('')
 				body.append('')
@@ -224,10 +271,10 @@ def down_load_growth(request):
 				body.append('')
 			if (VKGrowthPower.objects.filter(symbol=stockid, year=year, season=season)):
 				vk_growth_power = VKGrowthPower.objects.get(symbol=stockid, year=year, season=season)
-				body.append(str(vk_growth_power.reasonable_price))
+				body.append('$'+str(vk_growth_power.reasonable_price))
 				body.append(str(vk_growth_power.estimate_growth_rate))
-				body.append(str(vk_growth_power.estimate_eps))
-				body.append(str(vk_growth_power.last_year_eps))
+				body.append('$'+str(vk_growth_power.estimate_eps))
+				body.append('$'+str(vk_growth_power.last_year_eps))
 			else:
 				body.append('')
 				body.append('')
@@ -355,6 +402,11 @@ def update_wawa_value_line(request):
 			value_line.avg_dividend = 0
 		value_line.low_price = 16 * value_line.avg_dividend
 		value_line.high_price = 32 * value_line.avg_dividend
+		one_year_dividend = Dividend.objects.filter(symbol=symbol).order_by('-date')
+		if (len(one_year_dividend) > 0):
+			value_line.one_low_price = 16 * one_year_dividend[0].total_dividends
+		else:
+			value_line.one_low_price = 0
 		value_line.recovery_years = 100
 		if (value_line.future_eps_growth > 0):
 			eps_growth = value_line.future_eps_growth + 1

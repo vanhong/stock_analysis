@@ -45,6 +45,7 @@ class WawaValueLine(models.Model):
 	avg_dividend = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 	low_price = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 	high_price = models.DecimalField(max_digits=10, decimal_places=2, null=False)
+	one_low_price = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 	recovery_years = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 
 class AvgPE(models.Model):
