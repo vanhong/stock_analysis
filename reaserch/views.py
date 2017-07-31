@@ -386,13 +386,9 @@ def update_wawa_value_line(request):
 			value_line.past_pe = total_pe / (len(avg_pes))
 		else:
 			value_line.past_pe = 0
-<<<<<<< HEAD
-		value_line.estimate_eps = value_line.last_year_eps * ((value_line.future_eps_growth+1) ** 10)
-=======
 		if (value_line.future_eps_growth > 3):
 			value_line.future_eps_growth = Decimal(1)
 		value_line.estimate_eps = value_line.last_year_eps * (Decimal(value_line.future_eps_growth+1) ** 10)
->>>>>>> 76b401a1c2958bf3680d85199b8aaec14d40191e
 		value_line.estimate_future_price = value_line.estimate_eps * value_line.past_pe
 		value_line.estimate_price = value_line.estimate_future_price / (Decimal(1.1) ** 10)
 		value_line.hold_price = value_line.estimate_price * Decimal(0.8)
