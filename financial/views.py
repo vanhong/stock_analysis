@@ -1040,7 +1040,7 @@ def update_season_balance_sheet(request):
                 elif r'非流動資產合計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_non_current_assets = st_to_decimal(next_data.string)
-                elif r'資產總額' in data.string.encode('utf-8'):
+                elif r'資產總額' in data.string.encode('utf-8') or r'資產總計' in data.string.encode('utf-8'):
                     next_data = data.next_sibling.next_sibling
                     balance_sheet.total_assets = st_to_decimal(next_data.string)
                 elif r'短期借款' in data.string.encode('utf-8'):
@@ -2601,7 +2601,7 @@ def update_season_financial_ratio(request):
             else:
                 profitLoss = sis.profit_loss
             if sbs.total_assets:
-                if has_sbs_prev:
+                if has_sbs_prev and prev_sbs.total_assets:
                     ratio.return_on_assets = profitLoss / ((sbs.total_assets + prev_sbs.total_assets) / 2) * 100
                 else:
                     ratio.return_on_assets = profitLoss / (sbs.total_assets / 2) * 100
