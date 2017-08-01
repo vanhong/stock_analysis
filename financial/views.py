@@ -2609,10 +2609,14 @@ def update_season_financial_ratio(request):
                 ratio.return_on_assets = 0
         # 股東權益報酬率(ROE) = 本期淨利(稅前) / 期初期末平均之權益總額(期初股東權益+期末股東權益/2)
         if sis.profit_loss:
-            if sbs.total_equity and prev_sbs.total_equity:
-                if has_sbs_prev:
+            if has_sbs_prev:
+                if sbs.total_equity and prev_sbs.total_equity:
                     ratio.return_on_equity = sis.profit_loss / ((sbs.total_equity + prev_sbs.total_equity) / 2) * 100
+                elif sbs.total_equity:
+                    ratio.return_on_equity = sis.profit_loss / (sbs.total_equity / 2) * 100
                 else:
+                    ratio.return_on_equity = 0
+            elif sbs.total_equity:
                     ratio.return_on_equity = sis.profit_loss / (sbs.total_equity / 2) * 100
             else:
                 ratio.return_on_equity = 0
