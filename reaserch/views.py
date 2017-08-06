@@ -196,7 +196,7 @@ def down_load_growth(request):
 		return HttpResponse("please input correct season 'year-season'")
 	response = HttpResponse(content_type='text/csv')
 	today = datetime.today()
-	filename = 'growth_power_' + today.strftime('%Y%m%d') + '.csv'
+	filename = 'growth_power_' + str_year + str_season+'_' + today.strftime('%Y%m%d') + '.csv'
 	response['Content-Disposition'] = 'attachment; filename=' + filename
 	writer = csv.writer(response, delimiter=',', quotechar='"')
 	header = ['StockID','Name', 'Type','V', '5', 'Y', 'WG', 'VG',
@@ -385,6 +385,8 @@ def update_wawa_value_line(request):
 				total_pe += avg_pe.pe
 			value_line.past_pe = total_pe / (len(avg_pes))
 		else:
+			value_line.past_pe = 0
+		if value_line.past_pe > 1000:
 			value_line.past_pe = 0
 		if (value_line.future_eps_growth > 3):
 			value_line.future_eps_growth = Decimal(1)

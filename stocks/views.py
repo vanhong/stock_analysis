@@ -535,7 +535,7 @@ def update_watchlist(request):
             '1231','4205','1402','1477','1476',
             '4401','2912','5904','1707','1733',
             '3164','1788','4126','8940','2201',
-            '2207','2548','5522','2820','2881']
+            '2207','2548','5522','2820','2881', '2886']
     for stockid in stock_ids:
         watchlist = WatchList()
         watchlist.surrogate_key = 'wawa_' + stockid
@@ -543,7 +543,7 @@ def update_watchlist(request):
         watchlist.symbol = stockid
         watchlist.rank = -1
         watchlist.save()
-    stock_ids = ['2886','2449','1452','6202', '6449']
+    stock_ids = ['2449','1452','6202','6449','6274','8109','2421','6224','3617']
     for stockid in stock_ids:
         watchlist = WatchList()
         watchlist.surrogate_key = 'vk_' + stockid
