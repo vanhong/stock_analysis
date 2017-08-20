@@ -12,7 +12,7 @@ from datetime import *
 from datetime import timedelta, time
 from time import mktime
 from decimal import Decimal
-from stocks.models import StockId
+from stocks.models import StockId, WatchList
 from price.models import *
 from price.pivotal_state import *
 from bs4 import BeautifulSoup
@@ -508,11 +508,11 @@ def download_csv(request):
 	response = HttpResponse(content_type='text/csv')
 	today = datetime.today()
 	last_monday = today - timedelta(days=today.weekday())
-	filename = last_monday.strftime('%Y%m%d') + '.csv'
+	filename = last_monday.strftime('%Y%m%d') + '_keypoint.csv'
 	response['Content-Disposition'] = 'attachment; filename=' + filename
 
 	writer = csv.writer(response, delimiter=',', quotechar='"')
-	header = ['StockID','Name']
+	header = ['StockID','Name', 'Type']
 	for p in sample_points:
 		header.append(p.date)
 	header.append('current')
@@ -547,12 +547,15 @@ def download_csv(request):
 			'3164','1788','4126','8940','2201',
 			'2207','2548','5522','2820','2881','2886','2449','1452','6202', '6449', '3105',
 			'2399', '2421']
+	stockids = WatchList.objects.values_list('symbol', flat=True)
+	stock_ids = StockId.objects.filter(symbol__in=stockids).order_by('company_type', 'symbol').values_list('symbol', flat=True)
 	for stock_id in stock_ids:
 		if (StockId.objects.filter(symbol__contains=stock_id)):
 			stockId = StockId.objects.get(symbol=stock_id)
 			prev_point_state = ''
 			body = [stock_id]
 			body.append(stockId.name)
+			body.append(stockId.company_type)
 			points = pivotal_point.filter(symbol=stock_id).order_by('date')
 			if (points.count() < sample_points.count()):
 				for i in range(sample_points.count() - points.count()):
