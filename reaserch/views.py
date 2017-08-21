@@ -84,6 +84,8 @@ def update_wawa_growth_power(request):
 		if not YearFinancialRatio.objects.filter(symbol=stockid, year=year-1):
 			print(stockid + "'s yfr is empty year:" + str(year-1))
 			continue
+		if stockid == '3426':
+			pdb.set_trace()
 		if season == 1:
 			financial_ratio = SeasonFinancialRatio.objects.get(symbol=stockid, year=year, season=season)
 			wawa_growth.season_eps = financial_ratio.earnings_per_share
