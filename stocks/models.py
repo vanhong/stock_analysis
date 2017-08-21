@@ -102,6 +102,7 @@ class UpdateManagement(models.Model):
 
 class WatchList(models.Model):
     surrogate_key = models.CharField(max_length=20, primary_key=True)
+    date = models.DateField(db_index=True, null=False)
     user = models.CharField(max_length=20)
     symbol = models.CharField(max_length=20)
     rank = models.IntegerField()

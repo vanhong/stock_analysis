@@ -121,7 +121,7 @@ def update_month_revenue(request):
             response = urllib2.urlopen(req)
         except URLError as e:
             if hasattr(e, 'reason'):
-                json_obj = json.dumps({"notes": "Reason: " + e.reason})
+                json_obj = json.dumps({"notes": "Reason: " + str(e.reason)})
                 return HttpResponse(json_obj, content_type="application/json")
             elif hasattr(e, 'code'):
                 json_obj = json.dumps({"notes": "Error code:" + e.code})
@@ -542,14 +542,16 @@ def update_watchlist(request):
         watchlist.user = 'wawa'
         watchlist.symbol = stockid
         watchlist.rank = -1
+        watchlist.date = datetime.date(2016, 1, 1)
         watchlist.save()
-    stock_ids = ['2449','1452','6202','6449','6274','8109','2421','6224','3617', '3426']
+    stock_ids = ['2449','1452','6202','6449','6274','8109','2421','6224','3617','3426','2481']
     for stockid in stock_ids:
         watchlist = WatchList()
         watchlist.surrogate_key = 'vk_' + stockid
         watchlist.user = 'vk'
         watchlist.symbol = stockid
         watchlist.rank = -1
+        watchlist.date = datetime.date(1984, 1, 1)
         watchlist.save()
     return HttpResponse('update watchlist')
 

@@ -18,7 +18,7 @@ import json
 from exceptions import NotImplementedError
 from abc import ABCMeta, abstractmethod
 from stock_analysis.settings import STATIC_URL
-from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue
+from stocks.models import StockId, MonthRevenue, Dividend, SeasonProfit, SeasonRevenue, WatchList
 from financial.models import SeasonFinancialRatio
 from price.models import Price, NewPrice
 from chip.models import *
@@ -228,19 +228,30 @@ def filter_start2(request):
             revenue = MonthRevenue.objects.filter(symbol=item).order_by('-date')[0]
             resultObj.revenue_date = revenue.date.strftime('%Y-%m-%d')
             price = NewPrice.objects.filter(symbol=item).order_by('-date')[0]
+            decimalPe = 0
             if (SeasonFinancialRatio.objects.filter(symbol=item).count() > 3):
                 try:
                     eps = SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[0].earnings_per_share +\
                       SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[1].earnings_per_share +\
                       SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[2].earnings_per_share +\
                       SeasonFinancialRatio.objects.filter(symbol=item).order_by('-date')[3].earnings_per_share
-                    resultObj.pe = (price.close_price / eps)
-                    resultObj.pe = '{0:.2f}'.format(resultObj.pe)
+                    decimalPe = (price.close_price / eps)
+                    resultObj.pe = '{0:.2f}'.format(decimalPe)
                 except:
                     resultObj.pe = 0
             else:
                 resultObj.pe = 0
             results_dic[item] = resultObj
+            if decimalPe > 0 and decimalPe < 25:
+                if not WatchList.objects.filter(symbol=item, user='pick'):
+                    watchlist = WatchList()
+                    watchlist.surrogate_key = 'pick_' + item
+                    watchlist.user = 'pick'
+                    watchlist.symbol = item
+                    watchlist.rank = -1
+                    watchlist.date = revenue.date
+                    watchlist.save()
+
     return render_to_response(
                 'filter/filter_result.html', {
                 "results": sorted(results_dic.iteritems())},

@@ -92,7 +92,9 @@ def update_wawa_growth_power(request):
 			wawa_growth.estimate_eps = wawa_growth.season_eps * 4
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
-			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
+			if not wawa_growth.last_year_eps or not wawa_growth.last_year_season_eps:
+				continue
+			awa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.last_year_eps
 			wawa_growth.save()
 		elif season == 2:
@@ -102,6 +104,8 @@ def update_wawa_growth_power(request):
 			wawa_growth.estimate_eps = (financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share) * 2
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
+			if not wawa_growth.last_year_eps or not wawa_growth.last_year_season_eps:
+				continue
 			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.last_year_eps
 			wawa_growth.save()
@@ -113,6 +117,8 @@ def update_wawa_growth_power(request):
 			wawa_growth.estimate_eps = (financial_ratio1.earnings_per_share + financial_ratio2.earnings_per_share + financial_ratio3.earnings_per_share) * 4 / 3
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
+			if not wawa_growth.last_year_eps or not wawa_growth.last_year_season_eps:
+				continue
 			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.last_year_eps
 			wawa_growth.save()
@@ -126,6 +132,8 @@ def update_wawa_growth_power(request):
 									   financial_ratio3.earnings_per_share + financial_ratio4.earnings_per_share
 			wawa_growth.last_year_season_eps = SeasonFinancialRatio.objects.get(symbol=stockid, year=year-1, season=season).earnings_per_share
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
+			if not wawa_growth.last_year_eps or not wawa_growth.last_year_season_eps:
+				continue
 			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.estimate_eps
 			wawa_growth.save()
@@ -168,6 +176,11 @@ def update_vk_growth_power(request):
 			financial_ratio5 = financial_ratios[5]
 			financial_ratio6 = financial_ratios[6]
 			financial_ratio7 = financial_ratios[7]
+			if not financial_ratio.earnings_per_share or not financial_ratio1.earnings_per_share or \
+			   not financial_ratio2.earnings_per_share or not financial_ratio3.earnings_per_share or \
+			   not financial_ratio4.earnings_per_share or not financial_ratio5.earnings_per_share or \
+			   not financial_ratio6.earnings_per_share or not financial_ratio7.earnings_per_share:
+			   continue
 			vk_growth.season_eps = financial_ratio.earnings_per_share
 			vk_growth.estimate_eps = financial_ratio.earnings_per_share + financial_ratio1.earnings_per_share + \
 									 financial_ratio2.earnings_per_share + financial_ratio3.earnings_per_share
@@ -201,7 +214,7 @@ def down_load_growth(request):
 	filename = 'growth_power_' + str_year + str_season+'_' + today.strftime('%Y%m%d') + '.csv'
 	response['Content-Disposition'] = 'attachment; filename=' + filename
 	writer = csv.writer(response, delimiter=',', quotechar='"')
-	header = ['StockID','Name', 'Type','V', '5', 'Y', 'WG', 'VG',
+	header = ['StockID','Name', 'User','Type','V', '5', 'Y', 'WG', 'VG',
 			  'Price', 'P/FE', 'P/E', 
 			  'recovery_year', 'hold_price', 'low_price', 'high_price', 'one_year_price',
 			  'SeasonEPS', 'LastYearSeasonEPS',
@@ -221,6 +234,8 @@ def down_load_growth(request):
 				body.append(u'宏碁')
 			else:
 				body.append(stockId.name)
+			watchList = WatchList.objects.filter(symbol=stockid)[0]
+			body.append(watchList.user + '_' + watchList.date.strftime('%Y-%m-%d'))
 			body.append(stockId.company_type)
 			body.append('')
 			body.append('')
