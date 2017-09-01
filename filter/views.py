@@ -243,9 +243,9 @@ def filter_start2(request):
                 resultObj.pe = 0
             results_dic[item] = resultObj
             if decimalPe > 0 and decimalPe < 25:
-                if not WatchList.objects.filter(symbol=item, user='pick'):
+                if not WatchList.objects.filter(symbol=item, user='pick', date=revenue.date):
                     watchlist = WatchList()
-                    watchlist.surrogate_key = 'pick_' + item
+                    watchlist.surrogate_key = 'pick_' + resultObj.revenue_date + '_' + item
                     watchlist.user = 'pick'
                     watchlist.symbol = item
                     watchlist.rank = -1
