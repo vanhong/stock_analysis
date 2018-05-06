@@ -102,7 +102,6 @@ def filter_start2(request):
 
     print 'Start to Filter2'
     conditions = {}
-
     #處理前端post的條件參數
     #參數名需與前端template對應
     for key, value in request.POST.iteritems():
@@ -119,6 +118,7 @@ def filter_start2(request):
     print 'params are as follow:'
     print conditions
     filter_list = []
+    pdb.set_trace()
     for key, value in conditions.iteritems(): #逐一條件做篩選
         if key == 'RevenueYoY': #月營收連續幾個月年增率>
             cnt = int(value['cnt'])
@@ -250,7 +250,7 @@ def filter_start2(request):
                     watchlist.symbol = item
                     watchlist.rank = -1
                     watchlist.date = revenue.date
-                    watchlist.save()
+                    #watchlist.save()
 
     return render_to_response(
                 'filter/filter_result.html', {
@@ -410,7 +410,9 @@ def query_financial_ratio(cnt, value, field, time_type):
     update_lists = financial_model.objects.values_list(strSymbol).filter(**update_kwargs).\
                    annotate(symbol_count=Count(strSymbol)).filter(symbol_count=con_cnt).values_list(strSymbol, flat=True)
     update_lists = list(set(update_lists).union(set(not_update_lists)))
-
+    test = financial_model.objects.values(strSymbol).filter(**not_update_kwargs).\
+                   annotate(symbol_count=Count(strSymbol))
+    pdb.set_trace()
     return update_lists
 
 def query_revenue_ann_growth_rate(cnt, matchcnt, overunder, growth_rate, revenue_type):

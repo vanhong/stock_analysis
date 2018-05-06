@@ -3,6 +3,7 @@
 
 import urllib
 import urllib2
+import requests
 from django.http import HttpResponse
 from HTMLParser import HTMLParser
 import time
@@ -136,6 +137,26 @@ def update_corp_trade(request):
             #print ('update ' + value.trade_date + ', ' + key + ' corp trade')
     return HttpResponse('update corp')
     return HttpResponse('%s, %s, %s' % (securityIdList[0], securityIdList[0].next, securityIdList[0].next.next_sibling))
+
+def show_corp_trade(request):
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    url1 = "http://www.twse.com.tw/zh/page/trading/fund/T86.html"
+    #mydate = time.strftime("2017/09/01")
+    year = str(106)
+    #mydate2 = mydate.replace(mydate[0:4],year)
+    mydate2 = '106/09/01'
+    payload1 = {"download": "csv",
+                "qdate": mydate2,
+                "select2": "ALLBUT0999",
+                "sorting": "by_issue"}
+    res1 = requests.post(url1, headers=headers, data=payload1, stream=True)
+    #pdb.set_trace()
+    url = 'http://www.twse.com.tw/fund/T86?response=json&date=20170831&selectType=ALLBUT0999'
+    values = {'response' : 'json', 'date' : '20170901', 'selectType' : 'ALLBUT0999', '_':'1504423220166'}
+    url_data = urllib.urlencode(values)
+    req = urllib2.Request(url)
+    response = urllib2.urlopen(req)
+    return HttpResponse(response.read())
 
 #更新股權分佈
 def update_shareholder_structure(request):

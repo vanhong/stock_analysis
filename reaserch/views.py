@@ -222,8 +222,8 @@ def down_load_growth(request):
 	filename = 'growth_power_' + str_year + str_season+'_' + today.strftime('%Y%m%d') + '.csv'
 	response['Content-Disposition'] = 'attachment; filename=' + filename
 	writer = csv.writer(response, delimiter=',', quotechar='"')
-	header = ['StockID','Name', 'User','Type','V', '5', 'Y', 'WG', 'VG', 'KP',
-			  'Price', 'P/FE', 'P/E', 
+	header = ['StockID','Name', 'User','Type','V', '5', 'Y', 'WG', 'VG', 'PickTimes', 'KP',
+			  'LastPrice', 'Price', 'P/FE', 'P/E', 
 			  'recovery_year', 'hold_price', 'low_price', 'one_year_price', 'EPS_GrowthRate',
 			  'SeasonEPS', 'LastYearSeasonEPS',
 			  'W_ReasonablePrice', 'W_GrowthRate', 'W_EstiamteEPS', 'W_LastYearEPS', 
@@ -247,7 +247,11 @@ def down_load_growth(request):
 				body.append(u'宏碁')
 			else:
 				body.append(stockId.name)
-			watchList = WatchList.objects.filter(symbol=stockid).order_by('-date')[0]
+			pick_in_six_months = WatchList.objects.filter(date__gte=season_date, symbol=stockid).order_by('-date')
+			if (len(pick_in_six_months)>1):
+				watchList = pick_in_six_months[0]
+			else:
+				watchList = WatchList.objects.filter(symbol=stockid).order_by('-date')[0]
 			body.append(watchList.user + '_' + watchList.date.strftime('%Y-%m-%d'))
 			body.append(stockId.company_type)
 			body.append('')
@@ -255,10 +259,17 @@ def down_load_growth(request):
 			body.append('')
 			body.append('')
 			body.append('')
+			body.append(str(len(pick_in_six_months)))
 			if (pivotal_point.filter(symbol=stockid)):
 				body.append(pivotal_point.filter(symbol=stockid).order_by('-date')[0].state)
 			else:
 				body.append('')
+			if (NewPrice.objects.filter(symbol=stockid).count() >= 4):
+				price = NewPrice.objects.filter(symbol=stockid).order_by('-date')[3].close_price
+				body.append(str(price))
+			else:
+				price = 0
+				body.append('0')
 			if (NewPrice.objects.filter(symbol=stockid)):
 				price = NewPrice.objects.filter(symbol=stockid).order_by('-date')[0].close_price
 				body.append(str(price))

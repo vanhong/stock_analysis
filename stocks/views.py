@@ -109,58 +109,59 @@ def update_month_revenue(request):
     market = ['otc', 'sii']
     updateCnt = 0
     for i in range(len(market)):
-        # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
-        if year >= 2015:
-            url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
-        elif year == 2014 and month >= 11:
-            url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
-        else:
-            url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_0.html"
-        req = urllib2.Request(url)
-        try:
-            response = urllib2.urlopen(req)
-        except URLError as e:
-            if hasattr(e, 'reason'):
-                json_obj = json.dumps({"notes": "Reason: " + str(e.reason)})
-                return HttpResponse(json_obj, content_type="application/json")
-            elif hasattr(e, 'code'):
-                json_obj = json.dumps({"notes": "Error code:" + e.code})
-                return HttpResponse(json_obj, content_type="application/json")
-        soup = BeautifulSoup(response, from_encoding="utf-8")
-        datas = soup.find_all('td', {'align':'center'})
-        for data in datas:
-            if data.string:
-                if data.string != '-':
-                    revenue = MonthRevenue()
-                    revenue.surrogate_key = data.string + "_" + str(year) + str(month).zfill(2)
-                    revenue.year = year
-                    revenue.month = month
-                    revenue.date = datetime.date(year, month, 1)
-                    revenue.symbol = data.string
-                    revenue_data = data.next_sibling.next_sibling
-                    if is_decimal(st_to_decimal(revenue_data.string)):
-                        revenue.revenue = revenue_data.string.strip().replace(',', '')
-                    last_year_revenue_data = revenue_data.next_sibling.next_sibling
-                    if is_decimal(last_year_revenue_data.string.strip().replace(',', '')):
-                        revenue.last_year_revenue = last_year_revenue_data.string.strip().replace(',', '')
-                    month_growth_rate_data = last_year_revenue_data.next_sibling
-                    if is_decimal(month_growth_rate_data.string.strip().replace(',', '')):
-                        revenue.month_growth_rate = month_growth_rate_data.string.strip().replace(',', '')
-                    year_growth_rate_data = month_growth_rate_data.next_sibling
-                    if is_decimal(year_growth_rate_data.string.strip().replace(',', '')):
-                        revenue.year_growth_rate = year_growth_rate_data.string.strip().replace(',', '')
-                    acc_revenue_data = year_growth_rate_data.next_sibling
-                    if is_decimal(acc_revenue_data.string.strip().replace(',', '')):
-                        revenue.acc_revenue = acc_revenue_data.string.strip().replace(',', '')
-                    last_acc_revenue_data = acc_revenue_data.next_sibling
-                    if is_decimal(last_acc_revenue_data.string.strip().replace(',', '')):
-                        revenue.last_acc_revenue = last_acc_revenue_data.string.strip().replace(',', '')
-                    acc_year_growth_rate_data = last_acc_revenue_data.next_sibling
-                    if is_decimal(acc_year_growth_rate_data.string.strip().replace(',', '')):
-                        revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
-                    print (revenue.symbol)
-                    updateCnt = updateCnt + 1
-                    revenue.save()
+        for j in [0, 1]:
+            # url example http://mops.twse.com.tw/t21/sii/t21sc03_99_1.html
+            if year >= 2015:
+                url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_" + str(j) +".html"
+            elif year == 2014 and month >= 11:
+                url = "http://mops.twse.com.tw/nas/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_" + str(j) +".html"
+            else:
+                url = "http://mops.twse.com.tw/t21/" + market[i] + "/t21sc03_" + str(year-1911) + "_" + str(month) + "_" + str(j) + ".html"
+            req = urllib2.Request(url)
+            try:
+                response = urllib2.urlopen(req)
+            except URLError as e:
+                if hasattr(e, 'reason'):
+                    json_obj = json.dumps({"notes": "Reason: " + str(e.reason)})
+                    return HttpResponse(json_obj, content_type="application/json")
+                elif hasattr(e, 'code'):
+                    json_obj = json.dumps({"notes": "Error code:" + e.code})
+                    return HttpResponse(json_obj, content_type="application/json")
+            soup = BeautifulSoup(response, from_encoding="utf-8")
+            datas = soup.find_all('td', {'align':'center'})
+            for data in datas:
+                if data.string:
+                    if data.string != '-':
+                        revenue = MonthRevenue()
+                        revenue.surrogate_key = data.string + "_" + str(year) + str(month).zfill(2)
+                        revenue.year = year
+                        revenue.month = month
+                        revenue.date = datetime.date(year, month, 1)
+                        revenue.symbol = data.string
+                        revenue_data = data.next_sibling.next_sibling
+                        if is_decimal(st_to_decimal(revenue_data.string)):
+                            revenue.revenue = revenue_data.string.strip().replace(',', '')
+                        last_year_revenue_data = revenue_data.next_sibling.next_sibling
+                        if is_decimal(last_year_revenue_data.string.strip().replace(',', '')):
+                            revenue.last_year_revenue = last_year_revenue_data.string.strip().replace(',', '')
+                        month_growth_rate_data = last_year_revenue_data.next_sibling
+                        if is_decimal(month_growth_rate_data.string.strip().replace(',', '')):
+                            revenue.month_growth_rate = month_growth_rate_data.string.strip().replace(',', '')
+                        year_growth_rate_data = month_growth_rate_data.next_sibling
+                        if is_decimal(year_growth_rate_data.string.strip().replace(',', '')):
+                            revenue.year_growth_rate = year_growth_rate_data.string.strip().replace(',', '')
+                        acc_revenue_data = year_growth_rate_data.next_sibling
+                        if is_decimal(acc_revenue_data.string.strip().replace(',', '')):
+                            revenue.acc_revenue = acc_revenue_data.string.strip().replace(',', '')
+                        last_acc_revenue_data = acc_revenue_data.next_sibling
+                        if is_decimal(last_acc_revenue_data.string.strip().replace(',', '')):
+                            revenue.last_acc_revenue = last_acc_revenue_data.string.strip().replace(',', '')
+                        acc_year_growth_rate_data = last_acc_revenue_data.next_sibling
+                        if is_decimal(acc_year_growth_rate_data.string.strip().replace(',', '')):
+                            revenue.acc_year_growth_rate = acc_year_growth_rate_data.string.strip().replace(',', '')
+                        print (revenue.symbol)
+                        updateCnt = updateCnt + 1
+                        revenue.save()
     print ("update %d symbol") %updateCnt
     cnt = MonthRevenue.objects.filter(year=year, month=month).count()
     lastDate = MonthRevenue.objects.all().aggregate(Max('date'))['date__max']

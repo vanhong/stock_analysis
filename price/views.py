@@ -145,6 +145,7 @@ def update_price(request):
 		date = request.GET['date']
 		last_monday = datetime.strptime(date, '%Y-%m-%d')
 	for stock_id in stock_ids:
+		cnt = 0
 		lastest_price_date = NewPrice.objects.filter(symbol=stock_id.symbol).aggregate(Max("date"))
 		if lastest_price_date['date__max'] == None:
 			pass
@@ -162,7 +163,6 @@ def update_price(request):
 			volumes = datas[5].split(',')
 		else:
 			continue
-		cnt = 0
 		for i in range(len(dates)):
 			priceObj = NewPrice()
 			priceObj.surrogate_key = stock_id.symbol + '_' + dates[i].replace('-','')
