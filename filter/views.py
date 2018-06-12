@@ -250,7 +250,7 @@ def filter_start2(request):
                     watchlist.symbol = item
                     watchlist.rank = -1
                     watchlist.date = revenue.date
-                    #watchlist.save()
+                    watchlist.save()
 
     return render_to_response(
                 'filter/filter_result.html', {

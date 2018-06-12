@@ -92,7 +92,7 @@ def update_wawa_growth_power(request):
 			wawa_growth.last_year_eps = YearFinancialRatio.objects.get(symbol=stockid, year=year-1).earnings_per_share
 			if not wawa_growth.last_year_eps or not wawa_growth.last_year_season_eps:
 				continue
-			awa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
+			wawa_growth.estimate_growth_rate = wawa_growth.estimate_eps / wawa_growth.last_year_eps - 1
 			if (wawa_growth.estimate_growth_rate > 0.4):
 				wawa_growth.estimate_growth_rate = Decimal(0.4)
 			wawa_growth.reasonable_price = wawa_growth.estimate_growth_rate * Decimal(66) * wawa_growth.last_year_eps
@@ -229,10 +229,7 @@ def down_load_growth(request):
 			  'W_ReasonablePrice', 'W_GrowthRate', 'W_EstiamteEPS', 'W_LastYearEPS', 
 			  'V_ResonablePrice', 'V_GrowthRate', 'V_EstimateEPS', 'V_LastYearEPS']
 	writer.writerow([x for x in header])
-	if (season==1):
-		season_date = season_to_date(year-1, 4)
-	else:
-		season_date = season_to_date(year, season-1)
+	season_date = today - timedelta(days=180)
 	stockids = WatchList.objects.filter(Q(user='vk')|Q(user='wawa')|Q(date__gte=season_date)).values_list('symbol', flat=True)
 	#query = reduce(operator.and_, (Q(symbol__contains=item) for item in stockids))
 	symbols = StockId.objects.filter(symbol__in=stockids).order_by('company_type', 'symbol').values_list('symbol', flat=True)
